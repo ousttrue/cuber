@@ -12,6 +12,7 @@ executable(
         'GuiApp.cpp',
         'GlRenderer.cpp',
         'TurnTable.cpp',
+        'Bvh.cpp',
     ],
     install: true,
     dependencies: [

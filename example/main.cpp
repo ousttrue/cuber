@@ -7,7 +7,7 @@
 
 #include <GL/GL.h>
 
-int main(int, char **) {
+int main(int argc, char **argv) {
   GuiWindow gui;
   auto window = gui.Create();
   if (!window) {
@@ -17,6 +17,9 @@ int main(int, char **) {
   GuiApp app(window, gui.GlslVersion());
 
   GlRenderer renderer;
+  if (argc > 1) {
+    renderer.Load(argv[1]);
+  }
 
   // main loop
   int display_w, display_h;

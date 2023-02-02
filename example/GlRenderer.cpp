@@ -1,7 +1,18 @@
 #include "GlRenderer.h"
+#include "Bvh.h"
 #include <DirectXMath.h>
 #include <GL/glew.h>
+#include <fstream>
 #include <iostream>
+
+static std::vector<char> ReadAllBytes(const std::string &filename) {
+  std::ifstream ifs(filename.c_str(), std::ios::binary | std::ios::ate);
+  auto pos = ifs.tellg();
+  std::vector<char> buffer(pos);
+  ifs.seekg(0, std::ios::beg);
+  ifs.read(buffer.data(), pos);
+  return buffer;
+}
 
 static const struct {
   float x, y;
@@ -80,6 +91,20 @@ GlRenderer::GlRenderer() {
 }
 
 GlRenderer::~GlRenderer() {}
+
+void GlRenderer::Load(std::string_view file) {
+
+  auto bytes = ReadAllBytes(std::string(file.begin(), file.end()));
+  if (bytes.empty()) {
+    return;
+  }
+  std::cout << "load: " << file << " " << bytes.size() << "bytes" << std::endl;
+  Bvh bvh;
+  if (!bvh.Parse({bytes.begin(), bytes.end()})) {
+    return;
+  }
+  std::cout << bvh << std::endl;
+}
 
 void GlRenderer::RenderScene(RenderTime time, const float projection[16],
                              const float view[16]) {

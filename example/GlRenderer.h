@@ -1,6 +1,7 @@
 #pragma once
 #include <chrono>
 #include <stdint.h>
+#include <string_view>
 
 using RenderTime = std::chrono::duration<float, std::ratio<1, 1>>;
 
@@ -29,6 +30,8 @@ public:
   GlRenderer &operator=(const GlRenderer &) = delete;
   GlRenderer();
   ~GlRenderer();
+
+  void Load(std::string_view file);
 
   void RenderScene(RenderTime time, const float projection[16],
                    const float view[16]);
