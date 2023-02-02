@@ -7,6 +7,17 @@
 #include <stack>
 #include <stdlib.h>
 
+template <typename T> std::optional<T> to_num(std::string_view view) {
+  T value;
+  auto [ptr, ec] =
+      std::from_chars(view.data(), view.data() + view.size(), value);
+  if (ec == std::errc{}) {
+    return value;
+  } else {
+    return {};
+  }
+}
+
 using It = std::string_view::iterator;
 struct Result {
   It end;
@@ -45,6 +56,18 @@ public:
     }
     return false;
   }
+
+  template <typename T> std::optional<T> number(const Delimiter &delimiter) {
+    auto n = token(delimiter);
+    if (!n) {
+      return {};
+    }
+    if (auto value = to_num<T>(*n)) {
+      return *value;
+    } else {
+      return {};
+    }
+  }
 };
 
 static std::optional<Result> is_space(It it, It end) {
@@ -79,9 +102,11 @@ static std::optional<Result> get_name(It it, It end) {
 struct BvhImpl {
   Tokenizer token_;
   std::vector<BvhJoint> &joints_;
+  std::vector<BvhJoint> &endsites_;
 
-  BvhImpl(std::vector<BvhJoint> &joints, std::string_view src)
-      : token_(src), joints_(joints) {}
+  BvhImpl(std::vector<BvhJoint> &joints, std::vector<BvhJoint> &endsites,
+          std::string_view src)
+      : token_(src), joints_(joints), endsites_(endsites) {}
 
   std::vector<int> stack_;
 
@@ -124,11 +149,6 @@ private:
         }
 
         auto index = joints_.size();
-        joints_.push_back(BvhJoint{
-            .name = {name->begin(), name->end()},
-            .parent = stack_.empty() ? -1 : stack_.back(),
-        });
-        stack_.push_back(index);
         auto offset = ParseOffset();
         if (!offset) {
           return false;
@@ -137,6 +157,14 @@ private:
         if (!channels) {
           return false;
         }
+
+        joints_.push_back(BvhJoint{
+            .name = {name->begin(), name->end()},
+            .parent = stack_.empty() ? -1 : stack_.back(),
+            .offset = *offset,
+            .channels = *channels,
+        });
+        stack_.push_back(index);
 
         ParseJoint();
 
@@ -156,6 +184,12 @@ private:
         if (!offset) {
           return false;
         }
+        endsites_.push_back(BvhJoint{
+            .name = "End Site",
+            .parent = stack_.empty() ? -1 : stack_.back(),
+            .offset = *offset,
+        });
+
         if (!token_.expect("}", is_space)) {
           return false;
         }
@@ -174,11 +208,20 @@ private:
     if (!token_.expect("OFFSET", is_space)) {
       return {};
     }
-    auto x = token_.token(is_space);
-    auto y = token_.token(is_space);
-    auto z = token_.token(is_space);
+    auto x = token_.number<float>(is_space);
+    if (!x) {
+      return {};
+    }
+    auto y = token_.number<float>(is_space);
+    if (!y) {
+      return {};
+    }
+    auto z = token_.number<float>(is_space);
+    if (!z) {
+      return {};
+    }
 
-    return BvhOffset{};
+    return BvhOffset{*x, *y, *z};
   }
 
   std::optional<BvhChannels> ParseChannels() {
@@ -186,25 +229,39 @@ private:
       return {};
     }
 
-    auto n = token_.token(is_space);
+    auto n = token_.number<int>(is_space);
     if (!n) {
       return {};
     }
-    int channel_count;
-    auto [ptr, ec] =
-        std::from_chars(n->data(), n->data() + n->size(), channel_count);
+    auto channel_count = *n;
+    auto channels = BvhChannels{};
     for (int i = 0; i < channel_count; ++i) {
-      auto channel = token_.token(is_space);
+      if (auto channel = token_.token(is_space)) {
+        if (*channel == "Xposition") {
+          channels.values[i] = BvhChannelTypes::Xposition;
+        } else if (*channel == "Yposition") {
+          channels.values[i] = BvhChannelTypes::Yposition;
+        } else if (*channel == "Zposition") {
+          channels.values[i] = BvhChannelTypes::Zposition;
+        } else if (*channel == "Xrotation") {
+          channels.values[i] = BvhChannelTypes::Xrotation;
+        } else if (*channel == "Yrotation") {
+          channels.values[i] = BvhChannelTypes::Yrotation;
+        } else if (*channel == "Zrotation") {
+          channels.values[i] = BvhChannelTypes::Zrotation;
+        } else {
+          throw std::runtime_error("unknown");
+        }
+      }
     }
-
-    return BvhChannels{};
+    return channels;
   }
 };
 
 Bvh::Bvh() {}
 Bvh::~Bvh() {}
 bool Bvh::Parse(std::string_view src) {
-  BvhImpl parser(joints, src);
+  BvhImpl parser(joints, endsites, src);
   if (!parser.Parse()) {
     return false;
   }
