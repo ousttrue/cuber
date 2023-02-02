@@ -5,10 +5,20 @@
 #include <fstream>
 #include <iostream>
 
-static std::vector<char> ReadAllBytes(const std::string &filename) {
+template<typename T>
+static std::vector<T> ReadAllBytes(const std::string &filename) {
   std::ifstream ifs(filename.c_str(), std::ios::binary | std::ios::ate);
+  if(!ifs)
+  {
+    return {};
+  }
   auto pos = ifs.tellg();
-  std::vector<char> buffer(pos);
+  auto size = pos / sizeof(T);
+  if(pos % sizeof(T))
+  {
+    ++size;
+  }
+  std::vector<T> buffer(size);
   ifs.seekg(0, std::ios::beg);
   ifs.read(buffer.data(), pos);
   return buffer;
@@ -94,7 +104,7 @@ GlRenderer::~GlRenderer() {}
 
 void GlRenderer::Load(std::string_view file) {
 
-  auto bytes = ReadAllBytes(std::string(file.begin(), file.end()));
+  auto bytes = ReadAllBytes<char>(std::string(file.begin(), file.end()));
   if (bytes.empty()) {
     return;
   }
