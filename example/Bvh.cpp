@@ -8,27 +8,11 @@
 #include <stdlib.h>
 
 using It = std::string_view::iterator;
-using Delimiter = std::function<std::optional<It>(It, It)>;
-
-struct Offset {
-  float x;
-  float y;
-  float z;
+struct Result {
+  It end;
+  It next;
 };
-
-enum class ChannelTypes {
-  None,
-  Xposition,
-  Yposition,
-  Zposition,
-  Zrotation,
-  Xrotation,
-  Yrotation,
-};
-
-struct Channels {
-  ChannelTypes values[6] = {};
-};
+using Delimiter = std::function<std::optional<Result>(It, It)>;
 
 class Tokenizer {
   std::string_view m_data;
@@ -41,14 +25,16 @@ public:
     auto begin = m_pos;
 
     auto end = begin;
+
     for (; end != m_data.end(); ++end) {
       if (auto found = delimiter(end, m_data.end())) {
-        m_pos = *found;
-        break;
+        auto [tail, next] = *found;
+        m_pos = next;
+        return std::string_view(begin, tail);
       }
     }
 
-    return std::string_view(begin, end);
+    return {};
   }
 
   bool expect(std::string_view expected, const Delimiter &delimiter) {
@@ -61,31 +47,25 @@ public:
   }
 };
 
-static std::optional<It> is_space(It it, It end) {
+static std::optional<Result> is_space(It it, It end) {
   if (!std::isspace(*it)) {
     return {};
   }
+  auto tail = it;
   ++it;
   for (; it != end; ++it) {
     if (!std::isspace(*it)) {
       break;
     }
   }
-  return it;
+  return Result{tail, it};
 }
 
-static std::optional<It> eol(It it, It end) {
+static std::optional<Result> get_name(It it, It end) {
   if (*it != '\n') {
     return {};
   }
-  ++it;
-  return it;
-}
-
-static std::optional<It> get_name(It it, It end) {
-  if (*it != '\n') {
-    return {};
-  }
+  auto tail = it;
   ++it;
   // head space
   for (; it != end; ++it) {
@@ -93,26 +73,28 @@ static std::optional<It> get_name(It it, It end) {
       break;
     }
   }
-  return it;
+  return Result{tail, it};
 }
 
 struct BvhImpl {
   Tokenizer token_;
+  std::vector<BvhJoint> &joints_;
 
-  BvhImpl(std::string_view src) : token_(src) {}
+  BvhImpl(std::vector<BvhJoint> &joints, std::string_view src)
+      : token_(src), joints_(joints) {}
 
-  int level_ = 0;
+  std::vector<int> stack_;
 
   bool Parse() {
     if (!token_.expect("HIERARCHY", is_space)) {
       return false;
     }
 
-    return Joint();
+    return ParseJoint();
   }
 
 private:
-  bool Joint() {
+  bool ParseJoint() {
     while (true) {
       auto token = token_.token(is_space);
       if (!token) {
@@ -132,14 +114,21 @@ private:
           return false;
         }
 
-        for (int i = 0; i < level_; ++i) {
-          std::cout << "  ";
-        }
-        std::cout << *name << std::endl;
+        // for (size_t i = 0; i < stack_.size(); ++i) {
+        //   std::cout << "  ";
+        // }
+        // std::cout << *name << std::endl;
+
         if (!token_.expect("{", is_space)) {
           return false;
         }
-        ++level_;
+
+        auto index = joints_.size();
+        joints_.push_back(BvhJoint{
+            .name = {name->begin(), name->end()},
+            .parent = stack_.empty() ? -1 : stack_.back(),
+        });
+        stack_.push_back(index);
         auto offset = ParseOffset();
         if (!offset) {
           return false;
@@ -149,7 +138,7 @@ private:
           return false;
         }
 
-        Joint();
+        ParseJoint();
 
       } else if (*token == "End") {
         // End Site
@@ -171,7 +160,7 @@ private:
           return false;
         }
       } else if (*token == "}") {
-        --level_;
+        stack_.pop_back();
         break;
       } else if (*token == "MOTION") {
         break;
@@ -181,7 +170,7 @@ private:
     }
   }
 
-  std::optional<Offset> ParseOffset() {
+  std::optional<BvhOffset> ParseOffset() {
     if (!token_.expect("OFFSET", is_space)) {
       return {};
     }
@@ -189,10 +178,10 @@ private:
     auto y = token_.token(is_space);
     auto z = token_.token(is_space);
 
-    return Offset{};
+    return BvhOffset{};
   }
 
-  std::optional<Channels> ParseChannels() {
+  std::optional<BvhChannels> ParseChannels() {
     if (!token_.expect("CHANNELS", is_space)) {
       return {};
     }
@@ -208,14 +197,14 @@ private:
       auto channel = token_.token(is_space);
     }
 
-    return Channels{};
+    return BvhChannels{};
   }
 };
 
 Bvh::Bvh() {}
 Bvh::~Bvh() {}
 bool Bvh::Parse(std::string_view src) {
-  BvhImpl parser(src);
+  BvhImpl parser(joints, src);
   if (!parser.Parse()) {
     return false;
   }
