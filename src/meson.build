@@ -1,0 +1,1 @@
+cuber_dep = declare_dependency()
