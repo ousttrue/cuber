@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include <memory>
 #include <ostream>
 #include <span>
@@ -71,17 +72,22 @@ inline std::ostream &operator<<(std::ostream &os, const BvhJoint &joint) {
   return os;
 }
 
-class Bvh {
+using BvhTime = std::chrono::duration<float, std::ratio<1, 1>>;
+
+struct Bvh {
 public:
   std::vector<BvhJoint> joints;
   std::vector<BvhJoint> endsites;
+  BvhTime frame_time = {};
+  std::vector<float> frames;
   Bvh();
   ~Bvh();
   bool Parse(std::string_view src);
 };
 
 inline std::ostream &operator<<(std::ostream &os, const Bvh &bvh) {
-  os << "<BVH: " << bvh.joints.size() << "joints" << std::endl;
+  os << "<BVH: " << bvh.joints.size() << "joints: " << bvh.frames.size()
+     << "frames/" << bvh.frame_time << std::endl;
   for (auto joint : bvh.joints) {
     os << "  " << joint << std::endl;
   }

@@ -84,6 +84,15 @@ static std::optional<Result> is_space(It it, It end) {
   return Result{tail, it};
 }
 
+static std::optional<Result> get_eol(It it, It end) {
+  if (*it != '\n') {
+    return {};
+  }
+  auto tail = it;
+  ++it;
+  return Result{tail, it};
+}
+
 static std::optional<Result> get_name(It it, It end) {
   if (*it != '\n') {
     return {};
@@ -103,10 +112,13 @@ struct BvhImpl {
   Tokenizer token_;
   std::vector<BvhJoint> &joints_;
   std::vector<BvhJoint> &endsites_;
+  std::vector<float> &frames_;
+  uint32_t frame_count_;
+  BvhTime frame_time_;
 
   BvhImpl(std::vector<BvhJoint> &joints, std::vector<BvhJoint> &endsites,
-          std::string_view src)
-      : token_(src), joints_(joints), endsites_(endsites) {}
+          std::vector<float> &frames, std::string_view src)
+      : token_(src), joints_(joints), endsites_(endsites), frames_(frames) {}
 
   std::vector<int> stack_;
 
@@ -115,7 +127,46 @@ struct BvhImpl {
       return false;
     }
 
-    return ParseJoint();
+    if (!ParseJoint()) {
+      return false;
+    }
+
+    if (!token_.expect("Frames:", is_space)) {
+      return false;
+    }
+    auto frames = token_.number<int>(is_space);
+    if (!frames) {
+      return false;
+    }
+    frame_count_ = *frames;
+
+    if (!token_.expect("Frame", is_space)) {
+      return false;
+    }
+    if (!token_.expect("Time:", is_space)) {
+      return false;
+    }
+    auto frameTime = token_.number<float>(is_space);
+    if (!frameTime) {
+      return false;
+    }
+    frame_time_ = BvhTime(*frameTime);
+
+    // each frame
+    int channel_count = 0;
+    // for (auto &joint : joints_) {
+    //   channel_count += joint.channels.size();
+    // }
+
+    for (int i = 0; i < frame_count_; ++i) {
+      auto line = token_.token(get_eol);
+      if (!line) {
+        return false;
+      }
+      // frames_.push_back(BvhFrame(channel_count));
+    }
+
+    return true;
   }
 
 private:
@@ -195,13 +246,15 @@ private:
         }
       } else if (*token == "}") {
         stack_.pop_back();
-        break;
+        return true;
       } else if (*token == "MOTION") {
-        break;
+        return true;
       } else {
         throw std::runtime_error("unknown");
       }
     }
+
+    throw std::runtime_error("not reach here");
   }
 
   std::optional<BvhOffset> ParseOffset() {
@@ -261,9 +314,10 @@ private:
 Bvh::Bvh() {}
 Bvh::~Bvh() {}
 bool Bvh::Parse(std::string_view src) {
-  BvhImpl parser(joints, endsites, src);
+  BvhImpl parser(joints, endsites, frames, src);
   if (!parser.Parse()) {
     return false;
   }
+  frame_time = parser.frame_time_;
   return true;
 }
