@@ -116,6 +116,22 @@ void GuiApp::UpdateGui() {
     ImGui::End();
   }
 
+  // camera
+  turntable_.SetSize(static_cast<int>(io.DisplaySize.x),
+                     static_cast<int>(io.DisplaySize.y));
+  if (!io.WantCaptureMouse) {
+    if (io.MouseDown[ImGuiMouseButton_Right]) {
+      turntable_.YawPitch(static_cast<int>(io.MouseDelta.x),
+                          static_cast<int>(io.MouseDelta.y));
+    }
+    if (io.MouseDown[ImGuiMouseButton_Middle]) {
+      turntable_.Shift(static_cast<int>(io.MouseDelta.x),
+                       static_cast<int>(io.MouseDelta.y));
+    }
+    turntable_.Dolly(static_cast<int>(io.MouseWheel));
+  }
+  turntable_.Update(projection, view);
+
   // Rendering
   ImGui::Render();
 
@@ -123,10 +139,6 @@ void GuiApp::UpdateGui() {
   clear_color[1] = clear_color_[1] * clear_color_[3];
   clear_color[2] = clear_color_[2] * clear_color_[3];
   clear_color[3] = clear_color_[3];
-
-  // camera
-  turntable_.SetSize(io.DisplaySize.x, io.DisplaySize.y);
-  turntable_.Update(projection, view);
 }
 
 void GuiApp::RenderGui() {
