@@ -44,6 +44,16 @@ inline std::string_view to_str(BvhChannelTypes channelType) {
 
 struct BvhChannels {
   BvhChannelTypes values[6] = {};
+
+  size_t size() const {
+    size_t i = 0;
+    for (; i < 6; ++i) {
+      if (values[i] == BvhChannelTypes::None) {
+        break;
+      }
+    }
+    return i;
+  }
 };
 
 inline std::ostream &operator<<(std::ostream &os, const BvhChannels channel) {
@@ -86,8 +96,14 @@ public:
 };
 
 inline std::ostream &operator<<(std::ostream &os, const Bvh &bvh) {
-  os << "<BVH: " << bvh.joints.size() << "joints: " << bvh.frames.size()
-     << "frames/" << bvh.frame_time << std::endl;
+  int channel_count = 0;
+  for (auto &joint : bvh.joints) {
+    channel_count += joint.channels.size();
+  }
+
+  os << "<BVH: " << bvh.joints.size()
+     << "joints: " << (bvh.frames.size() / channel_count) << "frames/"
+     << bvh.frame_time << std::endl;
   for (auto joint : bvh.joints) {
     os << "  " << joint << std::endl;
   }

@@ -1,4 +1,5 @@
 #include "Bvh.h"
+#include <assert.h>
 #include <cctype>
 #include <charconv>
 #include <functional>
@@ -154,17 +155,26 @@ struct BvhImpl {
 
     // each frame
     int channel_count = 0;
-    // for (auto &joint : joints_) {
-    //   channel_count += joint.channels.size();
-    // }
-
+    for (auto &joint : joints_) {
+      channel_count += joint.channels.size();
+    }
+    frames_.reserve(frame_count_ * channel_count);
     for (int i = 0; i < frame_count_; ++i) {
       auto line = token_.token(get_eol);
       if (!line) {
         return false;
       }
-      // frames_.push_back(BvhFrame(channel_count));
+
+      Tokenizer line_token(*line);
+      for (int j = 0; j < channel_count; ++j) {
+        if (auto value = line_token.number<float>(is_space)) {
+          frames_.push_back(*value);
+        } else {
+          return false;
+        }
+      }
     }
+    assert(frames_.size() == frame_count_ * channel_count);
 
     return true;
   }
