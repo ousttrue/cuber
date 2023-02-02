@@ -62,9 +62,9 @@ GLFWwindow *GuiWindow::Create() {
   return window_;
 }
 
-bool GuiWindow::NewFrame(int *display_w, int *display_h) {
+std::optional<GlfwTime> GuiWindow::NewFrame(int *display_w, int *display_h) {
   if (glfwWindowShouldClose(window_)) {
-    return false;
+    return {};
   }
   // Poll and handle events (inputs, window resize, etc.)
   // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to
@@ -78,7 +78,7 @@ bool GuiWindow::NewFrame(int *display_w, int *display_h) {
   glfwPollEvents();
 
   glfwGetFramebufferSize(window_, display_w, display_h);
-  return true;
+  return GlfwTime(glfwGetTime());
 }
 
 void GuiWindow::EndFrame() { glfwSwapBuffers(window_); }

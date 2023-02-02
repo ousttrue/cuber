@@ -8,6 +8,8 @@ class GuiApp {
 
 public:
   float clear_color[4] = {};
+  GuiApp(const GuiApp &) = delete;
+  GuiApp &operator=(const GuiApp &) = delete;
   GuiApp(struct GLFWwindow *window, const char *glsl_version);
   ~GuiApp();
   void UpdateGui();
