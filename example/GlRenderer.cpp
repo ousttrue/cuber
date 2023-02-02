@@ -1,5 +1,5 @@
 #include "GlRenderer.h"
-// #include <DirectXMath.h>
+#include <DirectXMath.h>
 #include <GL/glew.h>
 #include <iostream>
 
@@ -81,22 +81,16 @@ GlRenderer::GlRenderer() {
 
 GlRenderer::~GlRenderer() {}
 
-void GlRenderer::RenderScene(RenderTime time, const CameraMatrix &camera) {
-  // float ratio;
-  // int width, height;
-
-  // mat4x4_identity(m);
-  // mat4x4_rotate_Z(m, m, (float)glfwGetTime());
-  // mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-  // mat4x4_mul(mvp, p, m);
-
-  // auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)view);
-  // auto p = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)projection);
-  // auto vp = v * p;
-  // DirectX::XMFLOAT4X4 mvp;
-  // DirectX::XMStoreFloat4x4(&mvp, vp);
+void GlRenderer::RenderScene(RenderTime time, const float projection[16],
+                             const float view[16]) {
+  auto angle = DirectX::XMConvertToRadians(time.count()) * 10.0f;
+  auto m = DirectX::XMMatrixRotationZ(angle);
+  auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)view);
+  auto p = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)projection);
+  DirectX::XMFLOAT4X4 mvp;
+  DirectX::XMStoreFloat4x4(&mvp, m * v * p);
 
   glUseProgram(program);
-  glUniformMatrix4fv(mvp_location, 1, GL_FALSE, camera.view);
+  glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const float *)&mvp);
   glDrawArrays(GL_TRIANGLES, 0, 3);
 }

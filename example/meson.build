@@ -3,7 +3,7 @@ c = meson.get_compiler('c')
 gl_dep = c.find_library('OpenGL32')
 imgui_dep = dependency('imgui', default_options: ['default_library=static'])
 glew_dep = dependency('glew')
-
+directxmath_dep = dependency('directxmath')
 executable(
     'cuber_sample',
     [
@@ -11,6 +11,7 @@ executable(
         'GuiWindow.cpp',
         'GuiApp.cpp',
         'GlRenderer.cpp',
+        'TurnTable.cpp',
     ],
     install: true,
     dependencies: [
@@ -18,5 +19,6 @@ executable(
         gl_dep,
         imgui_dep,
         glew_dep,
+        directxmath_dep,
     ],
 )

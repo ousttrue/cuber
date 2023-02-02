@@ -4,20 +4,16 @@
 
 using RenderTime = std::chrono::duration<float, std::ratio<1, 1>>;
 
-struct CameraMatrix {
-  float view[16] = {
-      1, 0, 0, 0, //
-      0, 1, 0, 0, //
-      0, 0, 1, 0, //
-      0, 0, 0, 1, //
-  };
-  float projection[16] = {
-      1, 0, 0, 0, //
-      0, 1, 0, 0, //
-      0, 0, 1, 0, //
-      0, 0, 0, 1, //
-  };
-};
+// struct CameraMatrix {
+//   float view[16] = {
+//       1, 0, 0, 0, //
+//       0, 1, 0, 0, //
+//       0, 0, 1, 0, //
+//       0, 0, 0, 1, //
+//   };
+//   float projection[16] = {
+//   };
+// };
 
 class GlRenderer {
   uint32_t vertex_buffer = 0;
@@ -34,5 +30,6 @@ public:
   GlRenderer();
   ~GlRenderer();
 
-  void RenderScene(RenderTime time, const CameraMatrix &camera);
+  void RenderScene(RenderTime time, const float projection[16],
+                   const float view[16]);
 };

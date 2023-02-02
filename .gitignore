@@ -3,3 +3,5 @@
 !/subprojects/*.wrap
 !/subprojects/packagefiles/
 imgui.ini
+compile_commands.json
+.cache

@@ -57,6 +57,8 @@ GuiApp::~GuiApp() {
 }
 
 void GuiApp::UpdateGui() {
+  ImGuiIO &io = ImGui::GetIO();
+
   // Start the Dear ImGui frame
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
@@ -121,6 +123,10 @@ void GuiApp::UpdateGui() {
   clear_color[1] = clear_color_[1] * clear_color_[3];
   clear_color[2] = clear_color_[2] * clear_color_[3];
   clear_color[3] = clear_color_[3];
+
+  // camera
+  turntable_.SetSize(io.DisplaySize.x, io.DisplaySize.y);
+  turntable_.Update(projection, view);
 }
 
 void GuiApp::RenderGui() {

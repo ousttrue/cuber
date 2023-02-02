@@ -1,6 +1,8 @@
 #include "GlRenderer.h"
 #include "GuiApp.h"
 #include "GuiWindow.h"
+#include "TurnTable.h"
+#include <DirectXMath.h>
 #include <Windows.h>
 
 #include <GL/GL.h>
@@ -15,7 +17,6 @@ int main(int, char **) {
   GuiApp app(window, gui.GlslVersion());
 
   GlRenderer renderer;
-  CameraMatrix camera = {};
 
   // main loop
   int display_w, display_h;
@@ -29,7 +30,7 @@ int main(int, char **) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     // scene
-    renderer.RenderScene(*time, camera);
+    renderer.RenderScene(*time, app.projection, app.view);
 
     // app
     app.RenderGui();
