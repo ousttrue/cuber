@@ -27,23 +27,26 @@ void Vbo::Unbind() { glBindBuffer(GL_ARRAY_BUFFER, 0); }
 //
 // Vao
 //
-Vao::Vao(uint32_t vao, const std::shared_ptr<Vbo> vbo) : vao_(vao), vbo_(vbo) {}
+Vao::Vao(uint32_t vao, std::span<VertexLayout> layouts)
+    : vao_(vao), layouts_(layouts.begin(), layouts.end()) {
+  Bind();
+  for (int i = 0; i < layouts.size(); ++i) {
+    auto &layout = layouts[i];
+    glEnableVertexAttribArray(layout.location);
+    layout.vbo->Bind();
+    glVertexAttribPointer(
+        layout.location, layout.count, layout.type, GL_FALSE, layout.stride,
+        reinterpret_cast<void *>(static_cast<uint64_t>(layout.offset)));
+  }
+  Unbind();
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
 Vao::~Vao() {}
 std::shared_ptr<Vao> Vao::Create(const std::shared_ptr<Vbo> &vbo,
                                  std::span<VertexLayout> layouts) {
   GLuint vao;
   glGenVertexArrays(1, &vao);
-  auto ptr = std::shared_ptr<Vao>(new Vao(vao, vbo));
-  ptr->Bind();
-  vbo->Bind();
-  for (int i = 0; i < layouts.size(); ++i) {
-    glEnableVertexAttribArray(i);
-    auto &layout = layouts[i];
-    glVertexAttribPointer(i, layout.count, layout.type, GL_FALSE, layout.stride,
-                          (void *)layout.offset);
-  }
-  vbo->Unbind();
-  ptr->Unbind();
+  auto ptr = std::shared_ptr<Vao>(new Vao(vao, layouts));
   return ptr;
 }
 void Vao::Bind() { glBindVertexArray(vao_); }

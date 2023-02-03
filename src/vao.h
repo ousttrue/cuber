@@ -2,6 +2,7 @@
 #include <memory>
 #include <span>
 #include <stdint.h>
+#include <vector>
 
 namespace cuber {
 
@@ -17,6 +18,8 @@ public:
 };
 
 struct VertexLayout {
+  uint32_t location;
+  std::shared_ptr<Vbo> vbo;
   uint32_t type;
   uint32_t count;
   uint32_t offset;
@@ -25,10 +28,10 @@ struct VertexLayout {
 
 class Vao {
   uint32_t vao_ = 0;
-  std::shared_ptr<Vbo> vbo_;
+  std::vector<VertexLayout> layouts_;
 
 public:
-  Vao(uint32_t vao, const std::shared_ptr<Vbo> vbo);
+  Vao(uint32_t vao, std::span<VertexLayout> layouts);
   ~Vao();
   static std::shared_ptr<Vao> Create(const std::shared_ptr<Vbo> &vbo,
                                      std::span<VertexLayout> layouts);

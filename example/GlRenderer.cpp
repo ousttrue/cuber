@@ -76,6 +76,16 @@ struct GlRendererImpl {
     if (!shader_) {
       throw std::runtime_error("cuber::ShaderProgram::Create");
     }
+    auto location = shader_->AttributeLocation("vPos");
+    if (!location) {
+      throw std::runtime_error("glGetUniformLocation");
+    }
+    auto vpos_location = *location;
+    location = shader_->AttributeLocation("vCol");
+    if (!location) {
+      throw std::runtime_error("glGetUniformLocation");
+    }
+    auto vcol_location = *location;
 
     auto vbo = cuber::Vbo::Create(sizeof(vertices), vertices);
     if (!vbo) {
@@ -83,12 +93,16 @@ struct GlRendererImpl {
     }
     cuber::VertexLayout layouts[] = {
         {
+            .location = vpos_location,
+            .vbo = vbo,
             .type = GL_FLOAT,
             .count = 2,
             .offset = 0,
             .stride = sizeof(vertices[0]),
         },
         {
+            .location = vcol_location,
+            .vbo = vbo,
             .type = GL_FLOAT,
             .count = 3,
             .offset = 8,
