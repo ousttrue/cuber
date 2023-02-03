@@ -49,13 +49,21 @@ struct GlRendererImpl {
     std::cout << bvh << std::endl;
 
     for (auto &joint : bvh.joints) {
-      cuber::xyz offset{
-          joint.worldOffset.x,
-          joint.worldOffset.y,
-          joint.worldOffset.z,
+      cuber::Instance instance{
+          .matrix =
+              {
+                  1, 0, 0,
+                  0, //
+                  0, 1, 0,
+                  0, //
+                  0, 0, 1,
+                  0, //
+                  joint.worldOffset.x, joint.worldOffset.y, joint.worldOffset.z,
+                  1, //
+              },
       };
-      instances.push_back({.position = offset});
-    }
+      instances.push_back(instance);
+    };
   }
 };
 

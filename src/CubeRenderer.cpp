@@ -9,23 +9,25 @@ static const char *vertex_shader_text = R"(
 uniform mat4 VP;
 in vec3 vPos;
 in vec4 vCol;
-in vec3 iPos;
-// in vec4 iRot;
+in vec4 iRow0;
+in vec4 iRow1;
+in vec4 iRow2;
+in vec4 iRow3;
 out vec4 color;
 
-mat4 translation(vec3 t)
+mat4 transform(vec4 r0, vec4 r1, vec4 r2, vec4 r3)
 {
   return mat4(
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    t.x, t.y, t.z, 1
+    r0.x, r0.y, r0.z, r0.w,
+    r1.x, r1.y, r1.z, r1.w,
+    r2.x, r2.y, r2.z, r2.w,
+    r3.x, r3.y, r3.z, r3.w
   );
 }
 
 void main()
 {
-    gl_Position = VP * translation(iPos) * vec4(vPos, 1.0);
+    gl_Position = VP * transform(iRow0, iRow1, iRow2, iRow3) * vec4(vPos, 1.0);
     color = vCol;
 }
 )";
@@ -174,7 +176,7 @@ CubeRenderer::CubeRenderer() {
 
   auto vpos_location = get_location(shader_, "vPos");
   auto vcol_location = get_location(shader_, "vCol");
-  auto ipos_location = get_location(shader_, "iPos");
+  // auto ipos_location = get_location(shader_, "iPos");
   // auto irot_location = get_location(shader_, "iRot");
 
   Builder builder;
@@ -212,24 +214,43 @@ CubeRenderer::CubeRenderer() {
           .offset = 12,
           .stride = sizeof(Vertex),
       },
+      //
       {
-          .location = ipos_location,
+          .location = 2,
           .vbo = instance_vbo_,
           .type = GL_FLOAT,
-          .count = 3,
+          .count = 4,
           .offset = 0,
           .stride = sizeof(Instance),
           .divisor = 1,
       },
-      // {
-      //     .location = irot_location,
-      //     .vbo = instance_vbo_,
-      //     .type = GL_FLOAT,
-      //     .count = 4,
-      //     .offset = 12,
-      //     .stride = sizeof(Instance),
-      //     .divisor = 1,
-      // },
+      {
+          .location = 3,
+          .vbo = instance_vbo_,
+          .type = GL_FLOAT,
+          .count = 4,
+          .offset = 16,
+          .stride = sizeof(Instance),
+          .divisor = 1,
+      },
+      {
+          .location = 4,
+          .vbo = instance_vbo_,
+          .type = GL_FLOAT,
+          .count = 4,
+          .offset = 32,
+          .stride = sizeof(Instance),
+          .divisor = 1,
+      },
+      {
+          .location = 5,
+          .vbo = instance_vbo_,
+          .type = GL_FLOAT,
+          .count = 4,
+          .offset = 48,
+          .stride = sizeof(Instance),
+          .divisor = 1,
+      },
   };
   auto ibo = cuber::Ibo::Create(sizeof(uint32_t) * builder.indices.size(),
                                 builder.indices.data());

@@ -6,8 +6,7 @@
 namespace cuber {
 
 struct Instance {
-  xyz position = {0, 0, 0};
-  xyzw rotation = {0, 0, 0, 1};
+  float matrix[16];
 };
 
 class CubeRenderer {
