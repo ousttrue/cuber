@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     glViewport(0, 0, display_w, display_h);
     glClearColor(app.clear_color[0], app.clear_color[1], app.clear_color[2],
                  app.clear_color[3]);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // scene
     renderer.RenderScene(*time, app.projection, app.view);

@@ -17,6 +17,17 @@ public:
   void Unbind();
 };
 
+class Ibo {
+  uint32_t ibo_ = 0;
+
+public:
+  Ibo(uint32_t ibo);
+  ~Ibo();
+  static std::shared_ptr<Ibo> Create(uint32_t size, const void *data);
+  void Bind();
+  void Unbind();
+};
+
 struct VertexLayout {
   uint32_t location;
   std::shared_ptr<Vbo> vbo;
@@ -29,12 +40,12 @@ struct VertexLayout {
 class Vao {
   uint32_t vao_ = 0;
   std::vector<VertexLayout> layouts_;
-
+  std::shared_ptr<Ibo> ibo_;
 public:
-  Vao(uint32_t vao, std::span<VertexLayout> layouts);
+  Vao(uint32_t vao, std::span<VertexLayout> layouts, const std::shared_ptr<Ibo> &ibo);
   ~Vao();
-  static std::shared_ptr<Vao> Create(const std::shared_ptr<Vbo> &vbo,
-                                     std::span<VertexLayout> layouts);
+  static std::shared_ptr<Vao> Create(std::span<VertexLayout> layouts,
+                                     const std::shared_ptr<Ibo> &ibo = {});
   void Bind();
   void Unbind();
   void Draw(uint32_t offset, uint32_t count);

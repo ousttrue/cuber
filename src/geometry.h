@@ -4,16 +4,23 @@
 namespace cuber {
 
 struct xyz {
-  float x = 0;
-  float y = 0;
-  float z = 0;
+  float x;
+  float y;
+  float z;
+};
+
+struct xyzw {
+  float x;
+  float y;
+  float z;
+  float w;
 };
 
 struct rgba {
-  float r = 1;
-  float g = 1;
-  float b = 1;
-  float a = 1;
+  float r;
+  float g;
+  float b;
+  float a;
 };
 
 template <typename T>

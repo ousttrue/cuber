@@ -1,6 +1,5 @@
 #include "GlRenderer.h"
 #include "Bvh.h"
-#include <DirectXMath.h>
 #include <GL/glew.h>
 #include <cuber.h>
 #include <fstream>
@@ -23,114 +22,14 @@ static std::vector<T> ReadAllBytes(const std::string &filename) {
   return buffer;
 }
 
-static const struct {
-  float x, y;
-  float r, g, b;
-} vertices[3] = {{-0.6f, -0.4f, 1.f, 0.f, 0.f},
-                 {0.6f, -0.4f, 0.f, 1.f, 0.f},
-                 {0.f, 0.6f, 0.f, 0.f, 1.f}};
-
-static const char *vertex_shader_text = R"(
-uniform mat4 MVP;
-in vec2 vPos;
-in vec3 vCol;
-out vec3 color;
-void main()
-{
-    gl_Position = MVP * vec4(vPos, 0.0, 1.0);
-    color = vCol;
-}
-)";
-
-static const char *fragment_shader_text = R"(
-in vec3 color;
-out vec4 FragColor;
-void main()
-{
-    FragColor = vec4(color, 1.0);
-}
-)";
-
 struct GlRendererImpl {
-  std::shared_ptr<cuber::Vao> vao_;
-  std::shared_ptr<cuber::ShaderProgram> shader_;
   cuber::CubeRenderer cubes;
 
-  GlRendererImpl() {
-
-    // auto glsl_version = "#version 150";
-    auto glsl_version = "#version 310 es\nprecision highp float;";
-
-    std::string_view vs[] = {
-        glsl_version,
-        "\n",
-        vertex_shader_text,
-    };
-    std::string_view fs[] = {
-        glsl_version,
-        "\n",
-        fragment_shader_text,
-    };
-    shader_ = cuber::ShaderProgram::Create(
-        [](auto msg) { std::cout << msg << std::endl; }, vs, fs);
-    if (!shader_) {
-      throw std::runtime_error("cuber::ShaderProgram::Create");
-    }
-    auto location = shader_->AttributeLocation("vPos");
-    if (!location) {
-      throw std::runtime_error("glGetUniformLocation");
-    }
-    auto vpos_location = *location;
-    location = shader_->AttributeLocation("vCol");
-    if (!location) {
-      throw std::runtime_error("glGetUniformLocation");
-    }
-    auto vcol_location = *location;
-
-    auto vbo = cuber::Vbo::Create(sizeof(vertices), vertices);
-    if (!vbo) {
-      throw std::runtime_error("cuber::Vbo::Create");
-    }
-    cuber::VertexLayout layouts[] = {
-        {
-            .location = vpos_location,
-            .vbo = vbo,
-            .type = GL_FLOAT,
-            .count = 2,
-            .offset = 0,
-            .stride = sizeof(vertices[0]),
-        },
-        {
-            .location = vcol_location,
-            .vbo = vbo,
-            .type = GL_FLOAT,
-            .count = 3,
-            .offset = 8,
-            .stride = sizeof(vertices[0]),
-        },
-    };
-    vao_ = cuber::Vao::Create(vbo, layouts);
-    if (!vao_) {
-      throw std::runtime_error("cuber::Vao::Create");
-    }
-
-    cubes.Push(0.5f, {});
-  }
+  GlRendererImpl() { cubes.Push(0.5f, {}); }
   ~GlRendererImpl() {}
 
   void Render(RenderTime time, const float projection[16],
               const float view[16]) {
-    auto angle = DirectX::XMConvertToRadians(time.count()) * 10.0f;
-    auto m = DirectX::XMMatrixRotationZ(angle);
-    auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)view);
-    auto p = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)projection);
-    DirectX::XMFLOAT4X4 mvp;
-    DirectX::XMStoreFloat4x4(&mvp, m * v * p);
-
-    shader_->Bind();
-    shader_->SetUniformMatrix([](auto err) {}, "MVP", mvp);
-
-    vao_->Draw(0, 3);
 
     cubes.Render(projection, view);
   }
