@@ -4,13 +4,26 @@
 #include <iostream>
 
 static const char *vertex_shader_text = R"(
-uniform mat4 MVP;
+uniform mat4 VP;
 in vec3 vPos;
 in vec4 vCol;
+in vec3 iPos;
+// in vec4 iRot;
 out vec4 color;
+
+mat4 translation(vec3 t)
+{
+  return mat4(
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    t.x, t.y, t.z, 1
+  );
+}
+
 void main()
 {
-    gl_Position = MVP * vec4(vPos, 1.0);
+    gl_Position = VP * translation(iPos) * vec4(vPos, 1.0);
     color = vCol;
 }
 )";
@@ -126,6 +139,16 @@ struct Builder {
   }
 };
 
+static uint32_t
+get_location(const std::shared_ptr<cuber::ShaderProgram> &shader,
+             const char *name) {
+  auto location = shader->AttributeLocation(name);
+  if (!location) {
+    throw std::runtime_error("glGetUniformLocation");
+  }
+  return *location;
+}
+
 CubeRenderer::CubeRenderer() {
 
   // auto glsl_version = "#version 150";
@@ -146,16 +169,11 @@ CubeRenderer::CubeRenderer() {
   if (!shader_) {
     throw std::runtime_error("cuber::ShaderProgram::Create");
   }
-  auto location = shader_->AttributeLocation("vPos");
-  if (!location) {
-    throw std::runtime_error("glGetUniformLocation");
-  }
-  auto vpos_location = *location;
-  location = shader_->AttributeLocation("vCol");
-  if (!location) {
-    throw std::runtime_error("glGetUniformLocation");
-  }
-  auto vcol_location = *location;
+
+  auto vpos_location = get_location(shader_, "vPos");
+  auto vcol_location = get_location(shader_, "vCol");
+  auto ipos_location = get_location(shader_, "iPos");
+  // auto irot_location = get_location(shader_, "iRot");
 
   Builder builder;
   for (auto face : cube_faces) {
@@ -169,6 +187,12 @@ CubeRenderer::CubeRenderer() {
   if (!vbo) {
     throw std::runtime_error("cuber::Vbo::Create");
   }
+
+  instance_vbo_ = cuber::Vbo::Create(sizeof(Instance) * 65535);
+  if (!instance_vbo_) {
+    throw std::runtime_error("cuber::Vbo::Create");
+  }
+
   cuber::VertexLayout layouts[] = {
       {
           .location = vpos_location,
@@ -186,6 +210,24 @@ CubeRenderer::CubeRenderer() {
           .offset = 12,
           .stride = sizeof(Vertex),
       },
+      {
+          .location = ipos_location,
+          .vbo = instance_vbo_,
+          .type = GL_FLOAT,
+          .count = 3,
+          .offset = 0,
+          .stride = sizeof(Instance),
+          .divisor = 1,
+      },
+      // {
+      //     .location = irot_location,
+      //     .vbo = instance_vbo_,
+      //     .type = GL_FLOAT,
+      //     .count = 4,
+      //     .offset = 12,
+      //     .stride = sizeof(Instance),
+      //     .divisor = 1,
+      // },
   };
   auto ibo = cuber::Ibo::Create(sizeof(uint32_t) * builder.indices.size(),
                                 builder.indices.data());
@@ -198,7 +240,10 @@ CubeRenderer::CubeRenderer() {
   }
 
   cubes_.push_back({
-
+      .position = {1, 0, 0},
+  });
+  cubes_.push_back({
+      .position = {-1, 1, 0},
   });
 
   glEnable(GL_DEPTH_TEST);
@@ -207,17 +252,16 @@ CubeRenderer::CubeRenderer() {
 CubeRenderer::~CubeRenderer() {}
 void CubeRenderer::Push(float size, const xyz &pos) {}
 void CubeRenderer::Render(const float projection[16], const float view[16]) {
-  // auto angle = DirectX::XMConvertToRadians(time.count()) * 10.0f;
-  // auto m = DirectX::XMMatrixRotationZ(angle);
   auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)view);
   auto p = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)projection);
-  DirectX::XMFLOAT4X4 mvp;
-  DirectX::XMStoreFloat4x4(&mvp, v * p);
+  DirectX::XMFLOAT4X4 vp;
+  DirectX::XMStoreFloat4x4(&vp, v * p);
 
   shader_->Bind();
-  shader_->SetUniformMatrix([](auto err) {}, "MVP", mvp);
+  shader_->SetUniformMatrix([](auto err) {}, "VP", vp);
 
-  vao_->Draw(0, cubes_.size() * 36);
+  instance_vbo_->Upload(sizeof(Instance) * cubes_.size(), cubes_.data());
+  vao_->DrawInstance(cubes_.size(), cubes_.size() * 36);
 }
 
 } // namespace cuber

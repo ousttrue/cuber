@@ -5,7 +5,7 @@
 #include <memory>
 namespace cuber {
 
-struct Cube {
+struct Instance {
   xyz position = {0, 0, 0};
   xyzw rotation = {0, 0, 0, 1};
 };
@@ -13,8 +13,8 @@ struct Cube {
 class CubeRenderer {
   std::shared_ptr<Vao> vao_;
   std::shared_ptr<ShaderProgram> shader_;
-
-  std::vector<Cube> cubes_;
+  std::shared_ptr<Vbo> instance_vbo_;
+  std::vector<Instance> cubes_;
 
 public:
   CubeRenderer(const CubeRenderer &) = delete;

@@ -23,6 +23,11 @@ std::shared_ptr<Vbo> Vbo::Create(uint32_t size, const void *data) {
 }
 void Vbo::Bind() { glBindBuffer(GL_ARRAY_BUFFER, vbo_); }
 void Vbo::Unbind() { glBindBuffer(GL_ARRAY_BUFFER, 0); }
+void Vbo::Upload(uint32_t size, const void *data) {
+  Bind();
+  glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
+  Unbind();
+}
 
 //
 // Ibo
@@ -62,6 +67,10 @@ Vao::Vao(uint32_t vao, std::span<VertexLayout> layouts,
     glVertexAttribPointer(
         layout.location, layout.count, layout.type, GL_FALSE, layout.stride,
         reinterpret_cast<void *>(static_cast<uint64_t>(layout.offset)));
+    if (layout.divisor) {
+      auto a = glVertexAttribDivisor;
+      glVertexAttribDivisor(layout.location, layout.divisor);
+    }
   }
   Unbind();
   if (ibo_) {
@@ -79,7 +88,7 @@ std::shared_ptr<Vao> Vao::Create(std::span<VertexLayout> layouts,
 }
 void Vao::Bind() { glBindVertexArray(vao_); }
 void Vao::Unbind() { glBindVertexArray(0); }
-void Vao::Draw(uint32_t offset, uint32_t count) {
+void Vao::Draw(uint32_t count, uint32_t offset) {
   Bind();
   if (ibo_) {
     glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT,
@@ -87,6 +96,13 @@ void Vao::Draw(uint32_t offset, uint32_t count) {
   } else {
     glDrawArrays(GL_TRIANGLES, offset, count);
   }
+  Unbind();
+}
+void Vao::DrawInstance(uint32_t primcount, uint32_t count, uint32_t offset) {
+  Bind();
+  glDrawElementsInstanced(
+      GL_TRIANGLES, count, GL_UNSIGNED_INT,
+      reinterpret_cast<void *>(static_cast<uint64_t>(offset)), primcount);
   Unbind();
 }
 
