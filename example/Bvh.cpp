@@ -114,8 +114,9 @@ struct BvhImpl {
   std::vector<BvhJoint> &joints_;
   std::vector<BvhJoint> &endsites_;
   std::vector<float> &frames_;
-  uint32_t frame_count_;
-  BvhTime frame_time_;
+  uint32_t frame_count_ = 0;
+  BvhTime frame_time_ = {};
+  uint32_t channel_count_ = 0;
 
   BvhImpl(std::vector<BvhJoint> &joints, std::vector<BvhJoint> &endsites,
           std::vector<float> &frames, std::string_view src)
@@ -154,11 +155,11 @@ struct BvhImpl {
     frame_time_ = BvhTime(*frameTime);
 
     // each frame
-    int channel_count = 0;
+    channel_count_ = 0;
     for (auto &joint : joints_) {
-      channel_count += joint.channels.size();
+      channel_count_ += joint.channels.size();
     }
-    frames_.reserve(frame_count_ * channel_count);
+    frames_.reserve(frame_count_ * channel_count_);
     for (int i = 0; i < frame_count_; ++i) {
       auto line = token_.token(get_eol);
       if (!line) {
@@ -166,7 +167,7 @@ struct BvhImpl {
       }
 
       Tokenizer line_token(*line);
-      for (int j = 0; j < channel_count; ++j) {
+      for (int j = 0; j < channel_count_; ++j) {
         if (auto value = line_token.number<float>(is_space)) {
           frames_.push_back(*value);
         } else {
@@ -174,7 +175,7 @@ struct BvhImpl {
         }
       }
     }
-    assert(frames_.size() == frame_count_ * channel_count);
+    assert(frames_.size() == frame_count_ * channel_count_);
 
     return true;
   }
@@ -334,5 +335,6 @@ bool Bvh::Parse(std::string_view src) {
     return false;
   }
   frame_time = parser.frame_time_;
+  frame_channel_count = parser.channel_count_;
   return true;
 }

@@ -30,8 +30,16 @@ struct GlRendererImpl {
   GlRendererImpl() {}
   ~GlRendererImpl() {}
 
+  std::optional<RenderTime> time_;
+
   void Render(RenderTime time, const float projection[16],
               const float view[16]) {
+    RenderTime elapsed = time_ ? (time - *time_) : RenderTime{};
+    time_ = time;
+    auto frame = bvh.GetFrame(elapsed);
+
+    
+
     cubes.Render(projection, view, instances);
   }
 

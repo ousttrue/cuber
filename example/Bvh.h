@@ -101,6 +101,8 @@ public:
   std::vector<BvhJoint> endsites;
   BvhTime frame_time = {};
   std::vector<float> frames;
+  uint32_t frame_channel_count = 0;
+  uint32_t FrameCount() const { return frames.size() / frame_channel_count; }
   Bvh();
   ~Bvh();
   bool Parse(std::string_view src);
@@ -111,6 +113,14 @@ public:
       }
     }
     return nullptr;
+  }
+  std::span<float> GetFrame(BvhTime time) {
+    auto index = (int)(time / frame_time);
+    if (index >= FrameCount()) {
+      index = index % FrameCount();
+    }
+    auto begin = frames.data() + index * frame_channel_count;
+    return {begin, begin + frame_channel_count};
   }
 };
 

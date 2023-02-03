@@ -12,6 +12,7 @@ executable(
         'GlRenderer.cpp',
         'TurnTable.cpp',
         'Bvh.cpp',
+        'BvhSolver.cpp',
     ],
     install: true,
     dependencies: [
