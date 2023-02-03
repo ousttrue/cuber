@@ -17,13 +17,7 @@ using RenderTime = std::chrono::duration<float, std::ratio<1, 1>>;
 // };
 
 class GlRenderer {
-  uint32_t vertex_buffer = 0;
-  uint32_t vertex_shader = 0;
-  uint32_t fragment_shader = 0;
-  uint32_t program = 0;
-  uint32_t mvp_location = -1;
-  uint32_t vpos_location = -1;
-  uint32_t vcol_location = -1;
+  struct GlRendererImpl *impl_ = nullptr;
 
 public:
   GlRenderer(const GlRenderer &) = delete;
