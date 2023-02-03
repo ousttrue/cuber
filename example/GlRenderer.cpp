@@ -1,9 +1,8 @@
 #include "GlRenderer.h"
 #include "Bvh.h"
-#include <CubeRenderer.h>
 #include <DirectXMath.h>
 #include <GL/glew.h>
-#include <LineRenderer.h>
+#include <cuber.h>
 #include <fstream>
 #include <iostream>
 
@@ -31,11 +30,11 @@ static const struct {
                  {0.6f, -0.4f, 0.f, 1.f, 0.f},
                  {0.f, 0.6f, 0.f, 0.f, 1.f}};
 
-static const char *vertex_shader_text = R"(#version 110
+static const char *vertex_shader_text = R"(
 uniform mat4 MVP;
-attribute vec3 vCol;
-attribute vec2 vPos;
-varying vec3 color;
+in vec2 vPos;
+in vec3 vCol;
+out vec3 color;
 void main()
 {
     gl_Position = MVP * vec4(vPos, 0.0, 1.0);
@@ -44,68 +43,64 @@ void main()
 )";
 
 static const char *fragment_shader_text = R"(
-#version 110
-varying vec3 color;
+in vec3 color;
+out vec4 FragColor;
 void main()
 {
-    gl_FragColor = vec4(color, 1.0);
+    FragColor = vec4(color, 1.0);
 }
 )";
 
 struct GlRendererImpl {
-  cuber::LineRenderer liner;
-  GLuint vertex_buffer = 0;
-  GLuint vertex_shader = 0;
-  GLuint fragment_shader = 0;
-  GLuint program = 0;
-  GLuint mvp_location = -1;
-  GLuint vpos_location = -1;
-  GLuint vcol_location = -1;
+  std::shared_ptr<cuber::Vao> vao_;
+  std::shared_ptr<cuber::ShaderProgram> shader_;
+  cuber::CubeRenderer cubes;
 
   GlRendererImpl() {
-    glGenBuffers(1, &vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader, 1, &vertex_shader_text, NULL);
-    glCompileShader(vertex_shader);
+    // auto glsl_version = "#version 150";
+    auto glsl_version = "#version 310 es\nprecision highp float;";
 
-    fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader, 1, &fragment_shader_text, NULL);
-    glCompileShader(fragment_shader);
-
-    program = glCreateProgram();
-    glAttachShader(program, vertex_shader);
-    glAttachShader(program, fragment_shader);
-    glLinkProgram(program);
-
-    int location = glGetUniformLocation(program, "MVP");
-    if (location == -1) {
-      throw std::runtime_error("glGetUniformLocation");
+    std::string_view vs[] = {
+        glsl_version,
+        "\n",
+        vertex_shader_text,
+    };
+    std::string_view fs[] = {
+        glsl_version,
+        "\n",
+        fragment_shader_text,
+    };
+    shader_ = cuber::ShaderProgram::Create(
+        [](auto msg) { std::cout << msg << std::endl; }, vs, fs);
+    if (!shader_) {
+      throw std::runtime_error("cuber::ShaderProgram::Create");
     }
-    mvp_location = location;
 
-    location = glGetAttribLocation(program, "vPos");
-    if (location == -1) {
-      throw std::runtime_error("glGetUniformLocation");
+    auto vbo = cuber::Vbo::Create(sizeof(vertices), vertices);
+    if (!vbo) {
+      throw std::runtime_error("cuber::Vbo::Create");
     }
-    vpos_location = location;
-
-    location = glGetAttribLocation(program, "vCol");
-    if (location == -1) {
-      throw std::runtime_error("glGetUniformLocation");
+    cuber::VertexLayout layouts[] = {
+        {
+            .type = GL_FLOAT,
+            .count = 2,
+            .offset = 0,
+            .stride = sizeof(vertices[0]),
+        },
+        {
+            .type = GL_FLOAT,
+            .count = 3,
+            .offset = 8,
+            .stride = sizeof(vertices[0]),
+        },
+    };
+    vao_ = cuber::Vao::Create(vbo, layouts);
+    if (!vao_) {
+      throw std::runtime_error("cuber::Vao::Create");
     }
-    vcol_location = location;
 
-    glEnableVertexAttribArray(vpos_location);
-    glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE,
-                          sizeof(vertices[0]), (void *)0);
-    glEnableVertexAttribArray(vcol_location);
-    glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
-                          sizeof(vertices[0]), (void *)(sizeof(float) * 2));
-
-    liner.PushGrid(10.0f);
+    cubes.Push(0.5f, {});
   }
   ~GlRendererImpl() {}
 
@@ -118,11 +113,12 @@ struct GlRendererImpl {
     DirectX::XMFLOAT4X4 mvp;
     DirectX::XMStoreFloat4x4(&mvp, m * v * p);
 
-    glUseProgram(program);
-    glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const float *)&mvp);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    shader_->Bind();
+    shader_->SetUniformMatrix([](auto err) {}, "MVP", mvp);
 
-    liner.Render(projection, view);
+    vao_->Draw(0, 3);
+
+    cubes.Render(projection, view);
   }
 };
 

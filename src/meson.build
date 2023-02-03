@@ -2,8 +2,9 @@ glew_dep = dependency('glew')
 cuber_lib = static_library(
     'cuber',
     [
+        'shader.cpp',
         'CubeRenderer.cpp',
-        'LineRenderer.cpp',
+        'vao.cpp',
     ],
     dependencies: [glew_dep],
 )

@@ -1,8 +1,8 @@
 #include "shader.h"
 #include <GL/glew.h>
 
-static uint32_t compile(const std::function<void(std::string_view)> &onError,
-                        GLenum shaderType, std::span<std::string_view> srcs) {
+static GLuint compile(const std::function<void(std::string_view)> &onError,
+                      GLenum shaderType, std::span<std::string_view> srcs) {
   auto shader = glCreateShader(shaderType);
 
   std::vector<const GLchar *> string;
@@ -23,14 +23,46 @@ static uint32_t compile(const std::function<void(std::string_view)> &onError,
     std::vector<GLchar> errorLog(maxLength);
     glGetShaderInfoLog(shader, maxLength, &maxLength, &errorLog[0]);
 
+    glDeleteShader(shader); // Don't leak the shader.
+
     // Provide the infolog in whatever manor you deem best.
     onError({errorLog.begin(), errorLog.end()});
-
     // Exit with failure.
-    glDeleteShader(shader); // Don't leak the shader.
     return 0;
   }
   return shader;
+}
+
+static GLuint link(const std::function<void(std::string_view)> &onError,
+                   GLuint vs, GLuint fs) {
+  GLuint program = glCreateProgram();
+
+  // Attach shaders as necessary.
+  glAttachShader(program, vs);
+  glAttachShader(program, fs);
+
+  // Link the program.
+  glLinkProgram(program);
+
+  GLint isLinked = 0;
+  glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+  if (isLinked == GL_FALSE) {
+    GLint maxLength = 0;
+    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
+
+    // The maxLength includes the NULL character
+    std::vector<GLchar> infoLog(maxLength);
+    glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
+
+    // The program is useless now. So delete it.
+    glDeleteProgram(program);
+
+    // Provide the infolog in whatever manner you deem best.
+    onError({infoLog.begin(), infoLog.end()});
+    // Exit with failure.
+    return {};
+  }
+  return program;
 }
 
 namespace cuber {
@@ -45,8 +77,41 @@ ShaderProgram::Create(const std::function<void(std::string_view)> &onError,
                       std::span<std::string_view> fs_srcs) {
 
   auto vs = compile(onError, GL_VERTEX_SHADER, vs_srcs);
+  if (!vs) {
+    return {};
+  }
+  auto fs = compile(onError, GL_FRAGMENT_SHADER, fs_srcs);
+  if (!fs) {
+    return {};
+  }
 
-  return {};
+  auto program = link(onError, vs, fs);
+  if (!program) {
+    return {};
+  }
+
+  return std::shared_ptr<ShaderProgram>(new ShaderProgram(program));
+}
+
+void ShaderProgram::Bind() { glUseProgram(program_); }
+void ShaderProgram::Unbind() { glUseProgram(0); }
+
+std::optional<uint32_t> ShaderProgram::AttributeLocation(const char *name) {
+  auto location = glGetAttribLocation(program_, name);
+  if (location < 0) {
+    return {};
+  }
+  return static_cast<uint32_t>(location);
+}
+
+void ShaderProgram::_SetUniformMatrix(const ErrorHandler &onError,
+                                      const char *name, const float m[16]) {
+  auto location = glGetUniformLocation(program_, name);
+  if (location < 0) {
+    onError("fail to glGetUniformLocation");
+    return;
+  }
+  glUniformMatrix4fv(location, 1, GL_FALSE, m);
 }
 
 } // namespace cuber
