@@ -9,7 +9,18 @@ struct BvhOffset {
   float x;
   float y;
   float z;
+
+  BvhOffset &operator+=(const BvhOffset &rhs) {
+    x += rhs.x;
+    y += rhs.y;
+    z += rhs.z;
+    return *this;
+  }
 };
+inline std::ostream &operator<<(std::ostream &os, const BvhOffset &offset) {
+  os << "[" << offset.x << ", " << offset.y << ", " << offset.z << "]";
+  return os;
+}
 
 enum class BvhChannelTypes {
   None,
@@ -72,13 +83,13 @@ inline std::ostream &operator<<(std::ostream &os, const BvhChannels channel) {
 struct BvhJoint {
   std::string name;
   int parent;
-  BvhOffset offset;
+  BvhOffset localOffset;
+  BvhOffset worldOffset;
   BvhChannels channels;
 };
 
 inline std::ostream &operator<<(std::ostream &os, const BvhJoint &joint) {
-  os << joint.name << ": [" << joint.offset.x << ", " << joint.offset.y << ", "
-     << joint.offset.z << "]: " << joint.channels;
+  os << joint.name << ": " << joint.worldOffset << " " << joint.channels;
   return os;
 }
 
@@ -93,6 +104,14 @@ public:
   Bvh();
   ~Bvh();
   bool Parse(std::string_view src);
+  const BvhJoint *GetParent(int parent) const {
+    for (auto &joint : joints) {
+      if (joint.parent == parent) {
+        return &joint;
+      }
+    }
+    return nullptr;
+  }
 };
 
 inline std::ostream &operator<<(std::ostream &os, const Bvh &bvh) {

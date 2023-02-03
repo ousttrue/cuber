@@ -3,6 +3,8 @@
 #include <GL/glew.h>
 #include <iostream>
 
+const int CUBE_INDEX_COUNT = 36;
+
 static const char *vertex_shader_text = R"(
 uniform mat4 VP;
 in vec3 vPos;
@@ -238,20 +240,13 @@ CubeRenderer::CubeRenderer() {
   if (!vao_) {
     throw std::runtime_error("cuber::Vao::Create");
   }
-
-  cubes_.push_back({
-      .position = {1, 0, 0},
-  });
-  cubes_.push_back({
-      .position = {-1, 1, 0},
-  });
-
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_CULL_FACE);
 }
 CubeRenderer::~CubeRenderer() {}
-void CubeRenderer::Push(float size, const xyz &pos) {}
-void CubeRenderer::Render(const float projection[16], const float view[16]) {
+void CubeRenderer::Render(const float projection[16], const float view[16],
+                          std::span<Instance> instances) {
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
+
   auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)view);
   auto p = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)projection);
   DirectX::XMFLOAT4X4 vp;
@@ -260,8 +255,8 @@ void CubeRenderer::Render(const float projection[16], const float view[16]) {
   shader_->Bind();
   shader_->SetUniformMatrix([](auto err) {}, "VP", vp);
 
-  instance_vbo_->Upload(sizeof(Instance) * cubes_.size(), cubes_.data());
-  vao_->DrawInstance(cubes_.size(), cubes_.size() * 36);
+  instance_vbo_->Upload(sizeof(Instance) * instances.size(), instances.data());
+  vao_->DrawInstance(instances.size(), CUBE_INDEX_COUNT);
 }
 
 } // namespace cuber

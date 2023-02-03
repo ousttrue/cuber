@@ -222,9 +222,14 @@ private:
         joints_.push_back(BvhJoint{
             .name = {name->begin(), name->end()},
             .parent = stack_.empty() ? -1 : stack_.back(),
-            .offset = *offset,
+            .localOffset = *offset,
+            .worldOffset = *offset,
             .channels = *channels,
         });
+        if (stack_.size()) {
+          auto &parent = joints_[stack_.back()];
+          joints_.back().worldOffset += parent.worldOffset;
+        }
         stack_.push_back(index);
 
         ParseJoint();
@@ -248,7 +253,7 @@ private:
         endsites_.push_back(BvhJoint{
             .name = "End Site",
             .parent = stack_.empty() ? -1 : stack_.back(),
-            .offset = *offset,
+            .localOffset = *offset,
         });
 
         if (!token_.expect("}", is_space)) {

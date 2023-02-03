@@ -24,14 +24,38 @@ static std::vector<T> ReadAllBytes(const std::string &filename) {
 
 struct GlRendererImpl {
   cuber::CubeRenderer cubes;
+  std::vector<cuber::Instance> instances;
+  Bvh bvh;
 
-  GlRendererImpl() { cubes.Push(0.5f, {}); }
+  GlRendererImpl() {}
   ~GlRendererImpl() {}
 
   void Render(RenderTime time, const float projection[16],
               const float view[16]) {
+    cubes.Render(projection, view, instances);
+  }
 
-    cubes.Render(projection, view);
+  void Load(std::string_view file) {
+
+    auto bytes = ReadAllBytes<char>(std::string(file.begin(), file.end()));
+    if (bytes.empty()) {
+      return;
+    }
+    std::cout << "load: " << file << " " << bytes.size() << "bytes"
+              << std::endl;
+    if (!bvh.Parse({bytes.begin(), bytes.end()})) {
+      return;
+    }
+    std::cout << bvh << std::endl;
+
+    for (auto &joint : bvh.joints) {
+      cuber::xyz offset{
+          joint.worldOffset.x,
+          joint.worldOffset.y,
+          joint.worldOffset.z,
+      };
+      instances.push_back({.position = offset});
+    }
   }
 };
 
@@ -44,19 +68,7 @@ GlRenderer::GlRenderer() {
 
 GlRenderer::~GlRenderer() { delete impl_; }
 
-void GlRenderer::Load(std::string_view file) {
-
-  auto bytes = ReadAllBytes<char>(std::string(file.begin(), file.end()));
-  if (bytes.empty()) {
-    return;
-  }
-  std::cout << "load: " << file << " " << bytes.size() << "bytes" << std::endl;
-  Bvh bvh;
-  if (!bvh.Parse({bytes.begin(), bytes.end()})) {
-    return;
-  }
-  std::cout << bvh << std::endl;
-}
+void GlRenderer::Load(std::string_view file) { impl_->Load(file); }
 
 void GlRenderer::RenderScene(RenderTime time, const float projection[16],
                              const float view[16]) {

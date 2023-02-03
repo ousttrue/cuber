@@ -6,7 +6,7 @@ class TurnTable {
   int width_ = 1;
   int height_ = 1;
   float nearZ_ = 0.01f;
-  float farZ_ = 100.0f;
+  float farZ_ = 1000.0f;
 
   float yaw_ = 0;
   float pitch_ = 0;

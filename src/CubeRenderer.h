@@ -14,14 +14,12 @@ class CubeRenderer {
   std::shared_ptr<Vao> vao_;
   std::shared_ptr<ShaderProgram> shader_;
   std::shared_ptr<Vbo> instance_vbo_;
-  std::vector<Instance> cubes_;
 
 public:
   CubeRenderer(const CubeRenderer &) = delete;
   CubeRenderer &operator=(const CubeRenderer &) = delete;
   CubeRenderer();
   ~CubeRenderer();
-  void Push(float size, const xyz &pos);
-  void Render(const float projection[16], const float view[16]);
+  void Render(const float projection[16], const float view[16], std::span<Instance> instances);
 };
 } // namespace cuber

@@ -1,5 +1,6 @@
 #include "vao.h"
 #include <GL/glew.h>
+#include <stdexcept>
 
 namespace cuber {
 
@@ -100,9 +101,13 @@ void Vao::Draw(uint32_t count, uint32_t offset) {
 }
 void Vao::DrawInstance(uint32_t primcount, uint32_t count, uint32_t offset) {
   Bind();
-  glDrawElementsInstanced(
-      GL_TRIANGLES, count, GL_UNSIGNED_INT,
-      reinterpret_cast<void *>(static_cast<uint64_t>(offset)), primcount);
+  if (ibo_) {
+    glDrawElementsInstanced(
+        GL_TRIANGLES, count, GL_UNSIGNED_INT,
+        reinterpret_cast<void *>(static_cast<uint64_t>(offset)), primcount);
+  } else {
+    throw std::runtime_error("not implemented");
+  }
   Unbind();
 }
 
