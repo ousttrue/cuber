@@ -3,6 +3,7 @@ c = meson.get_compiler('c')
 gl_dep = c.find_library('OpenGL32')
 imgui_dep = dependency('imgui', default_options: ['default_library=static'])
 directxmath_dep = dependency('directxmath')
+directxtk_dep = dependency('directxtk')
 executable(
     'cuber_sample',
     [
@@ -21,6 +22,7 @@ executable(
         imgui_dep,
         glew_dep,
         directxmath_dep,
+        directxtk_dep,
         cuber_dep,
     ],
 )
