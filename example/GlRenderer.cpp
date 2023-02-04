@@ -65,7 +65,7 @@ struct GlRendererImpl {
       scalingFactor = 0.01f;
     }
 
-    bvhSolver.Initialize(scalingFactor);
+    bvhSolver.Initialize();
     for (auto &joint : bvh.joints) {
       bvhSolver.PushJoint(joint);
     };

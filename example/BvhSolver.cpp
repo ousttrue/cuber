@@ -14,35 +14,28 @@ std::shared_ptr<BvhNode> BvhNode::Create(const BvhJoint &joint) {
 }
 
 // [x, y, z][c6][c5][c4][c3][c2][c1][parent][root]
-void BvhNode::ResolveFrame(int frame, DirectX::XMMATRIX m, float scaling,
+void BvhNode::ResolveFrame(int frame, DirectX::XMMATRIX m,
                            std::span<cuber::Instance>::iterator &out) {
 
   auto local = isRoot ? DirectX::XMMatrixIdentity()
-                      : DirectX::XMMatrixTranslation(localOffset.x * scaling,
-                                                     localOffset.y * scaling,
-                                                     localOffset.z * scaling);
+                      : DirectX::XMMatrixTranslation(
+                            localOffset.x, localOffset.y, localOffset.z);
   for (int i = 0; i < 6; ++i) {
     auto &curve = curves[i];
     switch (curve.chnnel) {
     case BvhChannelTypes::Xposition:
       if (isRoot) {
-        local =
-            DirectX::XMMatrixTranslation(curve.values[frame] * scaling, 0, 0) *
-            local;
+        local = DirectX::XMMatrixTranslation(curve.values[frame], 0, 0) * local;
       }
       break;
     case BvhChannelTypes::Yposition:
       if (isRoot) {
-        local =
-            DirectX::XMMatrixTranslation(0, curve.values[frame] * scaling, 0) *
-            local;
+        local = DirectX::XMMatrixTranslation(0, curve.values[frame], 0) * local;
       }
       break;
     case BvhChannelTypes::Zposition:
       if (isRoot) {
-        local =
-            DirectX::XMMatrixTranslation(0, 0, curve.values[frame] * scaling) *
-            local;
+        local = DirectX::XMMatrixTranslation(0, 0, curve.values[frame]) * local;
       }
       break;
     case BvhChannelTypes::Xrotation:
@@ -66,11 +59,11 @@ void BvhNode::ResolveFrame(int frame, DirectX::XMMATRIX m, float scaling,
   }
 BREAK:
   m = local * m;
-  auto shape = DirectX::XMMatrixScaling(0.02f, 0.02f, 0.02f);
+  auto shape = DirectX::XMMatrixScaling(1, 1, 1);
   DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4 *)&*out, shape * m);
   ++out;
   for (auto &child : children) {
-    child->ResolveFrame(frame, m, scaling, out);
+    child->ResolveFrame(frame, m, out);
   }
 }
 
@@ -112,8 +105,7 @@ void BvhSolver::PushFrame(std::span<const float>::iterator &it,
 std::span<cuber::Instance> BvhSolver::GetFrame(int frame) {
   auto span = std::span(instances_);
   auto it = span.begin();
-  assert(scalingFactor_ > 0);
-  root_->ResolveFrame(frame, DirectX::XMMatrixIdentity(), scalingFactor_, it);
+  root_->ResolveFrame(frame, DirectX::XMMatrixIdentity(), it);
   assert(it == span.end());
   return instances_;
 }
