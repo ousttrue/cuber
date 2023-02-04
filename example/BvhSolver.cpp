@@ -5,10 +5,11 @@
 //
 // BvhNode
 //
-std::shared_ptr<BvhNode> BvhNode::Create(const BvhJoint &joint) {
-  auto ptr = std::shared_ptr<BvhNode>(new BvhNode(joint.localOffset));
+std::shared_ptr<BvhNode> BvhNode::Create(const BvhJoint &joint, float scaling,
+                                         bool isRoot) {
+  auto ptr = std::shared_ptr<BvhNode>(new BvhNode(joint.localOffset, isRoot));
   for (int i = 0; i < 6; ++i) {
-    ptr->curves[i].chnnel = joint.channels.values[i];
+    ptr->curves_[i].chnnel = joint.channels.values[i];
   }
   return ptr;
 }
@@ -17,24 +18,24 @@ std::shared_ptr<BvhNode> BvhNode::Create(const BvhJoint &joint) {
 void BvhNode::ResolveFrame(int frame, DirectX::XMMATRIX m,
                            std::span<cuber::Instance>::iterator &out) {
 
-  auto local = isRoot ? DirectX::XMMatrixIdentity()
+  auto local = isRoot_ ? DirectX::XMMatrixIdentity()
                       : DirectX::XMMatrixTranslation(
-                            localOffset.x, localOffset.y, localOffset.z);
+                            localOffset_.x, localOffset_.y, localOffset_.z);
   for (int i = 0; i < 6; ++i) {
-    auto &curve = curves[i];
+    auto &curve = curves_[i];
     switch (curve.chnnel) {
     case BvhChannelTypes::Xposition:
-      if (isRoot) {
+      if (isRoot_) {
         local = DirectX::XMMatrixTranslation(curve.values[frame], 0, 0) * local;
       }
       break;
     case BvhChannelTypes::Yposition:
-      if (isRoot) {
+      if (isRoot_) {
         local = DirectX::XMMatrixTranslation(0, curve.values[frame], 0) * local;
       }
       break;
     case BvhChannelTypes::Zposition:
-      if (isRoot) {
+      if (isRoot_) {
         local = DirectX::XMMatrixTranslation(0, 0, curve.values[frame]) * local;
       }
       break;
@@ -62,7 +63,7 @@ BREAK:
   auto shape = DirectX::XMMatrixScaling(1, 1, 1);
   DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4 *)&*out, shape * m);
   ++out;
-  for (auto &child : children) {
+  for (auto &child : children_) {
     child->ResolveFrame(frame, m, out);
   }
 }
@@ -70,36 +71,25 @@ BREAK:
 //
 // BvhSolver
 //
-void BvhSolver::PushJoint(const BvhJoint &joint) {
+void BvhSolver::PushJoint(const BvhJoint &joint, float scaling) {
 
-  auto node = BvhNode::Create(joint);
+  auto node = BvhNode::Create(joint, scaling, nodes_.empty());
   nodes_.push_back(node);
   instances_.push_back({});
 
   if (nodes_.size() == 1) {
     root_ = node;
-    root_->isRoot = true;
   } else {
     auto parent = nodes_[joint.parent];
-    parent->children.push_back(node);
+    parent->AddChild(node);
   }
 }
 
-void BvhSolver::PushFrame(BvhTime time, std::span<const float> channelValues) {
+void BvhSolver::PushFrame(BvhTime time, std::span<const float> channelValues,
+                          float scaling) {
   auto it = channelValues.begin();
-  PushFrame(it, root_);
+  root_->PushFrame(it, scaling);
   assert(it == channelValues.end());
-}
-
-void BvhSolver::PushFrame(std::span<const float>::iterator &it,
-                          std::shared_ptr<BvhNode> node) {
-
-  for (int i = 0; i < node->ChannelCount(); ++i, ++it) {
-    node->curves[i].values.push_back(*it);
-  }
-  for (auto &child : node->children) {
-    PushFrame(it, child);
-  }
 }
 
 std::span<cuber::Instance> BvhSolver::GetFrame(int frame) {

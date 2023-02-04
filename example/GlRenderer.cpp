@@ -67,13 +67,13 @@ struct GlRendererImpl {
 
     bvhSolver.Initialize();
     for (auto &joint : bvh.joints) {
-      bvhSolver.PushJoint(joint);
+      bvhSolver.PushJoint(joint, scalingFactor);
     };
     int frameCount = bvh.FrameCount();
     for (int i = 0; i < frameCount; ++i) {
       auto frame = bvh.GetFrame(i);
       auto time = bvh.frame_time * i;
-      bvhSolver.PushFrame(time, frame);
+      bvhSolver.PushFrame(time, frame, scalingFactor);
     }
   }
 };
