@@ -1,8 +1,13 @@
 #include "BvhNode.h"
 
-BvhNode::BvhNode(const DirectX::XMFLOAT3 &offset, bool isRoot)
-    : isRoot_(isRoot), localOffset_(offset) {
-  DirectX::XMStoreFloat4x4(&shape_, DirectX::XMMatrixScaling(0.2f, 0.2f, 0.2f));
+const float DEFAULT_SIZE = 0.04f;
+
+BvhNode::BvhNode(std::string_view name, const DirectX::XMFLOAT3 &offset,
+                 bool isRoot)
+    : name_(name), isRoot_(isRoot), localOffset_(offset) {
+  DirectX::XMStoreFloat4x4(
+      &shape_,
+      DirectX::XMMatrixScaling(DEFAULT_SIZE, DEFAULT_SIZE, DEFAULT_SIZE));
 }
 
 std::shared_ptr<BvhNode> BvhNode::Create(const BvhJoint &joint, float scaling,
@@ -10,11 +15,56 @@ std::shared_ptr<BvhNode> BvhNode::Create(const BvhJoint &joint, float scaling,
   auto offset = DirectX::XMFLOAT3(joint.localOffset.x * scaling,
                                   joint.localOffset.y * scaling,
                                   joint.localOffset.z * scaling);
-  auto ptr = std::shared_ptr<BvhNode>(new BvhNode(offset, isRoot));
+  auto ptr = std::shared_ptr<BvhNode>(new BvhNode(joint.name, offset, isRoot));
   for (int i = 0; i < 6; ++i) {
     ptr->curves_[i].chnnel = joint.channels.values[i];
   }
   return ptr;
+}
+
+void BvhNode::CalcShape() {
+  if (!isRoot_) {
+    std::shared_ptr<BvhNode> tail;
+    switch (children_.size()) {
+    case 0:
+      return;
+
+    case 1:
+      tail = children_.front();
+      break;
+
+    default:
+      for (auto &child : children_) {
+        if (!tail) {
+          tail = child;
+        } else if (std::abs(child->localOffset_.x) <
+                   std::abs(tail->localOffset_.x)) {
+          // coose center node
+          tail = child;
+        }
+      }
+    }
+
+    auto Y = tail->localOffset_;
+    auto length = Y.Length();
+    std::cout << name_ << "=>" << tail->name_ << "=" << length << std::endl;
+    Y.Normalize();
+    DirectX::SimpleMath::Vector3 Z(0, 0, 1);
+    auto X = Y.Cross(Z);
+    Z = X.Cross(Y);
+
+    auto center = DirectX::SimpleMath::Matrix::CreateTranslation(0, 0.5f, 0);
+    auto scale = DirectX::SimpleMath::Matrix::CreateScale(DEFAULT_SIZE, length,
+                                                          DEFAULT_SIZE);
+    auto r = DirectX::SimpleMath::Matrix(X, Y, Z);
+
+    auto shape = center * scale * r;
+    DirectX::XMStoreFloat4x4(&shape_, shape);
+  }
+
+  for (auto &child : children_) {
+    child->CalcShape();
+  }
 }
 
 void BvhNode::PushFrame(std::span<const float>::iterator &it, float scaling) {
@@ -88,7 +138,7 @@ void BvhNode::ResolveFrame(int frame, DirectX::XMMATRIX m,
   }
 BREAK:
   m = local * m;
-  auto shape = DirectX::XMMatrixScaling(0.02f, 0.02f, 0.02f);
+  auto shape = DirectX::XMLoadFloat4x4(&shape_);
   DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4 *)&*out, shape * m);
   ++out;
   for (auto &child : children_) {

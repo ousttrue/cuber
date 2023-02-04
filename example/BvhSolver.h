@@ -20,6 +20,7 @@ public:
     instances_.clear();
   }
   void PushJoint(const BvhJoint &joint, float scaling);
+  void CalcShape();
   void PushFrame(BvhTime time, std::span<const float> channelValues,
                  float scaling);
   std::span<cuber::Instance> GetFrame(int frame);

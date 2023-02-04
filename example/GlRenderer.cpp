@@ -69,6 +69,8 @@ struct GlRendererImpl {
     for (auto &joint : bvh.joints) {
       bvhSolver.PushJoint(joint, scalingFactor);
     };
+    bvhSolver.CalcShape();
+
     int frameCount = bvh.FrameCount();
     for (int i = 0; i < frameCount; ++i) {
       auto frame = bvh.GetFrame(i);

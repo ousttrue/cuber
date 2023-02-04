@@ -20,6 +20,8 @@ void BvhSolver::PushJoint(const BvhJoint &joint, float scaling) {
   }
 }
 
+void BvhSolver::CalcShape() { root_->CalcShape(); }
+
 void BvhSolver::PushFrame(BvhTime time, std::span<const float> channelValues,
                           float scaling) {
   auto it = channelValues.begin();
