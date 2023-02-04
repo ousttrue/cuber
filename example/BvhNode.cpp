@@ -1,15 +1,45 @@
 #include "BvhNode.h"
 
-//
-// BvhNode
-//
+BvhNode::BvhNode(const DirectX::XMFLOAT3 &offset, bool isRoot)
+    : isRoot_(isRoot), localOffset_(offset) {
+  DirectX::XMStoreFloat4x4(&shape_, DirectX::XMMatrixScaling(0.2f, 0.2f, 0.2f));
+}
+
 std::shared_ptr<BvhNode> BvhNode::Create(const BvhJoint &joint, float scaling,
                                          bool isRoot) {
-  auto ptr = std::shared_ptr<BvhNode>(new BvhNode(joint.localOffset, isRoot));
+  auto offset = DirectX::XMFLOAT3(joint.localOffset.x * scaling,
+                                  joint.localOffset.y * scaling,
+                                  joint.localOffset.z * scaling);
+  auto ptr = std::shared_ptr<BvhNode>(new BvhNode(offset, isRoot));
   for (int i = 0; i < 6; ++i) {
     ptr->curves_[i].chnnel = joint.channels.values[i];
   }
   return ptr;
+}
+
+void BvhNode::PushFrame(std::span<const float>::iterator &it, float scaling) {
+
+  for (int i = 0; i < ChannelCount(); ++i, ++it) {
+    auto &curve = curves_[i];
+    switch (curve.chnnel) {
+    case BvhChannelTypes::Xposition:
+    case BvhChannelTypes::Yposition:
+    case BvhChannelTypes::Zposition:
+      curve.values.push_back(*it * scaling);
+      break;
+    case BvhChannelTypes::Xrotation:
+    case BvhChannelTypes::Yrotation:
+    case BvhChannelTypes::Zrotation:
+      curve.values.push_back(*it);
+      break;
+
+    default:
+      break;
+    }
+  }
+  for (auto &child : children_) {
+    child->PushFrame(it, scaling);
+  }
 }
 
 // [x, y, z][c6][c5][c4][c3][c2][c1][parent][root]
@@ -58,7 +88,7 @@ void BvhNode::ResolveFrame(int frame, DirectX::XMMATRIX m,
   }
 BREAK:
   m = local * m;
-  auto shape = DirectX::XMMatrixScaling(1, 1, 1);
+  auto shape = DirectX::XMMatrixScaling(0.02f, 0.02f, 0.02f);
   DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4 *)&*out, shape * m);
   ++out;
   for (auto &child : children_) {

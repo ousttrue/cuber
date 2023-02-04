@@ -1,6 +1,7 @@
 #pragma once
 #include "Bvh.h"
-#include <SimpleMath.h>
+// #include <SimpleMath.h>
+#include <DirectXMath.h>
 #include <cuber.h>
 #include <list>
 #include <memory>
@@ -13,14 +14,13 @@ struct BvhCurve {
 
 class BvhNode {
   bool isRoot_ = false;
-  BvhOffset localOffset_;
+  DirectX::XMFLOAT3 localOffset_;
   BvhCurve curves_[6];
   std::list<std::shared_ptr<BvhNode>> children_;
   DirectX::XMFLOAT4X4 shape_;
 
 public:
-  BvhNode(const BvhOffset &offset, bool isRoot)
-      : isRoot_(isRoot), localOffset_(offset) {}
+  BvhNode(const DirectX::XMFLOAT3 &offset, bool isRoot);
   static std::shared_ptr<BvhNode> Create(const BvhJoint &joint, float scaling,
                                          bool isRoot);
   int ChannelCount() const {
@@ -35,15 +35,7 @@ public:
   void AddChild(const std::shared_ptr<BvhNode> &node) {
     children_.push_back(node);
   }
-  void PushFrame(std::span<const float>::iterator &it, float scaling) {
-
-    for (int i = 0; i < ChannelCount(); ++i, ++it) {
-      curves_[i].values.push_back(*it);
-    }
-    for (auto &child : children_) {
-      child->PushFrame(it, scaling);
-    }
-  }
+  void PushFrame(std::span<const float>::iterator &it, float scaling);
   void ResolveFrame(int frame, DirectX::XMMATRIX m,
                     std::span<cuber::Instance>::iterator &out);
 };
