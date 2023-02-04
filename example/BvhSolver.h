@@ -28,7 +28,7 @@ struct BvhNode {
     }
     return i;
   }
-  void ResolveFrame(int frame, DirectX::XMMATRIX m,
+  void ResolveFrame(int frame, DirectX::XMMATRIX m, float scaling,
                     std::span<cuber::Instance>::iterator &out);
 };
 
@@ -36,8 +36,15 @@ class BvhSolver {
   std::vector<std::shared_ptr<BvhNode>> nodes_;
   std::shared_ptr<BvhNode> root_;
   std::vector<cuber::Instance> instances_;
+  float scalingFactor_ = 1.0f;
 
 public:
+  void Initialize(float scaling) {
+    nodes_.clear();
+    root_.reset();
+    instances_.clear();
+    scalingFactor_ = scaling;
+  }
   void PushJoint(const BvhJoint &joint);
   void PushFrame(BvhTime time, std::span<const float> channelValues);
   std::span<cuber::Instance> GetFrame(int frame);

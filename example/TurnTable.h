@@ -10,7 +10,7 @@ class TurnTable {
 
   float yaw_ = 0;
   float pitch_ = 0;
-  float shift_[3] = {0, 0, -5};
+  float shift_[3] = {0, -1, -4};
 
 public:
   void SetSize(int w, int h);

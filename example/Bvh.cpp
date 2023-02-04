@@ -117,6 +117,7 @@ struct BvhImpl {
   uint32_t frame_count_ = 0;
   BvhTime frame_time_ = {};
   uint32_t channel_count_ = 0;
+  float max_height_ = 0;
 
   BvhImpl(std::vector<BvhJoint> &joints, std::vector<BvhJoint> &endsites,
           std::vector<float> &frames, std::string_view src)
@@ -231,6 +232,9 @@ private:
           auto &parent = joints_[stack_.back()];
           joints_.back().worldOffset += parent.worldOffset;
         }
+
+        max_height_ = std::max(max_height_, joints_.back().worldOffset.y);
+
         stack_.push_back(index);
 
         ParseJoint();
@@ -336,5 +340,6 @@ bool Bvh::Parse(std::string_view src) {
   }
   frame_time = parser.frame_time_;
   frame_channel_count = parser.channel_count_;
+  max_height = parser.max_height_;
   return true;
 }

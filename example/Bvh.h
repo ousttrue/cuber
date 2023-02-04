@@ -1,10 +1,10 @@
 #pragma once
 #include <chrono>
+#include <iostream>
 #include <memory>
 #include <ostream>
 #include <span>
 #include <vector>
-#include <iostream>
 
 struct BvhOffset {
   float x;
@@ -97,15 +97,15 @@ inline std::ostream &operator<<(std::ostream &os, const BvhJoint &joint) {
 using BvhTime = std::chrono::duration<float, std::ratio<1, 1>>;
 
 struct Bvh {
-public:
   std::vector<BvhJoint> joints;
   std::vector<BvhJoint> endsites;
   BvhTime frame_time = {};
   std::vector<float> frames;
   uint32_t frame_channel_count = 0;
-  uint32_t FrameCount() const { return frames.size() / frame_channel_count; }
+  float max_height = 0;
   Bvh();
   ~Bvh();
+  uint32_t FrameCount() const { return frames.size() / frame_channel_count; }
   bool Parse(std::string_view src);
   const BvhJoint *GetParent(int parent) const {
     for (auto &joint : joints) {
@@ -141,8 +141,10 @@ inline std::ostream &operator<<(std::ostream &os, const Bvh &bvh) {
   }
 
   os << "<BVH: " << bvh.joints.size()
-     << "joints: " << (bvh.frames.size() / channel_count) << "frames/"
-     << bvh.frame_time << std::endl;
+     << " joints: " << (bvh.frames.size() / channel_count) //
+     << " frames/" << bvh.frame_time                       //
+     << " max_height: " << bvh.max_height                  //
+     << std::endl;
   for (auto joint : bvh.joints) {
     os << "  " << joint << std::endl;
   }

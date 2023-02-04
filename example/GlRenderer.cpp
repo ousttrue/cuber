@@ -35,8 +35,7 @@ struct GlRendererImpl {
 
   void Render(RenderTime time, const float projection[16],
               const float view[16]) {
-    if(!startTime_)
-    {
+    if (!startTime_) {
       startTime_ = time;
     }
     RenderTime elapsed = time - *startTime_;
@@ -57,6 +56,16 @@ struct GlRendererImpl {
     }
     std::cout << bvh << std::endl;
 
+    // guess bvh scale
+    float scalingFactor = 1.0f;
+    if (bvh.max_height < 2) {
+      // maybe meter scale. do nothing
+    } else if (bvh.max_height < 200) {
+      // maybe cm scale
+      scalingFactor = 0.01f;
+    }
+
+    bvhSolver.Initialize(scalingFactor);
     for (auto &joint : bvh.joints) {
       bvhSolver.PushJoint(joint);
     };
