@@ -14,6 +14,7 @@ executable(
         'TurnTable.cpp',
         'Bvh.cpp',
         'BvhSolver.cpp',
+        'BvhNode.cpp',
     ],
     install: true,
     dependencies: [
