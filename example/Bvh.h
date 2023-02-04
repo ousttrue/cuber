@@ -4,6 +4,7 @@
 #include <ostream>
 #include <span>
 #include <vector>
+#include <iostream>
 
 struct BvhOffset {
   float x;
@@ -114,11 +115,20 @@ public:
     }
     return nullptr;
   }
-  std::span<float> GetFrame(BvhTime time) {
-    auto index = (int)(time / frame_time);
+  int TimeToIndex(BvhTime time) const {
+    auto div = time / frame_time;
+    auto index = (int)div;
     if (index >= FrameCount()) {
       index = index % FrameCount();
     }
+    return index;
+  }
+  std::tuple<int, std::span<const float>> GetFrame(BvhTime time) const {
+    auto index = TimeToIndex(time);
+    auto begin = frames.data() + index * frame_channel_count;
+    return {index, {begin, begin + frame_channel_count}};
+  }
+  std::span<const float> GetFrame(int index) const {
     auto begin = frames.data() + index * frame_channel_count;
     return {begin, begin + frame_channel_count};
   }

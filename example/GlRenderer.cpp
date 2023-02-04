@@ -1,5 +1,6 @@
 #include "GlRenderer.h"
 #include "Bvh.h"
+#include "BvhSolver.h"
 #include <GL/glew.h>
 #include <cuber.h>
 #include <fstream>
@@ -24,23 +25,23 @@ static std::vector<T> ReadAllBytes(const std::string &filename) {
 
 struct GlRendererImpl {
   cuber::CubeRenderer cubes;
-  std::vector<cuber::Instance> instances;
   Bvh bvh;
+  BvhSolver bvhSolver;
 
   GlRendererImpl() {}
   ~GlRendererImpl() {}
 
-  std::optional<RenderTime> time_;
+  std::optional<RenderTime> startTime_;
 
   void Render(RenderTime time, const float projection[16],
               const float view[16]) {
-    RenderTime elapsed = time_ ? (time - *time_) : RenderTime{};
-    time_ = time;
-    auto frame = bvh.GetFrame(elapsed);
-
-    
-
-    cubes.Render(projection, view, instances);
+    if(!startTime_)
+    {
+      startTime_ = time;
+    }
+    RenderTime elapsed = time - *startTime_;
+    auto index = bvh.TimeToIndex(elapsed);
+    cubes.Render(projection, view, bvhSolver.GetFrame(index));
   }
 
   void Load(std::string_view file) {
@@ -57,21 +58,14 @@ struct GlRendererImpl {
     std::cout << bvh << std::endl;
 
     for (auto &joint : bvh.joints) {
-      cuber::Instance instance{
-          .matrix =
-              {
-                  1, 0, 0,
-                  0, //
-                  0, 1, 0,
-                  0, //
-                  0, 0, 1,
-                  0, //
-                  joint.worldOffset.x, joint.worldOffset.y, joint.worldOffset.z,
-                  1, //
-              },
-      };
-      instances.push_back(instance);
+      bvhSolver.PushJoint(joint);
     };
+    int frameCount = bvh.FrameCount();
+    for (int i = 0; i < frameCount; ++i) {
+      auto frame = bvh.GetFrame(i);
+      auto time = bvh.frame_time * i;
+      bvhSolver.PushFrame(time, frame);
+    }
   }
 };
 

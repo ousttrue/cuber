@@ -4,7 +4,7 @@
 #include "TurnTable.h"
 #include <DirectXMath.h>
 #include <Windows.h>
-
+#include <iostream>
 #include <GL/GL.h>
 
 int main(int argc, char **argv) {
