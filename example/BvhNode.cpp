@@ -94,7 +94,7 @@ void BvhNode::PushFrame(std::span<const float>::iterator &it, float scaling) {
 
 // [x, y, z][c6][c5][c4][c3][c2][c1][parent][root]
 void BvhNode::ResolveFrame(int frame, DirectX::XMMATRIX m,
-                           std::span<cuber::Instance>::iterator &out) {
+                           std::span<DirectX::XMFLOAT4X4>::iterator &out) {
 
   auto local = isRoot_ ? DirectX::XMMatrixIdentity()
                        : DirectX::XMMatrixTranslation(
@@ -139,7 +139,7 @@ void BvhNode::ResolveFrame(int frame, DirectX::XMMATRIX m,
 BREAK:
   m = local * m;
   auto shape = DirectX::XMLoadFloat4x4(&shape_);
-  DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4 *)&*out, shape * m);
+  DirectX::XMStoreFloat4x4(&*out, shape * m);
   ++out;
   for (auto &child : children_) {
     child->ResolveFrame(frame, m, out);

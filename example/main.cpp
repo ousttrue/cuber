@@ -1,13 +1,22 @@
+#include "Animation.h"
 #include "GlRenderer.h"
 #include "GuiApp.h"
 #include "GuiWindow.h"
 #include "TurnTable.h"
 #include <DirectXMath.h>
-#include <Windows.h>
+#include <asio.hpp>
 #include <iostream>
+#include <thread>
+
+// must after asio.hpp
+#include <Windows.h>
+
+// must after Windows.h
 #include <GL/GL.h>
 
 int main(int argc, char **argv) {
+  asio::io_context io;
+
   GuiWindow gui;
   auto window = gui.Create();
   if (!window) {
@@ -17,9 +26,25 @@ int main(int argc, char **argv) {
   GuiApp app(window, gui.GlslVersion());
 
   GlRenderer renderer;
+
+  Animation animation(io);
+  animation.OnFrame(
+      [&renderer](auto instances) { renderer.SetInstances(instances); });
+
   if (argc > 1) {
-    renderer.Load(argv[1]);
+    animation.Load(argv[1]);
   }
+
+  // start
+  auto work = asio::make_work_guard(io);
+  std::thread thread([&io]() {
+    try {
+      io.run();
+      std::cout << "[asio] end" << std::endl;
+    } catch (std::exception const &e) {
+      std::cout << "[asio] catch" << e.what() << std::endl;
+    }
+  });
 
   // main loop
   int display_w, display_h;
@@ -40,6 +65,10 @@ int main(int argc, char **argv) {
 
     gui.EndFrame();
   }
+
+  animation.Stop();
+  work.reset();
+  thread.join();
 
   return 0;
 }

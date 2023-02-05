@@ -3,6 +3,7 @@
 #include "shader.h"
 #include "vao.h"
 #include <memory>
+
 namespace cuber {
 
 union Instance {
@@ -25,6 +26,7 @@ public:
   CubeRenderer &operator=(const CubeRenderer &) = delete;
   CubeRenderer();
   ~CubeRenderer();
-  void Render(const float projection[16], const float view[16], std::span<Instance> instances);
+  void Render(const float projection[16], const float view[16],
+              std::span<Instance> instances);
 };
 } // namespace cuber

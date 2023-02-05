@@ -1,7 +1,6 @@
 #pragma once
 #include "Bvh.h"
 #include <SimpleMath.h>
-#include <cuber.h>
 #include <list>
 #include <memory>
 #include <vector>
@@ -38,5 +37,5 @@ public:
   void CalcShape();
   void PushFrame(std::span<const float>::iterator &it, float scaling);
   void ResolveFrame(int frame, DirectX::XMMATRIX m,
-                    std::span<cuber::Instance>::iterator &out);
+                    std::span<DirectX::XMFLOAT4X4>::iterator &out);
 };

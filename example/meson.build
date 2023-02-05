@@ -4,6 +4,7 @@ gl_dep = c.find_library('OpenGL32')
 imgui_dep = dependency('imgui', default_options: ['default_library=static'])
 directxmath_dep = dependency('directxmath')
 directxtk_dep = dependency('directxtk')
+asio_dep = dependency('asio')
 executable(
     'cuber_sample',
     [
@@ -15,6 +16,7 @@ executable(
         'Bvh.cpp',
         'BvhSolver.cpp',
         'BvhNode.cpp',
+        'Animation.cpp',
     ],
     install: true,
     dependencies: [
@@ -25,5 +27,6 @@ executable(
         directxmath_dep,
         directxtk_dep,
         cuber_dep,
+        asio_dep,
     ],
 )

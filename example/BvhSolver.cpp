@@ -29,7 +29,7 @@ void BvhSolver::PushFrame(BvhTime time, std::span<const float> channelValues,
   assert(it == channelValues.end());
 }
 
-std::span<cuber::Instance> BvhSolver::GetFrame(int frame) {
+std::span<DirectX::XMFLOAT4X4> BvhSolver::GetFrame(int frame) {
   auto span = std::span(instances_);
   auto it = span.begin();
   root_->ResolveFrame(frame, DirectX::XMMatrixIdentity(), it);

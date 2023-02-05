@@ -1,23 +1,19 @@
 #pragma once
+#include <DirectXMath.h>
 #include <chrono>
+#include <cuber.h>
+#include <mutex>
+#include <span>
 #include <stdint.h>
-#include <string_view>
+#include <vector>
 
 using RenderTime = std::chrono::duration<float, std::ratio<1, 1>>;
 
-// struct CameraMatrix {
-//   float view[16] = {
-//       1, 0, 0, 0, //
-//       0, 1, 0, 0, //
-//       0, 0, 1, 0, //
-//       0, 0, 0, 1, //
-//   };
-//   float projection[16] = {
-//   };
-// };
-
 class GlRenderer {
   struct GlRendererImpl *impl_ = nullptr;
+  cuber::CubeRenderer cubes;
+  std::vector<DirectX::XMFLOAT4X4> insancies_;
+  std::mutex mutex_;
 
 public:
   GlRenderer(const GlRenderer &) = delete;
@@ -25,8 +21,7 @@ public:
   GlRenderer();
   ~GlRenderer();
 
-  void Load(std::string_view file);
-
+  void SetInstances(std::span<DirectX::XMFLOAT4X4> instances);
   void RenderScene(RenderTime time, const float projection[16],
                    const float view[16]);
 };
