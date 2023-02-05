@@ -24,14 +24,16 @@ static int dropmax(float a, float b, float c, float d) {
 }
 static float sign(float v) { return v < float(0.0) ? float(-1.0) : float(1.0); }
 
+struct Packed {
+  uint32_t x0 : 10;
+  uint32_t x1 : 10;
+  uint32_t x2 : 10;
+  uint32_t drop : 2;
+};
+
 static uint32_t pack(float x, float y, float z, float w) {
 
-  struct {
-    uint32_t x0 : 10;
-    uint32_t x1 : 10;
-    uint32_t x2 : 10;
-    uint32_t drop : 2;
-  } value;
+  Packed value;
 
   float a0, a1, a2;
   value.drop = dropmax(square(x), square(y), square(z), square(w));
@@ -64,10 +66,58 @@ static uint32_t pack(float x, float y, float z, float w) {
   return *(uint32_t *)&value;
 }
 
-TEST_CASE("quat32", "[pack]") {
+static void unpack(uint32_t src, float values[4]) {
+
+  auto value = (Packed *)&src;
+
+  const float a0 = unpack(value->x0);
+  const float a1 = unpack(value->x1);
+  const float a2 = unpack(value->x2);
+  const float iss = sqrt(1.0f - (square(a0) + square(a1) + square(a2)));
+
+  switch (value->drop) {
+  case 0: {
+    values[0] = iss;
+    values[1] = a0;
+    values[2] = a1;
+    values[3] = a2;
+    break;
+  }
+  case 1: {
+    values[0] = a0;
+    values[1] = iss;
+    values[2] = a1;
+    values[3] = a2;
+    break;
+  }
+  case 2: {
+    values[0] = a0;
+    values[1] = a1;
+    values[2] = iss;
+    values[3] = a2;
+    break;
+  }
+  default: {
+    values[0] = a0;
+    values[1] = a1;
+    values[2] = a2;
+    values[3] = iss;
+    break;
+  }
+  }
+}
+
+TEST_CASE("quat32", "[pack, unpack]") {
   mu::quatf identity{0, 0, 0, 1};
   auto id32 = mu::quat32(identity);
-  REQUIRE((pack(0, 0, 0, 1) >> 2) == (*((uint32_t *)&id32) >> 2));
-  //   mu::quatf ex = id32;
-  //   REQUIRE(identity == ex);
+  auto packed = pack(0, 0, 0, 1);
+  REQUIRE(packed == (*((uint32_t *)&id32)));
+
+  mu::quatf ex = id32;
+  float unpacked[4];
+  unpack(packed, unpacked);
+  REQUIRE(ex.x == unpacked[0]);
+  REQUIRE(ex.y == unpacked[1]);
+  REQUIRE(ex.z == unpacked[2]);
+  REQUIRE(ex.w == unpacked[3]);
 }
