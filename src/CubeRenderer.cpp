@@ -5,15 +5,17 @@
 
 const int CUBE_INDEX_COUNT = 36;
 
+namespace cuber {
+
 static const char *vertex_shader_text = R"(
 uniform mat4 VP;
 in vec3 vPos;
-in vec4 vCol;
+in vec2 vBarycentric;
 in vec4 iRow0;
 in vec4 iRow1;
 in vec4 iRow2;
 in vec4 iRow3;
-out vec4 color;
+out vec2 barycentric;
 
 mat4 transform(vec4 r0, vec4 r1, vec4 r2, vec4 r3)
 {
@@ -28,23 +30,43 @@ mat4 transform(vec4 r0, vec4 r1, vec4 r2, vec4 r3)
 void main()
 {
     gl_Position = VP * transform(iRow0, iRow1, iRow2, iRow3) * vec4(vPos, 1.0);
-    color = vCol;
+    barycentric = vBarycentric;
 }
 )";
+
+struct Vertex {
+  XYZ position;
+  XY barycentric;
+};
 
 static const char *fragment_shader_text = R"(
-in vec4 color;
+in vec2 barycentric;
 out vec4 FragColor;
+
+// float grid (vec2 vBC, float width, float feather) {
+//   float w1 = width - feather * 0.5;
+//   vec3 bary = vec3(vBC.x, vBC.y, 1.0 - vBC.x - vBC.y);
+//   vec3 d = fwidth(bary);
+//   vec3 a3 = smoothstep(d * w1, d * (w1 + feather), bary);
+//   return min(min(a3.x, a3.y), a3.z);
+// }
+
+// https://github.com/rreusser/glsl-solid-wireframe
+float grid (vec2 vBC, float width) {
+  vec3 bary = vec3(vBC.x, vBC.y, 1.0 - vBC.x - vBC.y);
+  vec3 d = fwidth(bary);
+  vec3 a3 = smoothstep(d * (width - 0.5), d * (width + 0.5), bary);
+  return min(a3.x, a3.y);
+}
+
 void main()
 {
-    FragColor = vec4(color);
+    FragColor = vec4(vec3(grid(barycentric, 1.0)), 1);
 }
 )";
 
-namespace cuber {
-
 const float s = 0.5f;
-xyz positions[8] = {
+XYZ positions[8] = {
     {-s, -s, +s}, //
     {-s, +s, +s}, //
     {+s, +s, +s}, //
@@ -70,7 +92,7 @@ xyz positions[8] = {
 //
 struct Face {
   int indices[4];
-  rgba color;
+  RGBA color;
 };
 
 // CCW
@@ -101,31 +123,31 @@ Face cube_faces[6] = {
     },
 };
 
-struct Vertex {
-  xyz position;
-  rgba color;
-};
-
 struct Builder {
   std::vector<Vertex> vertices;
   std::vector<uint32_t> indices;
-  void Quad(const xyz &p0, const xyz &p1, const xyz &p2, const xyz &p3,
-            const rgba &color) {
+  void Quad(const XYZ &p0, const XYZ &p1, const XYZ &p2, const XYZ &p3,
+            const RGBA &color) {
+    // 01   00
+    //  3+-+2
+    //   | |
+    //  0+-+1
+    // 00   10
     Vertex v0{
         .position = p0,
-        .color = color,
+        .barycentric = {1, 0},
     };
     Vertex v1{
         .position = p1,
-        .color = color,
+        .barycentric = {0, 0},
     };
     Vertex v2{
         .position = p2,
-        .color = color,
+        .barycentric = {0, 1},
     };
     Vertex v3{
         .position = p3,
-        .color = color,
+        .barycentric = {0, 0},
     };
     auto index = vertices.size();
     vertices.push_back(v0);
@@ -175,7 +197,7 @@ CubeRenderer::CubeRenderer() {
   }
 
   auto vpos_location = get_location(shader_, "vPos");
-  auto vcol_location = get_location(shader_, "vCol");
+  auto vbarycentric_location = get_location(shader_, "vBarycentric");
   // auto ipos_location = get_location(shader_, "iPos");
   // auto irot_location = get_location(shader_, "iRot");
 
@@ -203,15 +225,15 @@ CubeRenderer::CubeRenderer() {
           .vbo = vbo,
           .type = GL_FLOAT,
           .count = 3,
-          .offset = 0,
+          .offset = offsetof(Vertex, position),
           .stride = sizeof(Vertex),
       },
       {
-          .location = vcol_location,
+          .location = vbarycentric_location,
           .vbo = vbo,
           .type = GL_FLOAT,
-          .count = 4,
-          .offset = 12,
+          .count = 3,
+          .offset = offsetof(Vertex, barycentric),
           .stride = sizeof(Vertex),
       },
       //
@@ -220,7 +242,7 @@ CubeRenderer::CubeRenderer() {
           .vbo = instance_vbo_,
           .type = GL_FLOAT,
           .count = 4,
-          .offset = 0,
+          .offset = offsetof(Instance, row0),
           .stride = sizeof(Instance),
           .divisor = 1,
       },
@@ -229,7 +251,7 @@ CubeRenderer::CubeRenderer() {
           .vbo = instance_vbo_,
           .type = GL_FLOAT,
           .count = 4,
-          .offset = 16,
+          .offset = offsetof(Instance, row1),
           .stride = sizeof(Instance),
           .divisor = 1,
       },
@@ -238,7 +260,7 @@ CubeRenderer::CubeRenderer() {
           .vbo = instance_vbo_,
           .type = GL_FLOAT,
           .count = 4,
-          .offset = 32,
+          .offset = offsetof(Instance, row2),
           .stride = sizeof(Instance),
           .divisor = 1,
       },
@@ -247,7 +269,7 @@ CubeRenderer::CubeRenderer() {
           .vbo = instance_vbo_,
           .type = GL_FLOAT,
           .count = 4,
-          .offset = 48,
+          .offset = offsetof(Instance, row3),
           .stride = sizeof(Instance),
           .divisor = 1,
       },

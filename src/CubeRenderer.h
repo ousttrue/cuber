@@ -5,8 +5,14 @@
 #include <memory>
 namespace cuber {
 
-struct Instance {
+union Instance {
   float matrix[16];
+  struct {
+    XYZW row0;
+    XYZW row1;
+    XYZW row2;
+    XYZW row3;
+  };
 };
 
 class CubeRenderer {

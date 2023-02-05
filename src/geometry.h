@@ -3,20 +3,25 @@
 
 namespace cuber {
 
-struct xyz {
+struct XY {
+  float x;
+  float y;
+};
+
+struct XYZ {
   float x;
   float y;
   float z;
 };
 
-struct xyzw {
+struct XYZW {
   float x;
   float y;
   float z;
   float w;
 };
 
-struct rgba {
+struct RGBA {
   float r;
   float g;
   float b;
