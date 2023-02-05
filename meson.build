@@ -6,3 +6,4 @@ project(
 )
 subdir('src')
 subdir('example')
+subdir('tests')

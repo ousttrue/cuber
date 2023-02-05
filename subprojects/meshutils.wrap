@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/i-saint/Glimmer.git
+revision = master
+depth = 1
+patch_directory = meshutils
+
+[provide]
+meshutils = meshutils_dep
