@@ -5,7 +5,6 @@
 #include "GuiApp.h"
 #include "GuiWindow.h"
 #include "TurnTable.h"
-#include "quat_packer.h"
 #include <DirectXMath.h>
 #include <asio.hpp>
 #include <imgui.h>
@@ -42,7 +41,7 @@ struct Payload {
         // .magic = {},
         .skeletonId = 0,
         .jointCount = 27,
-        .hasInitialRotation = 0,
+        .flags = {},
     };
     Push((const char *)&header, (const char *)&header + sizeof(header));
     Push(joints.data(), joints.data() + joints.size());
@@ -54,7 +53,12 @@ struct Payload {
 
     srht::FrameHeader header{
         // .magic = {},
-        .time = time.count(), .skeletonId = 0, .x = x, .y = y, .z = z,
+        .time = time.count(),
+        .flags = {},
+        .skeletonId = 0,
+        .x = x,
+        .y = y,
+        .z = z,
     };
     Push((const char *)&header, (const char *)&header + sizeof(header));
     Push(rotations.data(), rotations.data() + rotations.size());
@@ -123,7 +127,7 @@ public:
       DirectX::XMFLOAT4 rotation;
       DirectX::XMStoreFloat4(&rotation, r);
       auto packed =
-          quat_packer::pack(rotation.x, rotation.y, rotation.z, rotation.w);
+          quat_packer::Pack(rotation.x, rotation.y, rotation.z, rotation.w);
 #if _DEBUG
       {
         mu::quatf debug_q{rotation.x, rotation.y, rotation.z, rotation.w};
