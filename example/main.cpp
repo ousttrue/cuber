@@ -38,7 +38,7 @@ struct Payload {
     buffer.clear();
 
     srht::SkeletonHeader header{
-        .magic = {},
+        // .magic = {},
         .skeletonId = 0,
         .jointCount = 27,
         .hasInitialRotation = 0,
@@ -52,7 +52,7 @@ struct Payload {
     buffer.clear();
 
     srht::FrameHeader header{
-        .magic = {},
+        // .magic = {},
         .time = time.count(),
         .skeletonId = 0,
         .x = x,
