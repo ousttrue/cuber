@@ -1,22 +1,16 @@
-#include "Animation.h"
-#include "Bvh.h"
+#include "BvhPanel.h"
 #include "GlRenderer.h"
 #include "GuiApp.h"
 #include "GuiWindow.h"
 #include "TurnTable.h"
-#include "UdpSender.h"
+#include <Windows.h>
 #include <imgui.h>
 #include <iostream>
-#include <thread>
-
-// must after asio.hpp
-#include <Windows.h>
 
 // must after Windows.h
 #include <GL/GL.h>
 
 int main(int argc, char **argv) {
-  asio::io_context io;
 
   GuiWindow gui;
   auto window = gui.Create();
@@ -26,36 +20,14 @@ int main(int argc, char **argv) {
 
   GuiApp app(window, gui.GlslVersion());
 
-  GlRenderer renderer;
-
-  Animation animation(io);
-  animation.OnFrame([&renderer](auto time, auto instances) {
-    renderer.SetInstances(instances);
-  });
-
-  asio::ip::udp::endpoint ep(asio::ip::address::from_string("127.0.0.1"),
-                             54345);
-  UdpSender sender(io);
-  animation.OnFrame([&sender, &ep](auto time, auto instances) {
-    sender.SendFrame(ep, time, instances);
-  });
-
-  std::shared_ptr<Bvh> bvh;
+  BvhPanel bvhPanel;
   if (argc > 1) {
-    if ((bvh = animation.Load(argv[1]))) {
-      sender.SendSkeleton(ep, bvh);
-    }
+    bvhPanel.LoadBvh(argv[1]);
   }
 
-  // start
-  auto work = asio::make_work_guard(io);
-  std::thread thread([&io]() {
-    try {
-      io.run();
-      std::cout << "[asio] end" << std::endl;
-    } catch (std::exception const &e) {
-      std::cout << "[asio] catch" << e.what() << std::endl;
-    }
+  GlRenderer renderer;
+  bvhPanel.OnFrame([&renderer](auto time, auto instances) {
+    renderer.SetInstances(instances);
   });
 
   // main loop
@@ -64,19 +36,7 @@ int main(int argc, char **argv) {
     {
       // imgui
       app.UpdateGui();
-
-      if (bvh) {
-        // bvh panel
-        ImGui::Begin("BVH");
-
-        ImGui::LabelText("bvh", "%zu joints", bvh->joints.size());
-
-        if (ImGui::Button("send skeleton")) {
-          sender.SendSkeleton(ep, bvh);
-        }
-
-        ImGui::End();
-      }
+      bvhPanel.UpdateGui();
     }
 
     {
@@ -95,10 +55,6 @@ int main(int argc, char **argv) {
       gui.EndFrame();
     }
   }
-
-  animation.Stop();
-  work.reset();
-  thread.join();
 
   return 0;
 }

@@ -18,6 +18,7 @@ executable(
         'BvhNode.cpp',
         'Animation.cpp',
         'UdpSender.cpp',
+        'BvhPanel.cpp',
     ],
     install: true,
     dependencies: [

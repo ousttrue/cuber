@@ -16,7 +16,7 @@
             "problemMatcher": [],
         },
         {
-            "label": "build",
+            "label": "build.ninja",
             "type": "shell",
             "command": "ninja",
             "options": {
@@ -40,7 +40,7 @@
             },
         },
         {
-            "label": "build.meson",
+            "label": "build",
             "type": "shell",
             "command": "meson install -C builddir",
             "problemMatcher": {
