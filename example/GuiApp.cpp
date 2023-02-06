@@ -11,6 +11,7 @@ GuiApp::GuiApp(GLFWwindow *window, const char *glsl_version) {
   (void)io;
   // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable
   // Keyboard Controls io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; //
+  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   // Enable Gamepad Controls
 
   // Setup Dear ImGui style
@@ -56,6 +57,34 @@ GuiApp::~GuiApp() {
   ImGui::DestroyContext();
 }
 
+void GuiApp::UpdateGuiDockspace() {
+
+  auto flags =
+      (ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking |
+       ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar |
+       ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus |
+       ImGuiWindowFlags_NoNavFocus);
+
+  auto viewport = ImGui::GetMainViewport();
+  auto pos = viewport->Pos;
+  auto size = viewport->Size;
+  ImGui::SetNextWindowPos(pos);
+  ImGui::SetNextWindowSize(size);
+  ImGui::SetNextWindowViewport(viewport->ID);
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{});
+
+  // DockSpace
+  auto name = "dockspace";
+  ImGui::Begin(name, nullptr, flags);
+  ImGui::PopStyleVar(3);
+  auto dockspace_id = ImGui::GetID(name);
+  ImGui::DockSpace(dockspace_id, {}, ImGuiDockNodeFlags_PassthruCentralNode);
+  ImGui::End();
+}
+
 void GuiApp::UpdateGui() {
   ImGuiIO &io = ImGui::GetIO();
 
@@ -63,6 +92,25 @@ void GuiApp::UpdateGui() {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
+
+  // camera
+  turntable_.SetSize(static_cast<int>(io.DisplaySize.x),
+                     static_cast<int>(io.DisplaySize.y));
+  if (!io.WantCaptureMouse) {
+    if (io.MouseDown[ImGuiMouseButton_Right]) {
+      turntable_.YawPitch(static_cast<int>(io.MouseDelta.x),
+                          static_cast<int>(io.MouseDelta.y));
+    }
+    if (io.MouseDown[ImGuiMouseButton_Middle]) {
+      turntable_.Shift(static_cast<int>(io.MouseDelta.x),
+                       static_cast<int>(io.MouseDelta.y));
+    }
+    turntable_.Dolly(static_cast<int>(io.MouseWheel));
+  }
+  turntable_.Update(projection, view);
+
+  // Widgets
+  UpdateGuiDockspace();
 
   // 1. Show the big demo window (Most of the sample code is in
   // ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear
@@ -115,32 +163,15 @@ void GuiApp::UpdateGui() {
       show_another_window = false;
     ImGui::End();
   }
+}
 
-  // camera
-  turntable_.SetSize(static_cast<int>(io.DisplaySize.x),
-                     static_cast<int>(io.DisplaySize.y));
-  if (!io.WantCaptureMouse) {
-    if (io.MouseDown[ImGuiMouseButton_Right]) {
-      turntable_.YawPitch(static_cast<int>(io.MouseDelta.x),
-                          static_cast<int>(io.MouseDelta.y));
-    }
-    if (io.MouseDown[ImGuiMouseButton_Middle]) {
-      turntable_.Shift(static_cast<int>(io.MouseDelta.x),
-                       static_cast<int>(io.MouseDelta.y));
-    }
-    turntable_.Dolly(static_cast<int>(io.MouseWheel));
-  }
-  turntable_.Update(projection, view);
-
-  // Rendering
+void GuiApp::RenderGui() {
   ImGui::Render();
 
   clear_color[0] = clear_color_[0] * clear_color_[3];
   clear_color[1] = clear_color_[1] * clear_color_[3];
   clear_color[2] = clear_color_[2] * clear_color_[3];
   clear_color[3] = clear_color_[3];
-}
 
-void GuiApp::RenderGui() {
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

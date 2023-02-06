@@ -28,4 +28,7 @@ public:
   ~GuiApp();
   void UpdateGui();
   void RenderGui();
+
+private:
+  void UpdateGuiDockspace();
 };
