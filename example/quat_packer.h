@@ -36,6 +36,8 @@ struct Packed {
   uint32_t x1 : 10;
   uint32_t x2 : 10;
   uint32_t drop : 2;
+
+  uint32_t value() const { return *((uint32_t *)this); }
 };
 
 inline uint32_t pack(float x, float y, float z, float w) {

@@ -1,5 +1,6 @@
 #pragma once
 #include <DirectXMath.h>
+#include <chrono>
 #include <functional>
 #include <span>
 #include <string_view>
@@ -12,10 +13,11 @@ class Animation {
   struct AnimationImpl *impl_ = nullptr;
 
 public:
+  using OnFrameFunc = std::function<void(std::chrono::nanoseconds,
+                                         std::span<DirectX::XMFLOAT4X4>)>;
   Animation(asio::io_context &io);
   ~Animation();
   void Load(std::string_view file);
-  void
-  OnFrame(const std::function<void(std::span<DirectX::XMFLOAT4X4>)> &onFrame);
+  void OnFrame(const OnFrameFunc &onFrame);
   void Stop();
 };

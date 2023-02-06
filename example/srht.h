@@ -93,7 +93,7 @@ static_assert(sizeof(SkeletonHeader) == 16, "Skeleton");
 struct FrameHeader {
   char magic[8] = {'S', 'R', 'H', 'T', 'F', 'R', 'M', '1'};
   // std::chrono::nanoseconds
-  uint64_t time;
+  int64_t time;
   uint32_t skeletonId = 0;
   // root position
   float x;

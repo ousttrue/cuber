@@ -1,8 +1,10 @@
+#include "../subprojects/meshutils/Source/MeshUtils/muQuat32.h"
 #include "Animation.h"
 #include "GlRenderer.h"
 #include "GuiApp.h"
 #include "GuiWindow.h"
 #include "TurnTable.h"
+#include "quat_packer.h"
 #include <DirectXMath.h>
 #include <asio.hpp>
 #include <iostream>
@@ -13,6 +15,105 @@
 
 // must after Windows.h
 #include <GL/GL.h>
+
+#include "srht.h"
+
+struct Payload {
+  // srht::FrameHeader frameHeader_;
+  // std::vector<srht::PackQuat> rotations_;
+  std::vector<uint8_t> buffer;
+  std::vector<srht::PackQuat> rotations;
+
+  Payload(const Payload &) = delete;
+  Payload &operator=(const Payload &) = delete;
+  Payload() { std::cout << "Payload::Payload" << std::endl; }
+  ~Payload() { std::cout << "Payload::~Payload" << std::endl; }
+
+  void Push(const void *begin, const void *end) {
+    auto dst = buffer.size();
+    auto size = std::distance((const char *)begin, (const char *)end);
+    buffer.resize(dst + size);
+    std::copy((const char *)begin, (const char *)end, buffer.data());
+  }
+
+  void Update(std::chrono::nanoseconds time, float x, float y, float z,
+              std::span<srht::PackQuat> rotations) {
+    buffer.clear();
+
+    srht::FrameHeader header{
+        .magic = {},
+        .time = time.count(),
+        .skeletonId = 0,
+        .x = x,
+        .y = y,
+        .z = z,
+    };
+    Push((const char *)&header, (const char *)&header + sizeof(header));
+    Push(rotations.data(), rotations.data() + rotations.size());
+  }
+};
+
+class UdpSender {
+  asio::ip::udp::socket socket_;
+  std::list<std::shared_ptr<Payload>> payloads_;
+  std::mutex mutex_;
+  std::vector<srht::PackQuat> rotations_;
+
+public:
+  UdpSender(asio::io_context &io)
+      : socket_(io, asio::ip::udp::endpoint(asio::ip::udp::v4(), 0)) {}
+
+  std::shared_ptr<Payload> GetOrCreatePayload() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (payloads_.empty()) {
+      return std::make_shared<Payload>();
+    } else {
+      auto payload = payloads_.front();
+      payloads_.pop_front();
+      return payload;
+    }
+  }
+
+  void ReleasePayload(const std::shared_ptr<Payload> &payload) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    payloads_.push_back(payload);
+  }
+
+  void Send(asio::ip::udp::endpoint ep, std::chrono::nanoseconds time,
+            std::span<DirectX::XMFLOAT4X4> instances) {
+
+    auto payload = GetOrCreatePayload();
+
+    rotations_.clear();
+    for (auto &instance : instances) {
+      auto m = DirectX::XMLoadFloat4x4(&instance);
+      auto r = DirectX::XMQuaternionRotationMatrix(m);
+      DirectX::XMFLOAT4 rotation;
+      DirectX::XMStoreFloat4(&rotation, r);
+      auto packed =
+          quat_packer::pack(rotation.x, rotation.y, rotation.z, rotation.w);
+#if _DEBUG
+      {
+        mu::quatf debug_q{rotation.x, rotation.y, rotation.z, rotation.w};
+        auto debug_packed = mu::quat32(debug_q);
+        assert(*(uint32_t *)&debug_packed.value == packed);
+      }
+#endif
+      rotations_.push_back({.value = packed});
+    }
+
+    auto &hips = instances[0];
+
+    payload->Update(time, hips._41, hips._42, hips._43, rotations_);
+
+    socket_.async_send_to(
+        asio::buffer(payload->buffer), ep,
+        [self = this, payload](asio::error_code ec,
+                               std::size_t bytes_transferred) {
+          self->ReleasePayload(payload);
+        });
+  }
+};
 
 int main(int argc, char **argv) {
   asio::io_context io;
@@ -28,8 +129,16 @@ int main(int argc, char **argv) {
   GlRenderer renderer;
 
   Animation animation(io);
-  animation.OnFrame(
-      [&renderer](auto instances) { renderer.SetInstances(instances); });
+  animation.OnFrame([&renderer](auto time, auto instances) {
+    renderer.SetInstances(instances);
+  });
+
+  asio::ip::udp::endpoint ep(asio::ip::address::from_string("127.0.0.1"),
+                             54345);
+  UdpSender sender(io);
+  animation.OnFrame([&sender, &ep](auto time, auto instances) {
+    sender.Send(ep, time, instances);
+  });
 
   if (argc > 1) {
     animation.Load(argv[1]);

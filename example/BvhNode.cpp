@@ -47,7 +47,7 @@ void BvhNode::CalcShape() {
 
     auto Y = tail->localOffset_;
     auto length = Y.Length();
-    std::cout << name_ << "=>" << tail->name_ << "=" << length << std::endl;
+    // std::cout << name_ << "=>" << tail->name_ << "=" << length << std::endl;
     Y.Normalize();
     DirectX::SimpleMath::Vector3 Z(0, 0, 1);
     auto X = Y.Cross(Z);
