@@ -23,6 +23,8 @@ static std::vector<T> ReadAllBytes(const std::string &filename) {
   return buffer;
 }
 
+using OnFrame = std::function<void(std::span<DirectX::XMFLOAT4X4>)>;
+
 struct AnimationImpl {
   asio::io_context &io_;
   std::shared_ptr<asio::steady_timer> timer_;
@@ -30,7 +32,7 @@ struct AnimationImpl {
 
   Bvh bvh_;
   BvhSolver bvhSolver_;
-  std::function<void(std::span<DirectX::XMFLOAT4X4>)> onFrame_;
+  std::list<OnFrame> onFrameCallbacks_;
 
   AnimationImpl(asio::io_context &io) : io_(io) {}
 
@@ -62,7 +64,9 @@ struct AnimationImpl {
   void Update() {
     auto elapsed = std::chrono::steady_clock::now() - startTime_;
     auto index = bvh_.TimeToIndex(elapsed);
-    onFrame_(bvhSolver_.GetFrame(index));
+    for (auto &callback : onFrameCallbacks_) {
+      callback(bvhSolver_.GetFrame(index));
+    }
   }
 
   bool Load(std::string_view file) {
@@ -112,6 +116,6 @@ Animation::~Animation() { delete (impl_); }
 void Animation::Load(std::string_view file) { impl_->Load(file); }
 void Animation::OnFrame(
     const std::function<void(std::span<DirectX::XMFLOAT4X4>)> &onFrame) {
-  impl_->onFrame_ = onFrame;
+  impl_->onFrameCallbacks_.push_back(onFrame);
 }
 void Animation::Stop() { impl_->Stop(); }
