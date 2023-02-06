@@ -1,5 +1,6 @@
 #include "../subprojects/meshutils/Source/MeshUtils/muQuat32.h"
 #include "Animation.h"
+#include "Bvh.h"
 #include "GlRenderer.h"
 #include "GuiApp.h"
 #include "GuiWindow.h"
@@ -19,10 +20,7 @@
 #include "srht.h"
 
 struct Payload {
-  // srht::FrameHeader frameHeader_;
-  // std::vector<srht::PackQuat> rotations_;
   std::vector<uint8_t> buffer;
-  std::vector<srht::PackQuat> rotations;
 
   Payload(const Payload &) = delete;
   Payload &operator=(const Payload &) = delete;
@@ -33,11 +31,24 @@ struct Payload {
     auto dst = buffer.size();
     auto size = std::distance((const char *)begin, (const char *)end);
     buffer.resize(dst + size);
-    std::copy((const char *)begin, (const char *)end, buffer.data());
+    std::copy((const char *)begin, (const char *)end, buffer.data() + dst);
   }
 
-  void Update(std::chrono::nanoseconds time, float x, float y, float z,
-              std::span<srht::PackQuat> rotations) {
+  void SetSkeleton(std::span<srht::JointDefinition> joints) {
+    buffer.clear();
+
+    srht::SkeletonHeader header{
+        .magic = {},
+        .skeletonId = 0,
+        .jointCount = 27,
+        .hasInitialRotation = 0,
+    };
+    Push((const char *)&header, (const char *)&header + sizeof(header));
+    Push(joints.data(), joints.data() + joints.size());
+  }
+
+  void SetFrame(std::chrono::nanoseconds time, float x, float y, float z,
+                std::span<srht::PackQuat> rotations) {
     buffer.clear();
 
     srht::FrameHeader header{
@@ -58,6 +69,7 @@ class UdpSender {
   std::list<std::shared_ptr<Payload>> payloads_;
   std::mutex mutex_;
   std::vector<srht::PackQuat> rotations_;
+  std::vector<srht::JointDefinition> joints_;
 
 public:
   UdpSender(asio::io_context &io)
@@ -79,8 +91,31 @@ public:
     payloads_.push_back(payload);
   }
 
-  void Send(asio::ip::udp::endpoint ep, std::chrono::nanoseconds time,
-            std::span<DirectX::XMFLOAT4X4> instances) {
+  void SendSkeleton(asio::ip::udp::endpoint ep,
+                    const std::shared_ptr<Bvh> &bvh) {
+    auto payload = GetOrCreatePayload();
+    joints_.clear();
+    for (auto joint : bvh->joints) {
+      joints_.push_back({
+          .parentBoneIndex = joint.parent,
+          .boneType = 0,
+          .xFromParent = joint.localOffset.x,
+          .yFromParent = joint.localOffset.y,
+          .zFromParent = joint.localOffset.z,
+      });
+    }
+    payload->SetSkeleton(joints_);
+
+    socket_.async_send_to(
+        asio::buffer(payload->buffer), ep,
+        [self = this, payload](asio::error_code ec,
+                               std::size_t bytes_transferred) {
+          self->ReleasePayload(payload);
+        });
+  }
+
+  void SendFrame(asio::ip::udp::endpoint ep, std::chrono::nanoseconds time,
+                 std::span<DirectX::XMFLOAT4X4> instances) {
 
     auto payload = GetOrCreatePayload();
 
@@ -104,7 +139,7 @@ public:
 
     auto &hips = instances[0];
 
-    payload->Update(time, hips._41, hips._42, hips._43, rotations_);
+    payload->SetFrame(time, hips._41, hips._42, hips._43, rotations_);
 
     socket_.async_send_to(
         asio::buffer(payload->buffer), ep,
@@ -137,11 +172,13 @@ int main(int argc, char **argv) {
                              54345);
   UdpSender sender(io);
   animation.OnFrame([&sender, &ep](auto time, auto instances) {
-    sender.Send(ep, time, instances);
+    sender.SendFrame(ep, time, instances);
   });
 
   if (argc > 1) {
-    animation.Load(argv[1]);
+    if (auto bvh = animation.Load(argv[1])) {
+      sender.SendSkeleton(ep, bvh);
+    }
   }
 
   // start

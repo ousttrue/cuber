@@ -15,9 +15,10 @@ class Animation {
 public:
   using OnFrameFunc = std::function<void(std::chrono::nanoseconds,
                                          std::span<DirectX::XMFLOAT4X4>)>;
+
   Animation(asio::io_context &io);
   ~Animation();
-  void Load(std::string_view file);
+  std::shared_ptr<struct Bvh> Load(std::string_view file);
   void OnFrame(const OnFrameFunc &onFrame);
   void Stop();
 };

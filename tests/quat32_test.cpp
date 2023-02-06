@@ -46,4 +46,33 @@ TEST_CASE("bitfield", "[quat32]") {
     };
     REQUIRE(packed.value == 0x40000000);
   }
+
+  {
+    quat_packer::Packed packed{
+        .value = (uint32_t)-1,
+    };
+    packed.x0 = 0;
+    REQUIRE(packed.value == 0xfffffc00);
+  }
+  {
+    quat_packer::Packed packed{
+        .value = (uint32_t)-1,
+    };
+    packed.x1 = 0;
+    REQUIRE(packed.value == 0xfff003ff);
+  }
+  {
+    quat_packer::Packed packed{
+        .value = (uint32_t)-1,
+    };
+    packed.x2 = 0;
+    REQUIRE(packed.value == 0xc00fffff);
+  }
+  {
+    quat_packer::Packed packed{
+        .value = (uint32_t)-1,
+    };
+    packed.drop = 0;
+    REQUIRE(packed.value == 0x3fffffff);
+  }
 }

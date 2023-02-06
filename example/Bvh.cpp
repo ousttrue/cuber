@@ -1,4 +1,5 @@
 #include "Bvh.h"
+#include "ReadAllBytes.h"
 #include <assert.h>
 #include <cctype>
 #include <charconv>
@@ -223,7 +224,8 @@ private:
 
         joints_.push_back(BvhJoint{
             .name = {name->begin(), name->end()},
-            .parent = stack_.empty() ? -1 : stack_.back(),
+            .parent =
+                static_cast<uint16_t>(stack_.empty() ? -1 : stack_.back()),
             .localOffset = *offset,
             .worldOffset = *offset,
             .channels = *channels,
@@ -257,7 +259,8 @@ private:
         }
         endsites_.push_back(BvhJoint{
             .name = "End Site",
-            .parent = stack_.empty() ? -1 : stack_.back(),
+            .parent =
+                static_cast<uint16_t>(stack_.empty() ? -1 : stack_.back()),
             .localOffset = *offset,
         });
 
@@ -342,4 +345,20 @@ bool Bvh::Parse(std::string_view src) {
   frame_channel_count = parser.channel_count_;
   max_height = parser.max_height_;
   return true;
+}
+
+std::shared_ptr<Bvh> Bvh::ParseFile(std::string_view file) {
+  auto bytes = ReadAllBytes<char>(std::string(file.begin(), file.end()));
+  if (bytes.empty()) {
+    return {};
+  }
+  std::cout << "load: " << file << " " << bytes.size() << "bytes" << std::endl;
+
+  auto bvh = std::make_shared<Bvh>();
+  if (!bvh->Parse({bytes.begin(), bytes.end()})) {
+    return {};
+  }
+
+  std::cout << *bvh << std::endl;
+  return bvh;
 }

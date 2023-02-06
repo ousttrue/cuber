@@ -83,7 +83,7 @@ inline std::ostream &operator<<(std::ostream &os, const BvhChannels channel) {
 
 struct BvhJoint {
   std::string name;
-  int parent;
+  uint16_t parent;
   BvhOffset localOffset;
   BvhOffset worldOffset;
   BvhChannels channels;
@@ -105,8 +105,9 @@ struct Bvh {
   float max_height = 0;
   Bvh();
   ~Bvh();
-  uint32_t FrameCount() const { return frames.size() / frame_channel_count; }
+  static std::shared_ptr<Bvh> ParseFile(std::string_view file);
   bool Parse(std::string_view src);
+  uint32_t FrameCount() const { return frames.size() / frame_channel_count; }
   const BvhJoint *GetParent(int parent) const {
     for (auto &joint : joints) {
       if (joint.parent == parent) {
@@ -131,6 +132,17 @@ struct Bvh {
   std::span<const float> GetFrame(int index) const {
     auto begin = frames.data() + index * frame_channel_count;
     return {begin, begin + frame_channel_count};
+  }
+  float GuessScaling() const {
+    // guess bvh scale
+    float scalingFactor = 1.0f;
+    if (max_height < 2) {
+      // maybe meter scale. do nothing
+    } else if (max_height < 200) {
+      // maybe cm scale
+      scalingFactor = 0.01f;
+    }
+    return scalingFactor;
   }
 };
 
