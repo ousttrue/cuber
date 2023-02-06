@@ -2,7 +2,6 @@
 #include "GlRenderer.h"
 #include "GuiApp.h"
 #include "GuiWindow.h"
-#include "TurnTable.h"
 #include <Windows.h>
 #include <imgui.h>
 #include <iostream>
@@ -21,14 +20,16 @@ int main(int argc, char **argv) {
   GuiApp app(window, gui.GlslVersion());
 
   BvhPanel bvhPanel;
-  if (argc > 1) {
-    bvhPanel.LoadBvh(argv[1]);
-  }
 
+  // bind bvh animation to renderer
   GlRenderer renderer;
   bvhPanel.OnFrame([&renderer](auto time, auto instances) {
     renderer.SetInstances(instances);
   });
+
+  if (argc > 1) {
+    bvhPanel.LoadBvh(argv[1]);
+  }
 
   // main loop
   int display_w, display_h;
