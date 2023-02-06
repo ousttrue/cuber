@@ -8,6 +8,7 @@
 #include "quat_packer.h"
 #include <DirectXMath.h>
 #include <asio.hpp>
+#include <imgui.h>
 #include <iostream>
 #include <thread>
 
@@ -53,11 +54,7 @@ struct Payload {
 
     srht::FrameHeader header{
         // .magic = {},
-        .time = time.count(),
-        .skeletonId = 0,
-        .x = x,
-        .y = y,
-        .z = z,
+        .time = time.count(), .skeletonId = 0, .x = x, .y = y, .z = z,
     };
     Push((const char *)&header, (const char *)&header + sizeof(header));
     Push(rotations.data(), rotations.data() + rotations.size());
@@ -175,8 +172,9 @@ int main(int argc, char **argv) {
     sender.SendFrame(ep, time, instances);
   });
 
+  std::shared_ptr<Bvh> bvh;
   if (argc > 1) {
-    if (auto bvh = animation.Load(argv[1])) {
+    if ((bvh = animation.Load(argv[1]))) {
       sender.SendSkeleton(ep, bvh);
     }
   }
@@ -195,21 +193,39 @@ int main(int argc, char **argv) {
   // main loop
   int display_w, display_h;
   while (auto time = gui.NewFrame(&display_w, &display_h)) {
-    app.UpdateGui();
+    {
+      // imgui
+      app.UpdateGui();
 
-    // render
-    glViewport(0, 0, display_w, display_h);
-    glClearColor(app.clear_color[0], app.clear_color[1], app.clear_color[2],
-                 app.clear_color[3]);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      if (bvh) {
+        // bvh panel
+        ImGui::Begin("BVH");
 
-    // scene
-    renderer.RenderScene(*time, app.projection, app.view);
+        ImGui::LabelText("bvh", "%zu joints", bvh->joints.size());
 
-    // app
-    app.RenderGui();
+        if (ImGui::Button("send skeleton")) {
+          sender.SendSkeleton(ep, bvh);
+        }
 
-    gui.EndFrame();
+        ImGui::End();
+      }
+    }
+
+    {
+      // render
+      glViewport(0, 0, display_w, display_h);
+      glClearColor(app.clear_color[0], app.clear_color[1], app.clear_color[2],
+                   app.clear_color[3]);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+      // scene
+      renderer.RenderScene(*time, app.projection, app.view);
+
+      // app
+      app.RenderGui();
+
+      gui.EndFrame();
+    }
   }
 
   animation.Stop();
