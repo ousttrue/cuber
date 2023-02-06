@@ -17,6 +17,7 @@ executable(
         'BvhSolver.cpp',
         'BvhNode.cpp',
         'Animation.cpp',
+        'UdpSender.cpp',
     ],
     install: true,
     dependencies: [
