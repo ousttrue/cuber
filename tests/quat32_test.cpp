@@ -20,30 +20,30 @@ TEST_CASE("pack, unpack", "[quat32]") {
 TEST_CASE("bitfield", "[quat32]") {
   {
     quat_packer::Packed packed{};
-    REQUIRE(packed.value() == 0);
+    REQUIRE(packed.value == 0);
   }
   {
     quat_packer::Packed packed{
         .x0 = 1,
     };
-    REQUIRE(packed.value() == 1);
+    REQUIRE(packed.value == 1);
   }
   {
     quat_packer::Packed packed{
         .x1 = 1,
     };
-    REQUIRE(packed.value() == 0x400);
+    REQUIRE(packed.value == 0x400);
   }
   {
     quat_packer::Packed packed{
         .x2 = 1,
     };
-    REQUIRE(packed.value() == 0x100000);
+    REQUIRE(packed.value == 0x100000);
   }
   {
     quat_packer::Packed packed{
         .drop = 1,
     };
-    REQUIRE(packed.value() == 0x40000000);
+    REQUIRE(packed.value == 0x40000000);
   }
 }

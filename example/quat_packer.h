@@ -31,13 +31,14 @@ inline int dropmax(float a, float b, float c, float d) {
 }
 inline float sign(float v) { return v < float(0.0) ? float(-1.0) : float(1.0); }
 
-struct Packed {
-  uint32_t x0 : 10;
-  uint32_t x1 : 10;
-  uint32_t x2 : 10;
-  uint32_t drop : 2;
-
-  uint32_t value() const { return *((uint32_t *)this); }
+union Packed {
+  uint32_t value;
+  struct {
+    uint32_t x0 : 10;
+    uint32_t x1 : 10;
+    uint32_t x2 : 10;
+    uint32_t drop : 2;
+  };
 };
 
 inline uint32_t pack(float x, float y, float z, float w) {
