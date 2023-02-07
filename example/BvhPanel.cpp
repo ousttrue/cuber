@@ -14,13 +14,16 @@ class BvhPanelImpl {
   std::thread thread_;
   std::shared_ptr<Bvh> bvh_;
   asio::ip::udp::endpoint ep_;
+  bool enablePackQuat_ = false;
+  std::vector<int> parentMap_;
 
 public:
   BvhPanelImpl()
       : work_(asio::make_work_guard(io_)), animation_(io_), sender_(io_),
         ep_(asio::ip::address::from_string("127.0.0.1"), 54345) {
     animation_.OnFrame([self = this](auto time, auto instances) {
-      self->sender_.SendFrame(self->ep_, time, instances);
+      self->sender_.SendFrame(self->ep_, time, instances, self->parentMap_,
+                              self->enablePackQuat_);
     });
     thread_ = std::thread([self = this]() {
       try {
@@ -41,6 +44,9 @@ public:
     if (!bvh_) {
       return false;
     }
+    for (auto &joint : bvh_->joints) {
+      parentMap_.push_back(joint.parent);
+    }
     sender_.SendSkeleton(ep_, bvh_);
     return true;
   }
@@ -52,6 +58,8 @@ public:
     ImGui::Begin("BVH");
 
     ImGui::LabelText("bvh", "%zu joints", bvh_->joints.size());
+
+    ImGui::Checkbox("use quaternion pack32", &enablePackQuat_);
 
     if (ImGui::Button("send skeleton")) {
       sender_.SendSkeleton(ep_, bvh_);

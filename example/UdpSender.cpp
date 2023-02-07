@@ -18,6 +18,10 @@ struct Payload {
     std::copy((const char *)begin, (const char *)end, buffer.data() + dst);
   }
 
+  template <typename T> void Push(const T &t) {
+    Push((const char *)&t, (const char *)&t + sizeof(T));
+  }
+
   void SetSkeleton(std::span<srht::JointDefinition> joints) {
     buffer.clear();
 
@@ -32,20 +36,20 @@ struct Payload {
   }
 
   void SetFrame(std::chrono::nanoseconds time, float x, float y, float z,
-                std::span<srht::PackQuat> rotations) {
+                bool usePack) {
     buffer.clear();
 
     srht::FrameHeader header{
         // .magic = {},
         .time = time.count(),
-        .flags = {},
+        .flags =
+            usePack ? srht::FrameFlags::USE_QUAT32 : srht::FrameFlags::NONE,
         .skeletonId = 0,
         .x = x,
         .y = y,
         .z = z,
     };
     Push((const char *)&header, (const char *)&header + sizeof(header));
-    Push(rotations.data(), rotations.data() + rotations.size());
   }
 };
 
@@ -72,13 +76,14 @@ void UdpSender::SendSkeleton(asio::ip::udp::endpoint ep,
                              const std::shared_ptr<Bvh> &bvh) {
   auto payload = GetOrCreatePayload();
   joints_.clear();
+  auto scaling = bvh->GuessScaling();
   for (auto joint : bvh->joints) {
     joints_.push_back({
         .parentBoneIndex = joint.parent,
         .boneType = 0,
-        .xFromParent = joint.localOffset.x,
-        .yFromParent = joint.localOffset.y,
-        .zFromParent = joint.localOffset.z,
+        .xFromParent = joint.localOffset.x * scaling,
+        .yFromParent = joint.localOffset.y * scaling,
+        .zFromParent = joint.localOffset.z * scaling,
     });
   }
   payload->SetSkeleton(joints_);
@@ -92,31 +97,48 @@ void UdpSender::SendSkeleton(asio::ip::udp::endpoint ep,
 
 void UdpSender::SendFrame(asio::ip::udp::endpoint ep,
                           std::chrono::nanoseconds time,
-                          std::span<DirectX::XMFLOAT4X4> instances) {
+                          std::span<DirectX::XMFLOAT4X4> instances,
+                          std::span<int> parentMap, bool pack) {
 
   auto payload = GetOrCreatePayload();
-
-  rotations_.clear();
-  for (auto &instance : instances) {
-    auto m = DirectX::XMLoadFloat4x4(&instance);
-    auto r = DirectX::XMQuaternionRotationMatrix(m);
-    DirectX::XMFLOAT4 rotation;
-    DirectX::XMStoreFloat4(&rotation, r);
-    auto packed =
-        quat_packer::Pack(rotation.x, rotation.y, rotation.z, rotation.w);
-#if _DEBUG
-    {
-      mu::quatf debug_q{rotation.x, rotation.y, rotation.z, rotation.w};
-      auto debug_packed = mu::quat32(debug_q);
-      assert(*(uint32_t *)&debug_packed.value == packed);
-    }
-#endif
-    rotations_.push_back({.value = packed});
-  }
-
   auto &hips = instances[0];
+  payload->SetFrame(time, hips._41, hips._42, hips._43, pack);
 
-  payload->SetFrame(time, hips._41, hips._42, hips._43, rotations_);
+  for (int i = 0; i < instances.size(); ++i) {
+    auto &instance = instances[i];
+    auto parentIndex = parentMap[i];
+    auto m = DirectX::XMLoadFloat4x4(&instance);
+    // auto r = DirectX::XMQuaternionRotationMatrix(m);
+    auto parent = DirectX::XMMatrixIdentity();
+    if (parentIndex != 65535) {
+      parent = DirectX::XMLoadFloat4x4(&instances[parentIndex]);
+    }
+    auto localRotation = DirectX::XMQuaternionRotationMatrix(
+        m * DirectX::XMMatrixInverse(nullptr, parent));
+
+    // DirectX::XMVECTOR axis;
+    // float angle;
+    // DirectX::XMQuaternionToAxisAngle(&axis, &angle, local);
+    // local = DirectX::XMQuaternionRotationAxis(axis, angle*0.5f);
+
+    DirectX::XMFLOAT4 rotation;
+    DirectX::XMStoreFloat4(&rotation, localRotation);
+
+    if (pack) {
+      auto packed =
+          quat_packer::Pack(rotation.x, rotation.y, rotation.z, rotation.w);
+#if _DEBUG
+      {
+        mu::quatf debug_q{rotation.x, rotation.y, rotation.z, rotation.w};
+        auto debug_packed = mu::quat32(debug_q);
+        assert(*(uint32_t *)&debug_packed.value == packed);
+      }
+      payload->Push(packed);
+#endif
+    } else {
+      payload->Push(rotation);
+    }
+  }
 
   socket_.async_send_to(asio::buffer(payload->buffer), ep,
                         [self = this, payload](asio::error_code ec,
