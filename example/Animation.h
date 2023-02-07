@@ -18,7 +18,7 @@ public:
 
   Animation(asio::io_context &io);
   ~Animation();
-  std::shared_ptr<struct Bvh> Load(std::string_view file);
+  void SetBvh(const std::shared_ptr<struct Bvh> &bvh);
   void OnFrame(const OnFrameFunc &onFrame);
   void Stop();
 };

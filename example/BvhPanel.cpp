@@ -39,16 +39,16 @@ public:
     work_.reset();
     thread_.join();
   }
-  bool LoadBvh(std::string_view path) {
-    bvh_ = animation_.Load(path);
+  void SetBvh(const std::shared_ptr<Bvh> &bvh) {
+    bvh_ = bvh;
     if (!bvh_) {
-      return false;
+      return;
     }
+    animation_.SetBvh(bvh);
     for (auto &joint : bvh_->joints) {
       parentMap_.push_back(joint.parent);
     }
     sender_.SendSkeleton(ep_, bvh_);
-    return true;
   }
   void UpdateGui() {
     if (!bvh_) {
@@ -74,7 +74,7 @@ public:
 
 BvhPanel::BvhPanel() : impl_(new BvhPanelImpl) {}
 BvhPanel::~BvhPanel() { delete impl_; }
-bool BvhPanel::LoadBvh(std::string_view path) { return impl_->LoadBvh(path); }
+void BvhPanel::SetBvh(const std::shared_ptr<Bvh> &bvh) { impl_->SetBvh(bvh); }
 void BvhPanel::OnFrame(const Animation::OnFrameFunc &onFrame) {
   impl_->OnFrame(onFrame);
 }

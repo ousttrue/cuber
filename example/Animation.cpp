@@ -27,15 +27,14 @@ struct AnimationImpl {
 
   void BeginTimer(std::chrono::nanoseconds interval) {
     startTime_ = std::chrono::steady_clock::now();
-    timer_ = std::shared_ptr<asio::steady_timer>(
-        new asio::steady_timer(io_));
+    timer_ = std::shared_ptr<asio::steady_timer>(new asio::steady_timer(io_));
     AsyncWait(interval);
   }
 
   void AsyncWait(std::chrono::nanoseconds interval) {
     if (auto timer = timer_) {
       try {
-        timer->expires_after(interval);        
+        timer->expires_after(interval);
         timer->async_wait([self = this, interval](const std::error_code &) {
           self->Update();
           self->AsyncWait(interval);
@@ -60,27 +59,23 @@ struct AnimationImpl {
     }
   }
 
-  std::shared_ptr<Bvh> Load(std::string_view file) {
+  void SetBvh(const std::shared_ptr<Bvh> &bvh) {
 
-    bvh_ = Bvh::ParseFile(file);
+    bvh_ = bvh;
     if (!bvh_) {
-      return {};
+      return;
     }
 
     bvhSolver_.Initialize(bvh_);
 
     BeginTimer(
         std::chrono::duration_cast<std::chrono::nanoseconds>(bvh_->frame_time));
-
-    return bvh_;
   }
 };
 
 Animation::Animation(asio::io_context &io) : impl_(new AnimationImpl(io)) {}
 Animation::~Animation() { delete (impl_); }
-std::shared_ptr<Bvh> Animation::Load(std::string_view file) {
-  return impl_->Load(file);
-}
+void Animation::SetBvh(const std::shared_ptr<Bvh> &bvh) { impl_->SetBvh(bvh); }
 void Animation::OnFrame(const OnFrameFunc &onFrame) {
   impl_->onFrameCallbacks_.push_back(onFrame);
 }

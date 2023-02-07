@@ -11,7 +11,7 @@ class BvhPanel {
 public:
   BvhPanel();
   ~BvhPanel();
-  bool LoadBvh(std::string_view path);
+  void SetBvh(const std::shared_ptr<struct Bvh> &bvh);
   void
   OnFrame(const std::function<void(std::chrono::nanoseconds,
                                    std::span<DirectX::XMFLOAT4X4>)> &onFrame);

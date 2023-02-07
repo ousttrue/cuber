@@ -1,3 +1,4 @@
+#include "Bvh.h"
 #include "BvhPanel.h"
 #include "GlRenderer.h"
 #include "GuiApp.h"
@@ -28,7 +29,9 @@ int main(int argc, char **argv) {
   });
 
   if (argc > 1) {
-    bvhPanel.LoadBvh(argv[1]);
+    if (auto bvh = Bvh::ParseFile(argv[1])) {
+      bvhPanel.SetBvh(bvh);
+    }
   }
 
   // main loop
