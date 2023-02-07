@@ -22,11 +22,10 @@ void BvhSolver::PushJoint(const BvhJoint &joint, float scaling) {
 
 void BvhSolver::CalcShape() { root_->CalcShape(); }
 
-void BvhSolver::PushFrame(BvhTime time, std::span<const float> channelValues,
-                          float scaling) {
-  auto it = channelValues.begin();
+void BvhSolver::PushFrame(const BvhFrame &frame, float scaling) {
+  auto it = frame.values.begin();
   root_->PushFrame(it, scaling);
-  assert(it == channelValues.end());
+  assert(it == frame.values.end());
 }
 
 std::span<DirectX::XMFLOAT4X4> BvhSolver::GetFrame(int frame) {

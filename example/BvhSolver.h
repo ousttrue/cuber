@@ -20,8 +20,7 @@ public:
   }
   void PushJoint(const BvhJoint &joint, float scaling);
   void CalcShape();
-  void PushFrame(BvhTime time, std::span<const float> channelValues,
-                 float scaling);
+  void PushFrame(const BvhFrame &time, float scaling);
   std::span<DirectX::XMFLOAT4X4> GetFrame(int frame);
 
 private:

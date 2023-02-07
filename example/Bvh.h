@@ -96,6 +96,12 @@ inline std::ostream &operator<<(std::ostream &os, const BvhJoint &joint) {
 
 using BvhTime = std::chrono::duration<float, std::ratio<1, 1>>;
 
+struct BvhFrame {
+  int index;
+  BvhTime time;
+  std::span<const float> values;
+};
+
 struct Bvh {
   std::vector<BvhJoint> joints;
   std::vector<BvhJoint> endsites;
@@ -124,14 +130,13 @@ struct Bvh {
     }
     return index;
   }
-  std::tuple<int, std::span<const float>> GetFrame(BvhTime time) const {
-    auto index = TimeToIndex(time);
+  BvhFrame GetFrame(int index) const {
     auto begin = frames.data() + index * frame_channel_count;
-    return {index, {begin, begin + frame_channel_count}};
-  }
-  std::span<const float> GetFrame(int index) const {
-    auto begin = frames.data() + index * frame_channel_count;
-    return {begin, begin + frame_channel_count};
+    return {
+        .index = index,
+        .time = frame_time * index,
+        .values = {begin, begin + frame_channel_count},
+    };
   }
   float GuessScaling() const {
     // guess bvh scale

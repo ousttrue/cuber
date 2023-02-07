@@ -78,8 +78,8 @@ struct AnimationImpl {
     int frameCount = bvh_->FrameCount();
     for (int i = 0; i < frameCount; ++i) {
       auto frame = bvh_->GetFrame(i);
-      auto time = bvh_->frame_time * i;
-      bvhSolver_.PushFrame(time, frame, scalingFactor);
+      // auto time = bvh_->frame_time * i;
+      bvhSolver_.PushFrame(frame, scalingFactor);
     }
 
     BeginTimer(
