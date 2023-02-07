@@ -15,6 +15,9 @@ struct AnimationImpl {
   BvhSolver bvhSolver_;
   std::list<Animation::OnFrameFunc> onFrameCallbacks_;
 
+  int counter_ = 0;
+  int lastFrame_ = -1;
+
   AnimationImpl(asio::io_context &io) : io_(io) {}
 
   void Stop() {
@@ -25,16 +28,17 @@ struct AnimationImpl {
   void BeginTimer(std::chrono::nanoseconds interval) {
     startTime_ = std::chrono::steady_clock::now();
     timer_ = std::shared_ptr<asio::steady_timer>(
-        new asio::steady_timer(io_, interval));
-    AsyncWait();
+        new asio::steady_timer(io_));
+    AsyncWait(interval);
   }
 
-  void AsyncWait() {
+  void AsyncWait(std::chrono::nanoseconds interval) {
     if (auto timer = timer_) {
       try {
-        timer->async_wait([self = this](const std::error_code &) {
+        timer->expires_after(interval);        
+        timer->async_wait([self = this, interval](const std::error_code &) {
           self->Update();
-          self->AsyncWait();
+          self->AsyncWait(interval);
         });
       } catch (std::exception const &e) {
         std::cout << "AsyncWait catch: " << e.what() << std::endl;
@@ -43,8 +47,14 @@ struct AnimationImpl {
   }
 
   void Update() {
+    ++counter_;
     auto elapsed = std::chrono::steady_clock::now() - startTime_;
     auto index = bvh_->TimeToIndex(elapsed);
+    if (index == lastFrame_) {
+      std::cout << index << std::endl;
+      return;
+    }
+    lastFrame_ = index;
     for (auto &callback : onFrameCallbacks_) {
       callback(elapsed, bvhSolver_.GetFrame(index));
     }
