@@ -19,6 +19,7 @@ executable(
         'Animation.cpp',
         'UdpSender.cpp',
         'BvhPanel.cpp',
+        'Payload.cpp',
     ],
     install: true,
     dependencies: [
