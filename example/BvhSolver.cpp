@@ -3,12 +3,27 @@
 #include <assert.h>
 #include <iostream>
 
-//
-// BvhSolver
-//
-void BvhSolver::PushJoint(const BvhJoint &joint, float scaling) {
+void BvhSolver::Initialize(const std::shared_ptr<Bvh> &bvh) {
+  nodes_.clear();
+  root_.reset();
+  instances_.clear();
 
-  auto node = BvhNode::Create(joint, scaling, nodes_.empty());
+  scaling_ = bvh->GuessScaling();
+  for (auto &joint : bvh->joints) {
+    PushJoint(joint);
+  };
+  CalcShape();
+
+  int frameCount = bvh->FrameCount();
+  for (int i = 0; i < frameCount; ++i) {
+    auto frame = bvh->GetFrame(i);
+    // auto time = bvh_->frame_time * i;
+    PushFrame(frame);
+  }
+}
+
+void BvhSolver::PushJoint(const BvhJoint &joint) {
+  auto node = BvhNode::Create(joint, scaling_, nodes_.empty());
   nodes_.push_back(node);
   instances_.push_back({});
 
@@ -22,9 +37,9 @@ void BvhSolver::PushJoint(const BvhJoint &joint, float scaling) {
 
 void BvhSolver::CalcShape() { root_->CalcShape(); }
 
-void BvhSolver::PushFrame(const BvhFrame &frame, float scaling) {
+void BvhSolver::PushFrame(const BvhFrame &frame) {
   auto it = frame.values.begin();
-  root_->PushFrame(it, scaling);
+  root_->PushFrame(it, scaling_);
   assert(it == frame.values.end());
 }
 
