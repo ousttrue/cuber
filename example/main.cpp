@@ -20,43 +20,45 @@ int main(int argc, char **argv) {
 
   GuiApp app(window, gui.GlslVersion());
 
-  BvhPanel bvhPanel;
-
-  // bind bvh animation to renderer
   GlRenderer renderer;
-  bvhPanel.OnFrame([&renderer](auto time, auto instances) {
-    renderer.SetInstances(instances);
-  });
+  {
+    BvhPanel bvhPanel;
 
-  if (argc > 1) {
-    if (auto bvh = Bvh::ParseFile(argv[1])) {
-      bvhPanel.SetBvh(bvh);
-    }
-  }
+    // bind bvh animation to renderer
+    bvhPanel.OnFrame(
+        [&renderer](const BvhFrame &frame) { renderer.SetFrame(frame); });
 
-  // main loop
-  int display_w, display_h;
-  while (auto time = gui.NewFrame(&display_w, &display_h)) {
-    {
-      // imgui
-      app.UpdateGui();
-      bvhPanel.UpdateGui();
+    if (argc > 1) {
+      if (auto bvh = Bvh::ParseFile(argv[1])) {
+        bvhPanel.SetBvh(bvh);
+        renderer.SetBvh(bvh);
+      }
     }
 
-    {
-      // render
-      glViewport(0, 0, display_w, display_h);
-      glClearColor(app.clear_color[0], app.clear_color[1], app.clear_color[2],
-                   app.clear_color[3]);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // main loop
+    int display_w, display_h;
+    while (auto time = gui.NewFrame(&display_w, &display_h)) {
+      {
+        // imgui
+        app.UpdateGui();
+        bvhPanel.UpdateGui();
+      }
 
-      // scene
-      renderer.RenderScene(*time, app.projection, app.view);
+      {
+        // render
+        glViewport(0, 0, display_w, display_h);
+        glClearColor(app.clear_color[0], app.clear_color[1], app.clear_color[2],
+                     app.clear_color[3]);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      // app
-      app.RenderGui();
+        // scene
+        renderer.RenderScene(*time, app.projection, app.view);
 
-      gui.EndFrame();
+        // app
+        app.RenderGui();
+
+        gui.EndFrame();
+      }
     }
   }
 

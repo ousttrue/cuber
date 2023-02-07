@@ -1,4 +1,5 @@
 #pragma once
+#include "Bvh.h"
 #include <DirectXMath.h>
 #include <chrono>
 #include <functional>
@@ -11,9 +12,7 @@ class BvhPanel {
 public:
   BvhPanel();
   ~BvhPanel();
-  void SetBvh(const std::shared_ptr<struct Bvh> &bvh);
-  void
-  OnFrame(const std::function<void(std::chrono::nanoseconds,
-                                   std::span<DirectX::XMFLOAT4X4>)> &onFrame);
+  void SetBvh(const std::shared_ptr<Bvh> &bvh);
+  void OnFrame(const std::function<void(const BvhFrame &frame)> &onFrame);
   void UpdateGui();
 };

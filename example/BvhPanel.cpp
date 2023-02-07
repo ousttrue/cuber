@@ -21,10 +21,10 @@ public:
   BvhPanelImpl()
       : work_(asio::make_work_guard(io_)), animation_(io_), sender_(io_),
         ep_(asio::ip::address::from_string("127.0.0.1"), 54345) {
-    animation_.OnFrame([self = this](auto time, auto instances) {
-      self->sender_.SendFrame(self->ep_, time, instances, self->parentMap_,
-                              self->enablePackQuat_);
-    });
+    // animation_.OnFrame([self = this](auto time, auto instances) {
+    //   self->sender_.SendFrame(self->ep_, time, instances, self->parentMap_,
+    //                           self->enablePackQuat_);
+    // });
     thread_ = std::thread([self = this]() {
       try {
         self->io_.run();

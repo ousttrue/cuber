@@ -1,9 +1,11 @@
 #include "GlRenderer.h"
+#include "BvhSolver.h"
 #include <GL/glew.h>
 #include <iostream>
 
 struct GlRendererImpl {
-public:
+  BvhSolver bvhSolver_;
+
   GlRendererImpl() {
     std::cout << "GL_VERSION: " << glGetString(GL_VERSION) << std::endl;
     glewInit();
@@ -16,9 +18,16 @@ GlRenderer::GlRenderer() : impl_(new GlRendererImpl) {}
 
 GlRenderer::~GlRenderer() { delete impl_; }
 
-void GlRenderer::SetInstances(std::span<DirectX::XMFLOAT4X4> instances) {
-  std::lock_guard<std::mutex> lock(mutex_);
-  insancies_.assign(instances.begin(), instances.end());
+void GlRenderer::SetBvh(const std::shared_ptr<struct Bvh> &bvh) {
+  impl_->bvhSolver_.Initialize(bvh);
+}
+
+void GlRenderer::SetFrame(const BvhFrame &frame) {
+  auto instances = impl_->bvhSolver_.GetFrame(frame.index);
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    insancies_.assign(instances.begin(), instances.end());
+  }
 }
 
 void GlRenderer::RenderScene(RenderTime time, const float projection[16],

@@ -1,4 +1,5 @@
 #pragma once
+#include "Bvh.h"
 #include <DirectXMath.h>
 #include <chrono>
 #include <cuber.h>
@@ -20,8 +21,8 @@ public:
   GlRenderer &operator=(const GlRenderer &) = delete;
   GlRenderer();
   ~GlRenderer();
-
-  void SetInstances(std::span<DirectX::XMFLOAT4X4> instances);
+  void SetBvh(const std::shared_ptr<Bvh> &bvh);
+  void SetFrame(const BvhFrame &frame);
   void RenderScene(RenderTime time, const float projection[16],
                    const float view[16]);
 };

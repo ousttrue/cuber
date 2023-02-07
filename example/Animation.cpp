@@ -1,6 +1,4 @@
 #include "Animation.h"
-#include "Bvh.h"
-#include "BvhSolver.h"
 #include <asio.hpp>
 #include <fstream>
 #include <iostream>
@@ -9,14 +7,10 @@
 struct AnimationImpl {
   asio::io_context &io_;
   std::shared_ptr<asio::steady_timer> timer_;
+
   std::chrono::steady_clock::time_point startTime_;
-
   std::shared_ptr<Bvh> bvh_;
-  BvhSolver bvhSolver_;
   std::list<Animation::OnFrameFunc> onFrameCallbacks_;
-
-  int counter_ = 0;
-  int lastFrame_ = -1;
 
   AnimationImpl(asio::io_context &io) : io_(io) {}
 
@@ -46,27 +40,19 @@ struct AnimationImpl {
   }
 
   void Update() {
-    ++counter_;
     auto elapsed = std::chrono::steady_clock::now() - startTime_;
     auto index = bvh_->TimeToIndex(elapsed);
-    if (index == lastFrame_) {
-      std::cout << index << std::endl;
-      return;
-    }
-    lastFrame_ = index;
+    auto frame = bvh_->GetFrame(index);
     for (auto &callback : onFrameCallbacks_) {
-      callback(elapsed, bvhSolver_.GetFrame(index));
+      callback(frame);
     }
   }
 
   void SetBvh(const std::shared_ptr<Bvh> &bvh) {
-
     bvh_ = bvh;
     if (!bvh_) {
       return;
     }
-
-    bvhSolver_.Initialize(bvh_);
 
     BeginTimer(
         std::chrono::duration_cast<std::chrono::nanoseconds>(bvh_->frame_time));
