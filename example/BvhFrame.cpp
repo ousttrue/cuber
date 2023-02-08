@@ -12,8 +12,8 @@ BvhMat3 BvhMat3::RotateXDegrees(float degree) {
   auto c = std::cos(rad);
   return {
       1, 0, 0,  //
-      0, c, -s, //
-      0, s, c   //
+      0, c, s, //
+      0, -s, c   //
   };
 }
 BvhMat3 BvhMat3::RotateYDegrees(float degree) {
@@ -21,9 +21,9 @@ BvhMat3 BvhMat3::RotateYDegrees(float degree) {
   auto s = std::sin(rad);
   auto c = std::cos(rad);
   return {
-      c,  0, s, //
+      c,  0, -s, //
       0,  1, 0, //
-      -s, 0, c, //
+      s, 0, c, //
   };
 }
 BvhMat3 BvhMat3::RotateZDegrees(float degree) {
@@ -31,8 +31,8 @@ BvhMat3 BvhMat3::RotateZDegrees(float degree) {
   auto s = std::sin(rad);
   auto c = std::cos(rad);
   return {
-      c, -s, 0, //
-      s, c,  0, //
+      c, s, 0, //
+      -s, c,  0, //
       0, 0,  1  //
   };
 }
@@ -54,13 +54,13 @@ BvhFrame::Resolve(const BvhChannels &channels) const {
       pos.z = values[index];
       break;
     case BvhChannelTypes::Xrotation:
-      rot = rot * BvhMat3::RotateXDegrees(values[index]);
+      rot = BvhMat3::RotateXDegrees(values[index]) * rot;
       break;
     case BvhChannelTypes::Yrotation:
-      rot = rot * BvhMat3::RotateYDegrees(values[index]);
+      rot = BvhMat3::RotateYDegrees(values[index]) * rot;
       break;
     case BvhChannelTypes::Zrotation:
-      rot = rot * BvhMat3::RotateZDegrees(values[index]);
+      rot = BvhMat3::RotateZDegrees(values[index]) * rot;
       break;
     case BvhChannelTypes::None:
       break;

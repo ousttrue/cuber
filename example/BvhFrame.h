@@ -23,12 +23,12 @@ inline std::ostream &operator<<(std::ostream &os, const BvhOffset &offset) {
 ///
 /// Mat3 for bvh rotation
 ///
-/// cos -sin
-/// sin cos
+/// cos sin
+///-sin cos
 ///
-/// [0, 1, 2][x]    [0x + 1y + 2z]
-/// [3, 4, 5][y] => [3x + 4y + 5z]
-/// [6, 7, 8][z]    [6x + 7y + 8z]
+///        [0, 1, 2]    
+/// [x,y,z][3, 4, 5] => [0x + 3y + 6z][1x + 4y + 7z][2x + 5y + 8z]
+///        [6, 7, 8]    
 ///
 struct BvhMat3 {
   float _0 = 1;

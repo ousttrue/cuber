@@ -64,7 +64,6 @@ void BvhNode::ResolveFrame(const BvhFrame &frame, DirectX::XMMATRIX m,
 
   auto t = DirectX::XMMatrixTranslation(pos.x * scaling, pos.y * scaling,
                                         pos.z * scaling);
-  rot = rot.Transpose();
   auto r = DirectX::XMLoadFloat3x3((const DirectX::XMFLOAT3X3 *)&rot);
   auto local = r * t;
 
