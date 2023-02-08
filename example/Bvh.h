@@ -83,6 +83,7 @@ inline std::ostream &operator<<(std::ostream &os, const BvhChannels channel) {
 
 struct BvhJoint {
   std::string name;
+  uint16_t index;
   uint16_t parent;
   BvhOffset localOffset;
   BvhOffset worldOffset;

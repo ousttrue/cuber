@@ -23,7 +23,7 @@ void BvhSolver::Initialize(const std::shared_ptr<Bvh> &bvh) {
 }
 
 void BvhSolver::PushJoint(const BvhJoint &joint) {
-  auto node = BvhNode::Create(joint, scaling_, nodes_.empty());
+  auto node = BvhNode::Create(joint, scaling_);
   nodes_.push_back(node);
   instances_.push_back({});
 

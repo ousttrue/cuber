@@ -11,17 +11,15 @@ struct BvhCurve {
 };
 
 class BvhNode {
-  std::string name_;
-  bool isRoot_ = false;
+  const BvhJoint &joint_;
   DirectX::SimpleMath::Vector3 localOffset_;
   BvhCurve curves_[6];
   std::list<std::shared_ptr<BvhNode>> children_;
   DirectX::XMFLOAT4X4 shape_;
 
 public:
-  BvhNode(std::string_view name, const DirectX::XMFLOAT3 &offset, bool isRoot);
-  static std::shared_ptr<BvhNode> Create(const BvhJoint &joint, float scaling,
-                                         bool isRoot);
+  BvhNode(const BvhJoint &joint, const DirectX::XMFLOAT3 &offset);
+  static std::shared_ptr<BvhNode> Create(const BvhJoint &joint, float scaling);
   int ChannelCount() const {
     int i = 0;
     for (; i < 6; ++i) {

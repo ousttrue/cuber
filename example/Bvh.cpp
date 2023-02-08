@@ -224,6 +224,7 @@ private:
 
         joints_.push_back(BvhJoint{
             .name = {name->begin(), name->end()},
+            .index = static_cast<uint16_t>(index),
             .parent =
                 static_cast<uint16_t>(stack_.empty() ? -1 : stack_.back()),
             .localOffset = *offset,
