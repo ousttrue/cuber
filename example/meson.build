@@ -21,6 +21,7 @@ executable(
         'UdpSender.cpp',
         'BvhPanel.cpp',
         'Payload.cpp',
+        'BvhFrame.cpp',
     ],
     install: true,
     dependencies: [
