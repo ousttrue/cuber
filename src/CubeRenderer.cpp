@@ -34,6 +34,37 @@ void main()
 }
 )";
 
+struct XY {
+  float x;
+  float y;
+};
+
+struct XYZ {
+  float x;
+  float y;
+  float z;
+};
+
+struct XYZW {
+  float x;
+  float y;
+  float z;
+  float w;
+};
+
+struct RGBA {
+  float r;
+  float g;
+  float b;
+  float a;
+};
+
+struct Instance {
+  XYZW row0;
+  XYZW row1;
+  XYZW row2;
+  XYZW row3;
+};
 struct Vertex {
   XYZ position;
   XY barycentric;
@@ -214,7 +245,7 @@ CubeRenderer::CubeRenderer() {
     throw std::runtime_error("cuber::Vbo::Create");
   }
 
-  instance_vbo_ = cuber::Vbo::Create(sizeof(Instance) * 65535);
+  instance_vbo_ = cuber::Vbo::Create(sizeof(float) * 16 * 65535);
   if (!instance_vbo_) {
     throw std::runtime_error("cuber::Vbo::Create");
   }
@@ -286,7 +317,7 @@ CubeRenderer::CubeRenderer() {
 }
 CubeRenderer::~CubeRenderer() {}
 void CubeRenderer::Render(const float projection[16], const float view[16],
-                          std::span<Instance> instances) {
+                          const void *data, uint32_t instanceCount) {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
 
@@ -298,8 +329,8 @@ void CubeRenderer::Render(const float projection[16], const float view[16],
   shader_->Bind();
   shader_->SetUniformMatrix([](auto err) {}, "VP", vp);
 
-  instance_vbo_->Upload(sizeof(Instance) * instances.size(), instances.data());
-  vao_->DrawInstance(instances.size(), CUBE_INDEX_COUNT);
+  instance_vbo_->Upload(sizeof(float) * 16 * instanceCount, data);
+  vao_->DrawInstance(instanceCount, CUBE_INDEX_COUNT);
 }
 
 } // namespace cuber

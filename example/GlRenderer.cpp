@@ -34,8 +34,6 @@ void GlRenderer::RenderScene(RenderTime time, const float projection[16],
                              const float view[16]) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (!instancies_.empty()) {
-    auto begin = (cuber::Instance *)&*instancies_.begin();
-    auto end = begin + instancies_.size();
-    cubes.Render(projection, view, {begin, end});
+    cubes.Render<DirectX::XMFLOAT4X4>(projection, view, instancies_);
   }
 }

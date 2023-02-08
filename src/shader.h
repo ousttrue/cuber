@@ -1,6 +1,5 @@
 #pragma once
 #include "error_handler.h"
-#include "geometry.h"
 #include <functional>
 #include <memory>
 #include <optional>
@@ -9,6 +8,9 @@
 #include <string_view>
 
 namespace cuber {
+
+template <typename T>
+concept Mat4 = sizeof(T) == 4 * 16;
 
 class ShaderProgram {
   uint32_t program_ = 0;
