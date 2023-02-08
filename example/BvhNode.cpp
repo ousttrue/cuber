@@ -3,9 +3,6 @@
 const float DEFAULT_SIZE = 0.04f;
 
 BvhNode::BvhNode(const BvhJoint &joint) : joint_(joint) {
-  for (int i = 0; i < 6; ++i) {
-    curves_[i].chnnel = joint.channels.values[i];
-  }
   DirectX::XMStoreFloat4x4(
       &shape_,
       DirectX::XMMatrixScaling(DEFAULT_SIZE, DEFAULT_SIZE, DEFAULT_SIZE));
@@ -59,31 +56,6 @@ void BvhNode::CalcShape(float scaling) {
   }
 }
 
-void BvhNode::PushFrame(std::span<const float>::iterator &it) {
-
-  for (int i = 0; i < joint_.channels.size(); ++i, ++it) {
-    auto &curve = curves_[i];
-    switch (curve.chnnel) {
-    case BvhChannelTypes::Xposition:
-    case BvhChannelTypes::Yposition:
-    case BvhChannelTypes::Zposition:
-      curve.values.push_back(*it);
-      break;
-    case BvhChannelTypes::Xrotation:
-    case BvhChannelTypes::Yrotation:
-    case BvhChannelTypes::Zrotation:
-      curve.values.push_back(*it);
-      break;
-
-    default:
-      break;
-    }
-  }
-  for (auto &child : children_) {
-    child->PushFrame(it);
-  }
-}
-
 // [x, y, z][c6][c5][c4][c3][c2][c1][parent][root]
 void BvhNode::ResolveFrame(const BvhFrame &frame, DirectX::XMMATRIX m,
                            float scaling,
@@ -95,43 +67,44 @@ void BvhNode::ResolveFrame(const BvhFrame &frame, DirectX::XMMATRIX m,
                                              joint_.localOffset.y * scaling,
                                              joint_.localOffset.z * scaling);
 
-  for (int i = 0; i < 6; ++i) {
-    auto &curve = curves_[i];
-    switch (curve.chnnel) {
+  auto index = joint_.channelIndex;
+  for (int i = 0; i < 6; ++i, ++index) {
+    // auto &curve = curves_[i];
+    switch (joint_.channels.values[i]) {
     case BvhChannelTypes::Xposition:
       if (isRoot_) {
-        local = DirectX::XMMatrixTranslation(
-                    curve.values[frame.index] * scaling, 0, 0) *
-                local;
+        local =
+            DirectX::XMMatrixTranslation(frame.values[index] * scaling, 0, 0) *
+            local;
       }
       break;
     case BvhChannelTypes::Yposition:
       if (isRoot_) {
-        local = DirectX::XMMatrixTranslation(
-                    0, curve.values[frame.index] * scaling, 0) *
-                local;
+        local =
+            DirectX::XMMatrixTranslation(0, frame.values[index] * scaling, 0) *
+            local;
       }
       break;
     case BvhChannelTypes::Zposition:
       if (isRoot_) {
-        local = DirectX::XMMatrixTranslation(
-                    0, 0, curve.values[frame.index] * scaling) *
-                local;
+        local =
+            DirectX::XMMatrixTranslation(0, 0, frame.values[index] * scaling) *
+            local;
       }
       break;
     case BvhChannelTypes::Xrotation:
       local = DirectX::XMMatrixRotationX(
-                  DirectX::XMConvertToRadians(curve.values[frame.index])) *
+                  DirectX::XMConvertToRadians(frame.values[index])) *
               local;
       break;
     case BvhChannelTypes::Yrotation:
       local = DirectX::XMMatrixRotationY(
-                  DirectX::XMConvertToRadians(curve.values[frame.index])) *
+                  DirectX::XMConvertToRadians(frame.values[index])) *
               local;
       break;
     case BvhChannelTypes::Zrotation:
       local = DirectX::XMMatrixRotationZ(
-                  DirectX::XMConvertToRadians(curve.values[frame.index])) *
+                  DirectX::XMConvertToRadians(frame.values[index])) *
               local;
       break;
     case BvhChannelTypes::None:

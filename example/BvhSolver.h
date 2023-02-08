@@ -20,8 +20,4 @@ public:
 private:
   void PushJoint(const BvhJoint &joint);
   void CalcShape();
-  void PushFrame(const BvhFrame &time);
-
-  void PushFrame(std::span<const float>::iterator &it,
-                 std::shared_ptr<BvhNode> node);
 };

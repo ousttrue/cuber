@@ -13,13 +13,6 @@ void BvhSolver::Initialize(const std::shared_ptr<Bvh> &bvh) {
     PushJoint(joint);
   };
   CalcShape();
-
-  int frameCount = bvh->FrameCount();
-  for (int i = 0; i < frameCount; ++i) {
-    auto frame = bvh->GetFrame(i);
-    // auto time = bvh_->frame_time * i;
-    PushFrame(frame);
-  }
 }
 
 void BvhSolver::PushJoint(const BvhJoint &joint) {
@@ -36,12 +29,6 @@ void BvhSolver::PushJoint(const BvhJoint &joint) {
 }
 
 void BvhSolver::CalcShape() { root_->CalcShape(scaling_); }
-
-void BvhSolver::PushFrame(const BvhFrame &frame) {
-  auto it = frame.values.begin();
-  root_->PushFrame(it);
-  assert(it == frame.values.end());
-}
 
 std::span<DirectX::XMFLOAT4X4> BvhSolver::ResolveFrame(const BvhFrame &frame) {
   auto span = std::span(instances_);

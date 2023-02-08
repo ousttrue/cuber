@@ -23,6 +23,36 @@ inline std::ostream &operator<<(std::ostream &os, const BvhOffset &offset) {
   return os;
 }
 
+///
+/// Mat3 for bvh rotation
+///
+/// [0, 1, 2][x]    [0x + 1y + 2z]
+/// [3, 4, 5][y] => [3x + 4y + 5z]
+/// [6, 7, 8][z]    [6x + 7y + 8z]
+///
+struct BvhMat3 {
+  float _0 = 1;
+  float _1 = 0;
+  float _2 = 0;
+  float _3 = 0;
+  float _4 = 1;
+  float _5 = 0;
+  float _6 = 0;
+  float _7 = 0;
+  float _8 = 1;
+  static BvhMat3 RotateXDegrees(float degree);
+  static BvhMat3 RotateYDegrees(float degree);
+  static BvhMat3 RotateZDegrees(float degree);
+  BvhMat3 operator*(const BvhMat3 &rhs);
+  BvhMat3 Transpose() const {
+    return {
+        _0, _3, _6, //
+        _1, _4, _7, //
+        _2, _5, _8  //
+    };
+  }
+};
+
 enum class BvhChannelTypes {
   None,
   Xposition,
@@ -85,6 +115,7 @@ struct BvhJoint {
   std::string name;
   uint16_t index;
   uint16_t parent;
+  size_t channelIndex;
   BvhOffset localOffset;
   BvhOffset worldOffset;
   BvhChannels channels;
@@ -101,6 +132,8 @@ struct BvhFrame {
   int index;
   BvhTime time;
   std::span<const float> values;
+
+  std::tuple<BvhOffset, BvhMat3> Resolve(const BvhJoint &joint) const;
 };
 
 struct Bvh {
