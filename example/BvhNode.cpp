@@ -2,25 +2,16 @@
 
 const float DEFAULT_SIZE = 0.04f;
 
-BvhNode::BvhNode(const BvhJoint &joint, const DirectX::XMFLOAT3 &offset)
-    : joint_(joint), localOffset_(offset) {
+BvhNode::BvhNode(const BvhJoint &joint) : joint_(joint) {
+  for (int i = 0; i < 6; ++i) {
+    curves_[i].chnnel = joint.channels.values[i];
+  }
   DirectX::XMStoreFloat4x4(
       &shape_,
       DirectX::XMMatrixScaling(DEFAULT_SIZE, DEFAULT_SIZE, DEFAULT_SIZE));
 }
 
-std::shared_ptr<BvhNode> BvhNode::Create(const BvhJoint &joint, float scaling) {
-  auto offset = DirectX::XMFLOAT3(joint.localOffset.x * scaling,
-                                  joint.localOffset.y * scaling,
-                                  joint.localOffset.z * scaling);
-  auto ptr = std::shared_ptr<BvhNode>(new BvhNode(joint, offset));
-  for (int i = 0; i < 6; ++i) {
-    ptr->curves_[i].chnnel = joint.channels.values[i];
-  }
-  return ptr;
-}
-
-void BvhNode::CalcShape() {
+void BvhNode::CalcShape(float scaling) {
   auto isRoot_ = joint_.index == 0;
   if (!isRoot_) {
     std::shared_ptr<BvhNode> tail;
@@ -36,15 +27,17 @@ void BvhNode::CalcShape() {
       for (auto &child : children_) {
         if (!tail) {
           tail = child;
-        } else if (std::abs(child->localOffset_.x) <
-                   std::abs(tail->localOffset_.x)) {
+        } else if (std::abs(child->joint_.localOffset.x) <
+                   std::abs(tail->joint_.localOffset.x)) {
           // coose center node
           tail = child;
         }
       }
     }
 
-    auto Y = tail->localOffset_;
+    auto Y = DirectX::SimpleMath::Vector3(tail->joint_.localOffset.x * scaling,
+                                          tail->joint_.localOffset.y * scaling,
+                                          tail->joint_.localOffset.z * scaling);
     auto length = Y.Length();
     // std::cout << name_ << "=>" << tail->name_ << "=" << length << std::endl;
     Y.Normalize();
@@ -62,19 +55,19 @@ void BvhNode::CalcShape() {
   }
 
   for (auto &child : children_) {
-    child->CalcShape();
+    child->CalcShape(scaling);
   }
 }
 
-void BvhNode::PushFrame(std::span<const float>::iterator &it, float scaling) {
+void BvhNode::PushFrame(std::span<const float>::iterator &it) {
 
-  for (int i = 0; i < ChannelCount(); ++i, ++it) {
+  for (int i = 0; i < joint_.channels.size(); ++i, ++it) {
     auto &curve = curves_[i];
     switch (curve.chnnel) {
     case BvhChannelTypes::Xposition:
     case BvhChannelTypes::Yposition:
     case BvhChannelTypes::Zposition:
-      curve.values.push_back(*it * scaling);
+      curve.values.push_back(*it);
       break;
     case BvhChannelTypes::Xrotation:
     case BvhChannelTypes::Yrotation:
@@ -87,36 +80,42 @@ void BvhNode::PushFrame(std::span<const float>::iterator &it, float scaling) {
     }
   }
   for (auto &child : children_) {
-    child->PushFrame(it, scaling);
+    child->PushFrame(it);
   }
 }
 
 // [x, y, z][c6][c5][c4][c3][c2][c1][parent][root]
 void BvhNode::ResolveFrame(const BvhFrame &frame, DirectX::XMMATRIX m,
+                           float scaling,
                            std::span<DirectX::XMFLOAT4X4>::iterator &out) {
   auto isRoot_ = joint_.index == 0;
-  auto local = isRoot_ ? DirectX::XMMatrixIdentity()
-                       : DirectX::XMMatrixTranslation(
-                             localOffset_.x, localOffset_.y, localOffset_.z);
+  auto local =
+      isRoot_ ? DirectX::XMMatrixIdentity()
+              : DirectX::XMMatrixTranslation(joint_.localOffset.x * scaling,
+                                             joint_.localOffset.y * scaling,
+                                             joint_.localOffset.z * scaling);
 
   for (int i = 0; i < 6; ++i) {
     auto &curve = curves_[i];
     switch (curve.chnnel) {
     case BvhChannelTypes::Xposition:
       if (isRoot_) {
-        local = DirectX::XMMatrixTranslation(curve.values[frame.index], 0, 0) *
+        local = DirectX::XMMatrixTranslation(
+                    curve.values[frame.index] * scaling, 0, 0) *
                 local;
       }
       break;
     case BvhChannelTypes::Yposition:
       if (isRoot_) {
-        local = DirectX::XMMatrixTranslation(0, curve.values[frame.index], 0) *
+        local = DirectX::XMMatrixTranslation(
+                    0, curve.values[frame.index] * scaling, 0) *
                 local;
       }
       break;
     case BvhChannelTypes::Zposition:
       if (isRoot_) {
-        local = DirectX::XMMatrixTranslation(0, 0, curve.values[frame.index]) *
+        local = DirectX::XMMatrixTranslation(
+                    0, 0, curve.values[frame.index] * scaling) *
                 local;
       }
       break;
@@ -145,6 +144,6 @@ BREAK:
   DirectX::XMStoreFloat4x4(&*out, shape * m);
   ++out;
   for (auto &child : children_) {
-    child->ResolveFrame(frame, m, out);
+    child->ResolveFrame(frame, m, scaling, out);
   }
 }
