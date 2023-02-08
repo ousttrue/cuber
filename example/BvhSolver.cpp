@@ -43,7 +43,7 @@ void BvhSolver::PushFrame(const BvhFrame &frame) {
   assert(it == frame.values.end());
 }
 
-std::span<DirectX::XMFLOAT4X4> BvhSolver::GetFrame(int frame) {
+std::span<DirectX::XMFLOAT4X4> BvhSolver::ResolveFrame(const BvhFrame &frame) {
   auto span = std::span(instances_);
   auto it = span.begin();
   root_->ResolveFrame(frame, DirectX::XMMatrixIdentity(), it);

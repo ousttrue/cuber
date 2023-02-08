@@ -13,7 +13,7 @@ using RenderTime = std::chrono::duration<float, std::ratio<1, 1>>;
 class GlRenderer {
   struct GlRendererImpl *impl_ = nullptr;
   cuber::CubeRenderer cubes;
-  std::vector<DirectX::XMFLOAT4X4> insancies_;
+  std::vector<DirectX::XMFLOAT4X4> instancies_;
   std::mutex mutex_;
 
 public:

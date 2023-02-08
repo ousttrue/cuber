@@ -15,7 +15,7 @@ class BvhSolver {
 
 public:
   void Initialize(const std::shared_ptr<Bvh> &bvh);
-  std::span<DirectX::XMFLOAT4X4> GetFrame(int frame);
+  std::span<DirectX::XMFLOAT4X4> ResolveFrame(const BvhFrame &frame);
 
 private:
   void PushJoint(const BvhJoint &joint);

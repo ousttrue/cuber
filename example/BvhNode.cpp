@@ -93,43 +93,44 @@ void BvhNode::PushFrame(std::span<const float>::iterator &it, float scaling) {
 }
 
 // [x, y, z][c6][c5][c4][c3][c2][c1][parent][root]
-void BvhNode::ResolveFrame(int frame, DirectX::XMMATRIX m,
+void BvhNode::ResolveFrame(const BvhFrame &frame, DirectX::XMMATRIX m,
                            std::span<DirectX::XMFLOAT4X4>::iterator &out) {
 
   auto local = isRoot_ ? DirectX::XMMatrixIdentity()
                        : DirectX::XMMatrixTranslation(
-                             localOffset_.x, localOffset_.y, localOffset_.z);
+                             localOffset_.x, localOffset_.y, localOffset_.z);  
+  
   for (int i = 0; i < 6; ++i) {
     auto &curve = curves_[i];
     switch (curve.chnnel) {
     case BvhChannelTypes::Xposition:
       if (isRoot_) {
-        local = DirectX::XMMatrixTranslation(curve.values[frame], 0, 0) * local;
+        local = DirectX::XMMatrixTranslation(curve.values[frame.index], 0, 0) * local;
       }
       break;
     case BvhChannelTypes::Yposition:
       if (isRoot_) {
-        local = DirectX::XMMatrixTranslation(0, curve.values[frame], 0) * local;
+        local = DirectX::XMMatrixTranslation(0, curve.values[frame.index], 0) * local;
       }
       break;
     case BvhChannelTypes::Zposition:
       if (isRoot_) {
-        local = DirectX::XMMatrixTranslation(0, 0, curve.values[frame]) * local;
+        local = DirectX::XMMatrixTranslation(0, 0, curve.values[frame.index]) * local;
       }
       break;
     case BvhChannelTypes::Xrotation:
       local = DirectX::XMMatrixRotationX(
-                  DirectX::XMConvertToRadians(curve.values[frame])) *
+                  DirectX::XMConvertToRadians(curve.values[frame.index])) *
               local;
       break;
     case BvhChannelTypes::Yrotation:
       local = DirectX::XMMatrixRotationY(
-                  DirectX::XMConvertToRadians(curve.values[frame])) *
+                  DirectX::XMConvertToRadians(curve.values[frame.index])) *
               local;
       break;
     case BvhChannelTypes::Zrotation:
       local = DirectX::XMMatrixRotationZ(
-                  DirectX::XMConvertToRadians(curve.values[frame])) *
+                  DirectX::XMConvertToRadians(curve.values[frame.index])) *
               local;
       break;
     case BvhChannelTypes::None:

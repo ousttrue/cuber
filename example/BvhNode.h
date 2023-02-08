@@ -36,6 +36,6 @@ public:
   }
   void CalcShape();
   void PushFrame(std::span<const float>::iterator &it, float scaling);
-  void ResolveFrame(int frame, DirectX::XMMATRIX m,
+  void ResolveFrame(const BvhFrame &frame, DirectX::XMMATRIX m,
                     std::span<DirectX::XMFLOAT4X4>::iterator &out);
 };

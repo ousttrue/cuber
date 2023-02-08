@@ -23,19 +23,19 @@ void GlRenderer::SetBvh(const std::shared_ptr<struct Bvh> &bvh) {
 }
 
 void GlRenderer::SetFrame(const BvhFrame &frame) {
-  auto instances = impl_->bvhSolver_.GetFrame(frame.index);
+  auto instances = impl_->bvhSolver_.ResolveFrame(frame);
   {
     std::lock_guard<std::mutex> lock(mutex_);
-    insancies_.assign(instances.begin(), instances.end());
+    instancies_.assign(instances.begin(), instances.end());
   }
 }
 
 void GlRenderer::RenderScene(RenderTime time, const float projection[16],
                              const float view[16]) {
   std::lock_guard<std::mutex> lock(mutex_);
-  if (!insancies_.empty()) {
-    auto begin = (cuber::Instance *)&*insancies_.begin();
-    auto end = begin + insancies_.size();
+  if (!instancies_.empty()) {
+    auto begin = (cuber::Instance *)&*instancies_.begin();
+    auto end = begin + instancies_.size();
     cubes.Render(projection, view, {begin, end});
   }
 }

@@ -5,6 +5,7 @@ imgui_dep = dependency('imgui', default_options: ['default_library=static'])
 directxmath_dep = dependency('directxmath')
 directxtk_dep = dependency('directxtk')
 asio_dep = dependency('asio')
+spanmath_dep = dependency('spanmath')
 executable(
     'cuber_sample',
     [
@@ -31,5 +32,6 @@ executable(
         directxtk_dep,
         cuber_dep,
         asio_dep,
+        spanmath_dep,
     ],
 )
