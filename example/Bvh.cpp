@@ -381,32 +381,32 @@ private:
 std::tuple<BvhOffset, BvhMat3> BvhFrame::Resolve(const BvhJoint &joint) const {
   BvhOffset pos = {};
   auto rot = BvhMat3{};
-  auto it = values.begin() + joint.channelIndex;
-  for (int ch = 0; ch < joint.channels.size(); ++ch, ++it) {
+  auto index = joint.channelIndex;
+  for (int ch = 0; ch < joint.channels.size(); ++ch, ++index) {
     switch (joint.channels.values[ch]) {
     case BvhChannelTypes::Xposition:
-      pos.x = *it;
+      pos.x = values[index];
       break;
     case BvhChannelTypes::Yposition:
-      pos.y = *it;
+      pos.y = values[index];
       break;
     case BvhChannelTypes::Zposition:
-      pos.z = *it;
+      pos.z = values[index];
       break;
     case BvhChannelTypes::Xrotation:
-      rot = rot * BvhMat3::RotateXDegrees(*it);
+      rot = rot * BvhMat3::RotateXDegrees(values[index]);
       break;
     case BvhChannelTypes::Yrotation:
-      rot = rot * BvhMat3::RotateYDegrees(*it);
+      rot = rot * BvhMat3::RotateYDegrees(values[index]);
       break;
     case BvhChannelTypes::Zrotation:
-      rot = rot * BvhMat3::RotateZDegrees(*it);
+      rot = rot * BvhMat3::RotateZDegrees(values[index]);
       break;
     case BvhChannelTypes::None:
       break;
     }
   }
-  return {pos, rot.Transpose()};
+  return {pos, rot};
 }
 
 Bvh::Bvh() {}

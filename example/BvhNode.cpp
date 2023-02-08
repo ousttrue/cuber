@@ -60,58 +60,14 @@ void BvhNode::CalcShape(float scaling) {
 void BvhNode::ResolveFrame(const BvhFrame &frame, DirectX::XMMATRIX m,
                            float scaling,
                            std::span<DirectX::XMFLOAT4X4>::iterator &out) {
-  auto isRoot_ = joint_.index == 0;
-  auto local =
-      isRoot_ ? DirectX::XMMatrixIdentity()
-              : DirectX::XMMatrixTranslation(joint_.localOffset.x * scaling,
-                                             joint_.localOffset.y * scaling,
-                                             joint_.localOffset.z * scaling);
+  auto [pos, rot] = frame.Resolve(joint_);
 
-  auto index = joint_.channelIndex;
-  for (int i = 0; i < 6; ++i, ++index) {
-    // auto &curve = curves_[i];
-    switch (joint_.channels.values[i]) {
-    case BvhChannelTypes::Xposition:
-      if (isRoot_) {
-        local =
-            DirectX::XMMatrixTranslation(frame.values[index] * scaling, 0, 0) *
-            local;
-      }
-      break;
-    case BvhChannelTypes::Yposition:
-      if (isRoot_) {
-        local =
-            DirectX::XMMatrixTranslation(0, frame.values[index] * scaling, 0) *
-            local;
-      }
-      break;
-    case BvhChannelTypes::Zposition:
-      if (isRoot_) {
-        local =
-            DirectX::XMMatrixTranslation(0, 0, frame.values[index] * scaling) *
-            local;
-      }
-      break;
-    case BvhChannelTypes::Xrotation:
-      local = DirectX::XMMatrixRotationX(
-                  DirectX::XMConvertToRadians(frame.values[index])) *
-              local;
-      break;
-    case BvhChannelTypes::Yrotation:
-      local = DirectX::XMMatrixRotationY(
-                  DirectX::XMConvertToRadians(frame.values[index])) *
-              local;
-      break;
-    case BvhChannelTypes::Zrotation:
-      local = DirectX::XMMatrixRotationZ(
-                  DirectX::XMConvertToRadians(frame.values[index])) *
-              local;
-      break;
-    case BvhChannelTypes::None:
-      goto BREAK;
-    }
-  }
-BREAK:
+  auto t = DirectX::XMMatrixTranslation(pos.x * scaling, pos.y * scaling,
+                                        pos.z * scaling);
+  rot = rot.Transpose();
+  auto r = DirectX::XMLoadFloat3x3((const DirectX::XMFLOAT3X3 *)&rot);
+  auto local = r * t;
+
   m = local * m;
   auto shape = DirectX::XMLoadFloat4x4(&shape_);
   DirectX::XMStoreFloat4x4(&*out, shape * m);
