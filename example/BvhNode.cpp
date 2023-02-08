@@ -60,7 +60,7 @@ void BvhNode::CalcShape(float scaling) {
 void BvhNode::ResolveFrame(const BvhFrame &frame, DirectX::XMMATRIX m,
                            float scaling,
                            std::span<DirectX::XMFLOAT4X4>::iterator &out) {
-  auto [pos, rot] = frame.Resolve(joint_);
+  auto [pos, rot] = frame.Resolve(joint_.channels);
 
   auto t = DirectX::XMMatrixTranslation(pos.x * scaling, pos.y * scaling,
                                         pos.z * scaling);

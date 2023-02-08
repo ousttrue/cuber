@@ -85,8 +85,10 @@ inline std::string_view to_str(BvhChannelTypes channelType) {
 }
 
 struct BvhChannels {
+  size_t startIndex;
   BvhChannelTypes values[6] = {};
-
+  BvhChannelTypes operator[](size_t index) const { return values[index]; }
+  BvhChannelTypes &operator[](size_t index) { return values[index]; }
   size_t size() const {
     size_t i = 0;
     for (; i < 6; ++i) {
@@ -98,15 +100,15 @@ struct BvhChannels {
   }
 };
 
-inline std::ostream &operator<<(std::ostream &os, const BvhChannels channel) {
+inline std::ostream &operator<<(std::ostream &os, const BvhChannels channels) {
   for (int i = 0; i < 6; ++i) {
-    if (channel.values[i] == BvhChannelTypes::None) {
+    if (channels[i] == BvhChannelTypes::None) {
       break;
     }
     if (i) {
       os << ", ";
     }
-    os << to_str(channel.values[i]);
+    os << to_str(channels[i]);
   }
   return os;
 }
@@ -115,7 +117,6 @@ struct BvhJoint {
   std::string name;
   uint16_t index;
   uint16_t parent;
-  size_t channelIndex;
   BvhOffset localOffset;
   BvhOffset worldOffset;
   BvhChannels channels;
@@ -133,7 +134,7 @@ struct BvhFrame {
   BvhTime time;
   std::span<const float> values;
 
-  std::tuple<BvhOffset, BvhMat3> Resolve(const BvhJoint &joint) const;
+  std::tuple<BvhOffset, BvhMat3> Resolve(const BvhChannels &channels) const;
 };
 
 struct Bvh {

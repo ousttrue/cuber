@@ -259,6 +259,10 @@ private:
         if (!channels) {
           return false;
         }
+        channels->startIndex = joints_.empty()
+                                     ? 0
+                                     : joints_.back().channels.startIndex +
+                                           joints_.back().channels.size();
 
         auto parentIndex = stack_.empty() ? -1 : stack_.back();
         // auto parent = stack_.empty() ? nullptr : &joints_[parentIndex];
@@ -266,10 +270,6 @@ private:
             .name = {name->begin(), name->end()},
             .index = static_cast<uint16_t>(index),
             .parent = static_cast<uint16_t>(parentIndex),
-            .channelIndex = joints_.empty()
-                                ? 0
-                                : joints_.back().channelIndex +
-                                      joints_.back().channels.size(),
             .localOffset = *offset,
             .worldOffset = *offset,
             .channels = *channels,
@@ -358,17 +358,17 @@ private:
     for (int i = 0; i < channel_count; ++i) {
       if (auto channel = token_.token(is_space)) {
         if (*channel == "Xposition") {
-          channels.values[i] = BvhChannelTypes::Xposition;
+          channels[i] = BvhChannelTypes::Xposition;
         } else if (*channel == "Yposition") {
-          channels.values[i] = BvhChannelTypes::Yposition;
+          channels[i] = BvhChannelTypes::Yposition;
         } else if (*channel == "Zposition") {
-          channels.values[i] = BvhChannelTypes::Zposition;
+          channels[i] = BvhChannelTypes::Zposition;
         } else if (*channel == "Xrotation") {
-          channels.values[i] = BvhChannelTypes::Xrotation;
+          channels[i] = BvhChannelTypes::Xrotation;
         } else if (*channel == "Yrotation") {
-          channels.values[i] = BvhChannelTypes::Yrotation;
+          channels[i] = BvhChannelTypes::Yrotation;
         } else if (*channel == "Zrotation") {
-          channels.values[i] = BvhChannelTypes::Zrotation;
+          channels[i] = BvhChannelTypes::Zrotation;
         } else {
           throw std::runtime_error("unknown");
         }
@@ -378,12 +378,13 @@ private:
   }
 };
 
-std::tuple<BvhOffset, BvhMat3> BvhFrame::Resolve(const BvhJoint &joint) const {
+std::tuple<BvhOffset, BvhMat3>
+BvhFrame::Resolve(const BvhChannels &channels) const {
   BvhOffset pos = {};
   auto rot = BvhMat3{};
-  auto index = joint.channelIndex;
-  for (int ch = 0; ch < joint.channels.size(); ++ch, ++index) {
-    switch (joint.channels.values[ch]) {
+  auto index = channels.startIndex;
+  for (int ch = 0; ch < channels.size(); ++ch, ++index) {
+    switch (channels.values[ch]) {
     case BvhChannelTypes::Xposition:
       pos.x = values[index];
       break;

@@ -77,7 +77,7 @@ void UdpSender::SendFrame(asio::ip::udp::endpoint ep,
 
   auto scaling = bvh->GuessScaling();
   for (auto &joint : bvh->joints) {
-    auto [pos, rot] = frame.Resolve(joint);
+    auto [pos, rot] = frame.Resolve(joint.channels);
     rot = rot.Transpose();
 
     auto rotation = ToQuat(rot);
