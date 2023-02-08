@@ -2,6 +2,7 @@
 #include "../subprojects/meshutils/Source/MeshUtils/muQuat32.h"
 #include "Bvh.h"
 #include "Payload.h"
+#include <DirectXMath.h>
 #include <iostream>
 #include <spanmath.h>
 
@@ -47,58 +48,64 @@ void UdpSender::SendSkeleton(asio::ip::udp::endpoint ep,
                         });
 }
 
+static DirectX::XMFLOAT4X4 ToMat(const BvhMat3 &rot, const BvhOffset &pos,
+                                 float scaling) {
+
+  auto r = DirectX::XMLoadFloat3x3((const DirectX::XMFLOAT3X3 *)&rot);
+  auto t = DirectX::XMMatrixTranslation(pos.x * scaling, pos.y * scaling,
+                                        pos.z * scaling);
+  auto m = r * t;
+  DirectX::XMFLOAT4X4 mat;
+  DirectX::XMStoreFloat4x4(&mat, m);
+  return mat;
+}
+
+static DirectX::XMFLOAT4 ToQuat(const BvhMat3 &rot) {
+
+  auto r = DirectX::XMLoadFloat3x3((const DirectX::XMFLOAT3X3 *)&rot);
+  auto q = DirectX::XMQuaternionRotationMatrix(r);
+  DirectX::XMFLOAT4 vec4;
+  DirectX::XMStoreFloat4(&vec4, q);
+  return vec4;
+}
+
 void UdpSender::SendFrame(asio::ip::udp::endpoint ep,
                           const std::shared_ptr<Bvh> &bvh,
                           const BvhFrame &frame, bool pack) {
 
   auto payload = GetOrCreatePayload();
 
-  //   auto &hips = instances[0];
-  //   payload->SetFrame(time, hips._41, hips._42, hips._43, pack);
+  auto scaling = bvh->GuessScaling();
+  for (auto &joint : bvh->joints) {
+    auto [pos, rot] = frame.Resolve(joint);
+    rot = rot.Transpose();
 
-  //   for (int i = 0; i < instances.size(); ++i) {
-  //     auto &instance = instances[i];
-  //     auto parentIndex = parentMap[i];
-  //     auto m = DirectX::XMLoadFloat4x4(&instance);
-  //     // auto r = DirectX::XMQuaternionRotationMatrix(m);
-  //     auto parent = DirectX::XMMatrixIdentity();
-  //     if (parentIndex != 65535) {
-  //       parent = DirectX::XMLoadFloat4x4(&instances[parentIndex]);
-  //     }
-  //     auto localRotation = DirectX::XMQuaternionRotationMatrix(
-  //         m * DirectX::XMMatrixInverse(nullptr, parent));
+    auto rotation = ToQuat(rot);
 
-  //     // DirectX::XMVECTOR axis;
-  //     // float angle;
-  //     // DirectX::XMQuaternionToAxisAngle(&axis, &angle, local);
-  //     // local = DirectX::XMQuaternionRotationAxis(axis, angle*0.5f);
+    if (joint.index == 0) {
+      payload->SetFrame(
+          std::chrono::duration_cast<std::chrono::nanoseconds>(frame.time),
+          pos.x * scaling, pos.y * scaling, pos.z * scaling, pack);
+    }
+    if (pack) {
+      auto packed =
+          quat_packer::Pack(rotation.x, rotation.y, rotation.z, rotation.w);
+#if _DEBUG
+      {
+        mu::quatf debug_q{rotation.x, rotation.y, rotation.z, rotation.w};
+        auto debug_packed = mu::quat32(debug_q);
+        assert(*(uint32_t *)&debug_packed.value == packed);
+      }
+      payload->Push(packed);
+#endif
+    } else {
+      payload->Push(rotation);
+    }
+  }
 
-  //     DirectX::XMFLOAT4 rotation;
-  //     DirectX::XMStoreFloat4(&rotation, localRotation);
-
-  //     if (pack) {
-  //       auto packed =
-  //           quat_packer::Pack(rotation.x, rotation.y, rotation.z,
-  //           rotation.w);
-  // #if _DEBUG
-  //       {
-  //         mu::quatf debug_q{rotation.x, rotation.y, rotation.z, rotation.w};
-  //         auto debug_packed = mu::quat32(debug_q);
-  //         assert(*(uint32_t *)&debug_packed.value == packed);
-  //       }
-  //       payload->Push(packed);
-  // #endif
-  //     } else {
-  //       payload->Push(rotation);
-  //     }
-  //   }
-
-  //   socket_.async_send_to(asio::buffer(payload->buffer), ep,
-  //                         [self = this, payload](asio::error_code ec,
-  //                                                std::size_t
-  //                                                bytes_transferred) {
-  //                           self->ReleasePayload(payload);
-  //                         });
-
-  ReleasePayload(payload);
+  socket_.async_send_to(asio::buffer(payload->buffer), ep,
+                        [self = this, payload](asio::error_code ec,
+                                               std::size_t bytes_transferred) {
+                          self->ReleasePayload(payload);
+                        });
 }
