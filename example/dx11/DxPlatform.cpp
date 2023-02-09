@@ -105,12 +105,14 @@ struct DxPlatformImpl {
         .BufferCount = 2,
         .OutputWindow = hWnd,
         .Windowed = TRUE,
-        .SwapEffect = DXGI_SWAP_EFFECT_DISCARD,
+        .SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD,
         .Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH,
     };
 
     UINT createDeviceFlags = 0;
-    // createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#if _DEBUG
+    createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
     D3D_FEATURE_LEVEL featureLevel;
     const D3D_FEATURE_LEVEL featureLevelArray[2] = {
         D3D_FEATURE_LEVEL_11_0,
@@ -205,15 +207,7 @@ struct DxPlatformImpl {
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
 
-    // clear
-    const float clear_color_with_alpha[4] = {
-        clear_color[0] * clear_color[3], clear_color[1] * clear_color[3],
-        clear_color[2] * clear_color[3], clear_color[3]};
-    /* clear the back buffer to cornflower blue for the new frame */
-    float background_colour[4] = {0x64 / 255.0f, 0x95 / 255.0f, 0xED / 255.0f,
-                                  1.0f};
-    context_->ClearRenderTargetView(rtv_.get(), clear_color_with_alpha);
-    context_->ClearRenderTargetView(rtv_.get(), background_colour);
+    context_->ClearRenderTargetView(rtv_.get(), clear_color);
 
     // pipeline
     ID3D11RenderTargetView *rtv[] = {

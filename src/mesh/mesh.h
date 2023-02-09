@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include <vector>
 
 const int CUBE_INDEX_COUNT = 36;
@@ -8,6 +9,8 @@ enum class ValueType {
 };
 
 struct VertexLayout {
+  std::string semantic_name;
+  uint32_t semantic_index;
   ValueType type;
   uint32_t count;
   uint32_t offset;
@@ -58,4 +61,4 @@ struct Instance {
   XYZW row3;
 };
 
-Mesh Cube();
+Mesh Cube(bool isCCW);

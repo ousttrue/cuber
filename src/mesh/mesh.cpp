@@ -2,19 +2,25 @@
 
 static VertexLayout layouts[] = {
     {
+        .semantic_name = "POSITION",
+        .semantic_index = 0,
         .type = ValueType::Float,
         .count = 3,
         .offset = offsetof(Vertex, position),
         .stride = sizeof(Vertex),
     },
     {
+        .semantic_name = "BARYCENTRIC",
+        .semantic_index = 0,
         .type = ValueType::Float,
-        .count = 3,
+        .count = 2,
         .offset = offsetof(Vertex, barycentric),
         .stride = sizeof(Vertex),
     },
     //
     {
+        .semantic_name = "ROW",
+        .semantic_index = 0,
         .type = ValueType::Float,
         .count = 4,
         .offset = offsetof(Instance, row0),
@@ -22,6 +28,8 @@ static VertexLayout layouts[] = {
         .divisor = 1,
     },
     {
+        .semantic_name = "ROW",
+        .semantic_index = 1,
         .type = ValueType::Float,
         .count = 4,
         .offset = offsetof(Instance, row1),
@@ -29,6 +37,8 @@ static VertexLayout layouts[] = {
         .divisor = 1,
     },
     {
+        .semantic_name = "ROW",
+        .semantic_index = 2,
         .type = ValueType::Float,
         .count = 4,
         .offset = offsetof(Instance, row2),
@@ -36,6 +46,8 @@ static VertexLayout layouts[] = {
         .divisor = 1,
     },
     {
+        .semantic_name = "ROW",
+        .semantic_index = 3,
         .type = ValueType::Float,
         .count = 4,
         .offset = offsetof(Instance, row3),
@@ -104,6 +116,9 @@ Face cube_faces[6] = {
 
 struct Builder {
   Mesh mesh;
+  bool ccw;
+  Builder(bool isCCW) : ccw(isCCW) {}
+
   void Quad(const XYZ &p0, const XYZ &p1, const XYZ &p2, const XYZ &p3,
             const RGBA &color) {
     // 01   00
@@ -132,19 +147,30 @@ struct Builder {
     mesh.vertices.push_back(v1);
     mesh.vertices.push_back(v2);
     mesh.vertices.push_back(v3);
-    // 0, 1, 2
-    mesh.indices.push_back(index);
-    mesh.indices.push_back(index + 1);
-    mesh.indices.push_back(index + 2);
-    // 2, 3, 0
-    mesh.indices.push_back(index + 2);
-    mesh.indices.push_back(index + 3);
-    mesh.indices.push_back(index);
+    if (ccw) {
+      // 0, 1, 2
+      mesh.indices.push_back(index);
+      mesh.indices.push_back(index + 1);
+      mesh.indices.push_back(index + 2);
+      // 2, 3, 0
+      mesh.indices.push_back(index + 2);
+      mesh.indices.push_back(index + 3);
+      mesh.indices.push_back(index);
+    } else {
+      // 0, 3, 2
+      mesh.indices.push_back(index);
+      mesh.indices.push_back(index + 3);
+      mesh.indices.push_back(index + 2);
+      // 2, 1, 0
+      mesh.indices.push_back(index + 2);
+      mesh.indices.push_back(index + 1);
+      mesh.indices.push_back(index);
+    }
   }
 };
 
-Mesh Cube() {
-  Builder builder;
+Mesh Cube(bool isCCW) {
+  Builder builder(isCCW);
   builder.mesh.layouts.assign(layouts, layouts + std::size(layouts));
   for (auto face : cube_faces) {
     builder.Quad(positions[face.indices[0]], positions[face.indices[1]],

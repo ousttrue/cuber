@@ -1,6 +1,6 @@
 #include "GlCubeRenderer.h"
-#include "vao.h"
 #include "shader.h"
+#include "vao.h"
 #include <DirectXMath.h>
 #include <GL/glew.h>
 #include <iostream>
@@ -93,7 +93,7 @@ GlCubeRenderer::GlCubeRenderer() {
   // auto ipos_location = get_location(shader_, "iPos");
   // auto irot_location = get_location(shader_, "iRot");
 
-  auto [vertices, indices, layouts] = Cube();
+  auto [vertices, indices, layouts] = Cube(true);
 
   auto vbo =
       cuber::Vbo::Create(sizeof(Vertex) * vertices.size(), vertices.data());

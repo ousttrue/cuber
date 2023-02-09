@@ -1,35 +1,52 @@
 #include "DxCubeRenderer.h"
 #include <d3d11.h>
 #include <d3dcompiler.h>
+#include <mesh.h>
 
 auto SHADER = R"(
 #pragma pack_matrix(row_major)
-
-// 定義
-cbuffer c0
-{
-    float4x4 ProjectionMatrix;
-    float4x4 ViewMatrix;
-};
-
-/* vertex attributes go here to input to the vertex shader */
+float4x4 VP;
 struct vs_in {
-    float3 position_local : POS;
-};
-
-/* outputs from vertex shader go here. can be interpolated to pixel shader */
+    float3 pos: POSITION;
+    float2 barycentric: BARYCENTRIC;
+    float4 row0: ROW0;
+    float4 row1: ROW1;
+    float4 row2: ROW2;
+    float4 row3: ROW3;    
+    uint instanceID : SV_InstanceID;
+ };
 struct vs_out {
-    float4 position_clip : SV_POSITION; // required output of VS
+    float4 position_clip: SV_POSITION;
+    float2 barycentric: TEXCOORD;
 };
 
-vs_out vs_main(vs_in input) {
-  vs_out output = (vs_out)0; // zero the memory first
-  output.position_clip = mul(float4(input.position_local, 1.0), mul(ViewMatrix, ProjectionMatrix));
-  return output;
+float4x4 transform(float4 r0, float4 r1, float4 r2, float4 r3)
+{
+  return float4x4(
+    r0.x, r0.y, r0.z, r0.w,
+    r1.x, r1.y, r1.z, r1.w,
+    r2.x, r2.y, r2.z, r2.w,
+    r3.x, r3.y, r3.z, r3.w
+  );
 }
 
-float4 ps_main(vs_out input) : SV_TARGET {
-  return float4( 1.0, 0.0, 1.0, 1.0 ); // must return an RGBA colour
+vs_out vs_main(vs_in IN) {
+  vs_out OUT = (vs_out)0; // zero the memory first
+  OUT.position_clip = mul(float4(IN.pos, 1.0), mul(transform(IN.row0, IN.row1, IN.row2, IN.row3), VP));
+  OUT.barycentric = IN.barycentric;
+  return OUT;
+}
+
+float grid (float2 vBC, float width) {
+  float3 bary = float3(vBC.x, vBC.y, 1.0 - vBC.x - vBC.y);
+  float3 d = fwidth(bary);
+  float3 a3 = smoothstep(d * (width - 0.5), d * (width + 0.5), bary);
+  return min(a3.x, a3.y);
+}
+
+float4 ps_main(vs_out IN) : SV_TARGET {
+  float value = grid(IN.barycentric, 1.0);
+  return float4(value, value, value, 1.0);
 }
 )";
 
@@ -55,20 +72,20 @@ CompileShader(std::string_view src, const char *entry, const char *target) {
   return vs_blob_ptr;
 }
 
-const float size = 5.0f;
-float vertex_data_array[] = {
-    0.0f,  size,  0.0f, // point at top
-    size,  -size, 0.0f, // point at bottom-right
-    -size, -size, 0.0f, // point at bottom-left
-};
-UINT vertex_stride = 3 * sizeof(float);
-UINT vertex_offset = 0;
-UINT vertex_count = 3;
-
-struct Constant {
-  DirectX::XMFLOAT4X4 projection;
-  DirectX::XMFLOAT4X4 view;
-};
+static DXGI_FORMAT DxgiFormat(const VertexLayout &layout) {
+  switch (layout.type) {
+  case ValueType::Float:
+    switch (layout.count) {
+    case 2:
+      return DXGI_FORMAT_R32G32_FLOAT;
+    case 3:
+      return DXGI_FORMAT_R32G32B32_FLOAT;
+    case 4:
+      return DXGI_FORMAT_R32G32B32A32_FLOAT;
+    }
+  }
+  throw std::invalid_argument("not implemented");
+}
 
 namespace cuber {
 struct DxCubeRendererImpl {
@@ -76,8 +93,10 @@ struct DxCubeRendererImpl {
   winrt::com_ptr<ID3D11VertexShader> vertex_shader_;
   winrt::com_ptr<ID3D11PixelShader> pixel_shader_;
   winrt::com_ptr<ID3D11InputLayout> input_layout_;
-  winrt::com_ptr<ID3D11Buffer> vertex_buffer_;
 
+  winrt::com_ptr<ID3D11Buffer> vertex_buffer_;
+  winrt::com_ptr<ID3D11Buffer> index_buffer_;
+  winrt::com_ptr<ID3D11Buffer> instance_buffer_;
   winrt::com_ptr<ID3D11Buffer> constant_buffer_;
 
   DxCubeRendererImpl(const winrt::com_ptr<ID3D11Device> &device)
@@ -93,38 +112,78 @@ struct DxCubeRendererImpl {
                                     NULL, pixel_shader_.put());
     assert(SUCCEEDED(hr));
 
-    D3D11_INPUT_ELEMENT_DESC inputElementDesc[] = {
-        {"POS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
-         D3D11_INPUT_PER_VERTEX_DATA, 0},
-        /*
-        { "COL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,
-        D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }, { "NOR",
-        0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT,
-        D3D11_INPUT_PER_VERTEX_DATA, 0 }, { "TEX", 0, DXGI_FORMAT_R32G32_FLOAT,
-        0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        */
+    auto [vertices, indices, layouts] = Cube(false);
+
+    uint32_t slots[] = {
+        0, 0, 1, 1, 1, 1,
     };
+    std::vector<D3D11_INPUT_ELEMENT_DESC> inputElementDesc;
+    for (uint32_t i = 0; i < layouts.size(); ++i) {
+      auto &layout = layouts[i];
+      inputElementDesc.push_back(D3D11_INPUT_ELEMENT_DESC{
+          .SemanticName = layout.semantic_name.c_str(),
+          .SemanticIndex = layout.semantic_index,
+          .Format = DxgiFormat(layout),
+          .InputSlot = slots[i],
+          .AlignedByteOffset = layout.offset,
+          .InputSlotClass = layout.divisor ? D3D11_INPUT_PER_INSTANCE_DATA
+                                           : D3D11_INPUT_PER_VERTEX_DATA,
+          .InstanceDataStepRate = layout.divisor,
+      });
+    }
+
     hr = device_->CreateInputLayout(
-        inputElementDesc, ARRAYSIZE(inputElementDesc), vs->GetBufferPointer(),
-        vs->GetBufferSize(), input_layout_.put());
+        inputElementDesc.data(), inputElementDesc.size(),
+        vs->GetBufferPointer(), vs->GetBufferSize(), input_layout_.put());
     assert(SUCCEEDED(hr));
 
-    { /*** load mesh data into vertex buffer **/
-      D3D11_BUFFER_DESC vertex_buff_descr = {
-          .ByteWidth = sizeof(vertex_data_array),
+    {
+      D3D11_BUFFER_DESC vertex_buff_desc = {
+          .ByteWidth =
+              static_cast<uint32_t>(sizeof(vertices[0]) * vertices.size()),
           .Usage = D3D11_USAGE_DEFAULT,
           .BindFlags = D3D11_BIND_VERTEX_BUFFER,
       };
-      D3D11_SUBRESOURCE_DATA sr_data = {0};
-      sr_data.pSysMem = vertex_data_array;
-      hr = device_->CreateBuffer(&vertex_buff_descr, &sr_data,
+      D3D11_SUBRESOURCE_DATA sr_data = {
+          .pSysMem = vertices.data(),
+      };
+      hr = device_->CreateBuffer(&vertex_buff_desc, &sr_data,
                                  vertex_buffer_.put());
       assert(SUCCEEDED(hr));
     }
 
     {
+      D3D11_BUFFER_DESC index_buff_desc = {
+          .ByteWidth = static_cast<uint32_t>(sizeof(uint32_t) * indices.size()),
+          .Usage = D3D11_USAGE_DEFAULT,
+          .BindFlags = D3D11_BIND_INDEX_BUFFER,
+      };
+      D3D11_SUBRESOURCE_DATA sr_data = {
+          .pSysMem = indices.data(),
+      };
+      hr = device_->CreateBuffer(&index_buff_desc, &sr_data,
+                                 index_buffer_.put());
+      assert(SUCCEEDED(hr));
+    }
+
+    {
+      D3D11_BUFFER_DESC instance_buff_desc = {
+          .ByteWidth =
+              static_cast<uint32_t>(sizeof(DirectX::XMFLOAT4X4) * 65535),
+          .Usage = D3D11_USAGE_DEFAULT,
+          .BindFlags = D3D11_BIND_VERTEX_BUFFER,
+      };
+      // D3D11_SUBRESOURCE_DATA sr_data = {
+      //     .pSysMem = vertices.data(),
+      // };
+      hr = device_->CreateBuffer(&instance_buff_desc, nullptr,
+                                 instance_buffer_.put());
+      assert(SUCCEEDED(hr));
+    }
+
+    {
       D3D11_BUFFER_DESC desc = {
-          .ByteWidth = sizeof(Constant),
+          .ByteWidth = sizeof(DirectX::XMFLOAT4X4),
           .Usage = D3D11_USAGE_DEFAULT,
           .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
       };
@@ -136,27 +195,50 @@ struct DxCubeRendererImpl {
 
   void Render(const float projection[16], const float view[16],
               const void *data, uint32_t instanceCount) {
+    if (instanceCount == 0) {
+      return;
+    }
     winrt::com_ptr<ID3D11DeviceContext> context;
     device_->GetImmediateContext(context.put());
 
     context->VSSetShader(vertex_shader_.get(), NULL, 0);
     context->PSSetShader(pixel_shader_.get(), NULL, 0);
 
+    D3D11_BOX box{
+        .left = 0,
+        .top = 0,
+        .front = 0,
+        .right =
+            static_cast<uint32_t>(sizeof(DirectX::XMFLOAT4X4) * instanceCount),
+        .bottom = 1,
+        .back = 1,
+    };
+    context->UpdateSubresource(instance_buffer_.get(), 0, &box, data,
+                               sizeof(DirectX::XMFLOAT4X4), 0);
+
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     context->IASetInputLayout(input_layout_.get());
-    ID3D11Buffer *vb[] = {vertex_buffer_.get()};
-    context->IASetVertexBuffers(0, 1, vb, &vertex_stride, &vertex_offset);
-
-    Constant constant_value{
-        *((const DirectX::XMFLOAT4X4 *)projection),
-        *((const DirectX::XMFLOAT4X4 *)view),
+    ID3D11Buffer *vb[] = {
+        vertex_buffer_.get(),
+        instance_buffer_.get(),
     };
-    context->UpdateSubresource(constant_buffer_.get(), 0, NULL, &constant_value,
-                               0, 0);
+    uint32_t strides[] = {
+        sizeof(Vertex),
+        sizeof(DirectX::XMFLOAT4X4),
+    };
+    uint32_t offsets[] = {0, 0};
+    context->IASetVertexBuffers(0, std::size(vb), vb, strides, offsets);
+    context->IASetIndexBuffer(index_buffer_.get(), DXGI_FORMAT_R32_UINT, 0);
+
+    auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)view);
+    auto p = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)projection);
+    DirectX::XMFLOAT4X4 vp;
+    DirectX::XMStoreFloat4x4(&vp, v * p);
+    context->UpdateSubresource(constant_buffer_.get(), 0, NULL, &vp, 0, 0);
 
     ID3D11Buffer *cb[]{constant_buffer_.get()};
     context->VSSetConstantBuffers(0, 1, cb);
-    context->Draw(vertex_count, 0);
+    context->DrawIndexedInstanced(CUBE_INDEX_COUNT, instanceCount, 0, 0, 0);
   }
 };
 

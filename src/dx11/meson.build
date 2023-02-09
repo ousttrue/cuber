@@ -3,6 +3,7 @@ cuber_dx_lib = static_library(
     [
         'DxCubeRenderer.cpp',
     ],
+    dependencies: [mesh_dep],
 )
 cuber_dx_dep = declare_dependency(
     include_directories: include_directories('.'),
