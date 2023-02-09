@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
   }
 
   // bvh scene
-  DxRenderer renderer;
+  DxRenderer renderer(platform.GetDevice());
   BvhPanel bvhPanel;
 
   // bind bvh animation to renderer

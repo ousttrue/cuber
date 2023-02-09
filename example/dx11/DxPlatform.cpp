@@ -253,3 +253,7 @@ DxPlatform::NewFrame(const float clear_color[4]) {
   return impl_->NewFrame(clear_color);
 }
 void DxPlatform::EndFrame(ImDrawData *data) { impl_->EndFrame(data); }
+
+winrt::com_ptr<struct ID3D11Device> DxPlatform::GetDevice() const {
+  return impl_->g_pd3dDevice;
+}
