@@ -208,6 +208,10 @@ get_location(const std::shared_ptr<cuber::ShaderProgram> &shader,
 
 CubeRenderer::CubeRenderer() {
 
+  std::cout << "GL_VERSION: " << glGetString(GL_VERSION) << std::endl;
+  glewInit();
+  std::cout << "GLEW_VERSION: " << glewGetString(GLEW_VERSION) << std::endl;
+
   // auto glsl_version = "#version 150";
   auto glsl_version = "#version 310 es\nprecision highp float;";
 
@@ -318,6 +322,9 @@ CubeRenderer::CubeRenderer() {
 CubeRenderer::~CubeRenderer() {}
 void CubeRenderer::Render(const float projection[16], const float view[16],
                           const void *data, uint32_t instanceCount) {
+  if (instanceCount == 0) {
+    return;
+  }
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
 
