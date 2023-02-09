@@ -1,9 +1,7 @@
 #include "GuiApp.h"
 #include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
 
-GuiApp::GuiApp(GLFWwindow *window, const char *glsl_version) {
+GuiApp::GuiApp(const char *glsl_version) {
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -17,10 +15,6 @@ GuiApp::GuiApp(GLFWwindow *window, const char *glsl_version) {
   // Setup Dear ImGui style
   ImGui::StyleColorsDark();
   // ImGui::StyleColorsLight();
-
-  // Setup Platform/Renderer backends
-  ImGui_ImplGlfw_InitForOpenGL(window, true);
-  ImGui_ImplOpenGL3_Init(glsl_version);
 
   // Load Fonts
   // - If no fonts are loaded, dear imgui will use the default font. You can
@@ -50,12 +44,7 @@ GuiApp::GuiApp(GLFWwindow *window, const char *glsl_version) {
   // NULL, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != NULL);
 }
 
-GuiApp::~GuiApp() {
-  // Cleanup
-  ImGui_ImplOpenGL3_Shutdown();
-  ImGui_ImplGlfw_Shutdown();
-  ImGui::DestroyContext();
-}
+GuiApp::~GuiApp() { ImGui::DestroyContext(); }
 
 void GuiApp::UpdateGuiDockspace() {
 
@@ -87,10 +76,6 @@ void GuiApp::UpdateGuiDockspace() {
 
 void GuiApp::UpdateGui() {
   ImGuiIO &io = ImGui::GetIO();
-
-  // Start the Dear ImGui frame
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
   // camera
@@ -165,7 +150,7 @@ void GuiApp::UpdateGui() {
   }
 }
 
-void GuiApp::RenderGui() {
+ImDrawData *GuiApp::RenderGui() {
   ImGui::Render();
 
   clear_color[0] = clear_color_[0] * clear_color_[3];
@@ -173,5 +158,5 @@ void GuiApp::RenderGui() {
   clear_color[2] = clear_color_[2] * clear_color_[3];
   clear_color[3] = clear_color_[3];
 
-  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+  return ImGui::GetDrawData();
 }

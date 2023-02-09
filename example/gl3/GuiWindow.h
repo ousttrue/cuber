@@ -13,7 +13,9 @@ public:
   GuiWindow(const GuiWindow &) = delete;
   GuiWindow &operator=(const GuiWindow &) = delete;
   struct GLFWwindow *Create();
-  std::optional<GlfwTime> NewFrame(int *display_w, int *display_h);
-  void EndFrame();
+  void InitGuiPlatform(GLFWwindow *window);
+  void ShutdownGuiPlatform();
+  std::optional<GlfwTime> NewFrame(const float clear_color[4]);
+  void EndFrame(struct ImDrawData *data);
   const char *GlslVersion() const;
 };

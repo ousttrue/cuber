@@ -1,4 +1,6 @@
 #include "GuiWindow.h"
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 #include <stdexcept>
 #include <stdio.h>
 
@@ -9,6 +11,9 @@ const char *glsl_version = nullptr;
 #include <GLES2/gl2.h>
 #endif
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
+
+// must after Windows.h
+#include <GL/GL.h>
 
 static void glfw_error_callback(int error, const char *description) {
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
@@ -34,11 +39,12 @@ GLFWwindow *GuiWindow::Create() {
   // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
-  // glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);           // Required on Mac
+  // glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);           // Required
+  // on Mac
 
   // Create window with graphics context
-  window_ = glfwCreateWindow(1280, 720, "CubeR GLFW+OpenGL3 example", NULL,
-                             NULL);
+  window_ =
+      glfwCreateWindow(1280, 720, "CubeR GLFW+OpenGL3 example", NULL, NULL);
   if (!window_) {
     return nullptr;
   }
@@ -47,7 +53,18 @@ GLFWwindow *GuiWindow::Create() {
   return window_;
 }
 
-std::optional<GlfwTime> GuiWindow::NewFrame(int *display_w, int *display_h) {
+void GuiWindow::InitGuiPlatform(GLFWwindow *window) {
+  // Setup Platform/Renderer backends
+  ImGui_ImplGlfw_InitForOpenGL(window, true);
+  ImGui_ImplOpenGL3_Init(glsl_version);
+}
+
+void GuiWindow::ShutdownGuiPlatform() {
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+}
+
+std::optional<GlfwTime> GuiWindow::NewFrame(const float clear_color[4]) {
   if (glfwWindowShouldClose(window_)) {
     return {};
   }
@@ -62,10 +79,24 @@ std::optional<GlfwTime> GuiWindow::NewFrame(int *display_w, int *display_h) {
   // and hide them from your application based on those two flags.
   glfwPollEvents();
 
-  glfwGetFramebufferSize(window_, display_w, display_h);
+  int display_w, display_h;
+  glfwGetFramebufferSize(window_, &display_w, &display_h);
+
+  // Start the Dear ImGui frame
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplGlfw_NewFrame();
+
+  // render
+  glViewport(0, 0, display_w, display_h);
+  glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
   return GlfwTime(glfwGetTime());
 }
 
-void GuiWindow::EndFrame() { glfwSwapBuffers(window_); }
+void GuiWindow::EndFrame(ImDrawData *data) {
+  ImGui_ImplOpenGL3_RenderDrawData(data);
+  glfwSwapBuffers(window_);
+}
 
 const char *GuiWindow::GlslVersion() const { return glsl_version; }

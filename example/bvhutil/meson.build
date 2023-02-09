@@ -1,5 +1,3 @@
-glfw_dep = dependency('glfw3', default_options: ['install=true'])
-imgui_dep = dependency('imgui', default_options: ['default_library=static'])
 directxmath_dep = dependency('directxmath')
 directxtk_dep = dependency('directxtk')
 asio_dep = dependency('asio')

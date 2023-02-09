@@ -5,6 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "cuber_dx11",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/prefix/bin/cuber_dx11.exe",
+            "args": [
+                "sample.bvh"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "cuber_gl3",
             "type": "cppvsdbg",
             "request": "launch",
@@ -16,6 +29,6 @@
             "cwd": "${workspaceFolder}",
             "environment": [],
             "console": "integratedTerminal"
-        }
+        },
     ]
 }

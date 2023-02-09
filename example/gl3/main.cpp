@@ -1,27 +1,25 @@
-#include "Bvh.h"
 #include "BvhPanel.h"
 #include "GlRenderer.h"
 #include "GuiApp.h"
 #include "GuiWindow.h"
-#include <Windows.h>
-#include <imgui.h>
-#include <iostream>
-
-// must after Windows.h
-#include <GL/GL.h>
 
 int main(int argc, char **argv) {
-
+  // window
   GuiWindow gui;
   auto window = gui.Create();
   if (!window) {
     return 1;
   }
 
-  GuiApp app(window, gui.GlslVersion());
+  // imgui
+  GuiApp app(gui.GlslVersion());
+  gui.InitGuiPlatform(window);
 
+  // OpenGL
   GlRenderer renderer;
+
   {
+    // bvh scene
     BvhPanel bvhPanel;
 
     // bind bvh animation to renderer
@@ -36,30 +34,22 @@ int main(int argc, char **argv) {
     }
 
     // main loop
-    int display_w, display_h;
-    while (auto time = gui.NewFrame(&display_w, &display_h)) {
+    while (auto time = gui.NewFrame(app.clear_color)) {
+      // imgui
       {
-        // imgui
         app.UpdateGui();
         bvhPanel.UpdateGui();
       }
+      auto data = app.RenderGui();
 
+      // scene
       {
-        // render
-        glViewport(0, 0, display_w, display_h);
-        glClearColor(app.clear_color[0], app.clear_color[1], app.clear_color[2],
-                     app.clear_color[3]);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // scene
         renderer.RenderScene(*time, app.projection, app.view);
-
-        // app
-        app.RenderGui();
-
-        gui.EndFrame();
+        gui.EndFrame(data);
       }
     }
+
+    gui.ShutdownGuiPlatform();
   }
 
   return 0;
