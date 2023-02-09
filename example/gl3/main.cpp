@@ -1,25 +1,23 @@
 #include "BvhPanel.h"
 #include "GlRenderer.h"
+#include "GlfwPlatform.h"
 #include "GuiApp.h"
-#include "GuiWindow.h"
 
 int main(int argc, char **argv) {
+  GlfwPlatform platform;
+
+  // imgui
+  GuiApp app(platform.GlslVersion());
+
   // window
-  GuiWindow gui;
-  auto window = gui.Create();
+  auto window = platform.Create();
   if (!window) {
     return 1;
   }
 
-  // imgui
-  GuiApp app(gui.GlslVersion());
-  gui.InitGuiPlatform(window);
-
-  // OpenGL
-  GlRenderer renderer;
-
   {
     // bvh scene
+    GlRenderer renderer;
     BvhPanel bvhPanel;
 
     // bind bvh animation to renderer
@@ -34,7 +32,7 @@ int main(int argc, char **argv) {
     }
 
     // main loop
-    while (auto time = gui.NewFrame(app.clear_color)) {
+    while (auto time = platform.NewFrame(app.clear_color)) {
       // imgui
       {
         app.UpdateGui();
@@ -45,11 +43,11 @@ int main(int argc, char **argv) {
       // scene
       {
         renderer.RenderScene(*time, app.projection, app.view);
-        gui.EndFrame(data);
+        platform.EndFrame(data);
       }
     }
 
-    gui.ShutdownGuiPlatform();
+    platform.ShutdownGuiPlatform();
   }
 
   return 0;

@@ -4,16 +4,16 @@
 
 using GlfwTime = std::chrono::duration<float, std::ratio<1, 1>>;
 
-class GuiWindow {
+class GlfwPlatform {
   struct GLFWwindow *window_ = nullptr;
 
 public:
-  GuiWindow();
-  ~GuiWindow();
-  GuiWindow(const GuiWindow &) = delete;
-  GuiWindow &operator=(const GuiWindow &) = delete;
+  GlfwPlatform();
+  ~GlfwPlatform();
+  GlfwPlatform(const GlfwPlatform &) = delete;
+  GlfwPlatform &operator=(const GlfwPlatform &) = delete;
   struct GLFWwindow *Create();
-  void InitGuiPlatform(GLFWwindow *window);
+  void InitGui(GLFWwindow *window);
   void ShutdownGuiPlatform();
   std::optional<GlfwTime> NewFrame(const float clear_color[4]);
   void EndFrame(struct ImDrawData *data);

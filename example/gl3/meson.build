@@ -7,7 +7,7 @@ executable(
     [
         'main.cpp',
         'GlRenderer.cpp',
-        'GuiWindow.cpp',
+        'GlfwPlatform.cpp',
     ],
     install: true,
     dependencies: [

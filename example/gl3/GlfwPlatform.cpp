@@ -1,4 +1,4 @@
-#include "GuiWindow.h"
+#include "GlfwPlatform.h"
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <stdexcept>
@@ -19,7 +19,7 @@ static void glfw_error_callback(int error, const char *description) {
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-GuiWindow::GuiWindow() {
+GlfwPlatform::GlfwPlatform() {
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
   if (!glfwInit()) {
@@ -27,12 +27,12 @@ GuiWindow::GuiWindow() {
   }
 }
 
-GuiWindow::~GuiWindow() {
+GlfwPlatform::~GlfwPlatform() {
   glfwDestroyWindow(window_);
   glfwTerminate();
 }
 
-GLFWwindow *GuiWindow::Create() {
+GLFWwindow *GlfwPlatform::Create() {
 
   // GL 3.2 + GLSL 150
   glsl_version = "#version 150";
@@ -50,21 +50,24 @@ GLFWwindow *GuiWindow::Create() {
   }
   glfwMakeContextCurrent(window_);
   glfwSwapInterval(1); // Enable vsync
+
+  InitGui(window_);
+
   return window_;
 }
 
-void GuiWindow::InitGuiPlatform(GLFWwindow *window) {
+void GlfwPlatform::InitGui(GLFWwindow *window) {
   // Setup Platform/Renderer backends
   ImGui_ImplGlfw_InitForOpenGL(window, true);
   ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
-void GuiWindow::ShutdownGuiPlatform() {
+void GlfwPlatform::ShutdownGuiPlatform() {
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
 }
 
-std::optional<GlfwTime> GuiWindow::NewFrame(const float clear_color[4]) {
+std::optional<GlfwTime> GlfwPlatform::NewFrame(const float clear_color[4]) {
   if (glfwWindowShouldClose(window_)) {
     return {};
   }
@@ -94,9 +97,9 @@ std::optional<GlfwTime> GuiWindow::NewFrame(const float clear_color[4]) {
   return GlfwTime(glfwGetTime());
 }
 
-void GuiWindow::EndFrame(ImDrawData *data) {
+void GlfwPlatform::EndFrame(ImDrawData *data) {
   ImGui_ImplOpenGL3_RenderDrawData(data);
   glfwSwapBuffers(window_);
 }
 
-const char *GuiWindow::GlslVersion() const { return glsl_version; }
+const char *GlfwPlatform::GlslVersion() const { return glsl_version; }
