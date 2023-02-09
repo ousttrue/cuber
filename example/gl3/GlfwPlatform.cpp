@@ -83,7 +83,7 @@ std::optional<GlfwTime> GlfwPlatform::NewFrame(const float clear_color[4]) {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
 
-  // render
+  // clear viewport
   glViewport(0, 0, display_w, display_h);
   glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

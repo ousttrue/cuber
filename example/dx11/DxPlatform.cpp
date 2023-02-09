@@ -34,10 +34,10 @@ struct DxPlatformImpl {
                     NULL};
 
   HWND hwnd = {};
-  winrt::com_ptr<ID3D11Device> g_pd3dDevice;
-  winrt::com_ptr<ID3D11DeviceContext> g_pd3dDeviceContext;
-  winrt::com_ptr<IDXGISwapChain> g_pSwapChain;
-  winrt::com_ptr<ID3D11RenderTargetView> g_mainRenderTargetView;
+  winrt::com_ptr<ID3D11Device> device_;
+  winrt::com_ptr<ID3D11DeviceContext> context_;
+  winrt::com_ptr<IDXGISwapChain> swapchain_;
+  winrt::com_ptr<ID3D11RenderTargetView> rtv_;
 
   DxPlatformImpl() {}
 
@@ -52,8 +52,8 @@ struct DxPlatformImpl {
   }
 
   void CleanupRenderTarget() {
-    if (g_mainRenderTargetView) {
-      g_mainRenderTargetView = nullptr;
+    if (rtv_) {
+      rtv_ = nullptr;
     }
   }
 
@@ -76,7 +76,7 @@ struct DxPlatformImpl {
 
     // Setup Platform/Renderer backends
     ImGui_ImplWin32_Init(hwnd);
-    ImGui_ImplDX11_Init(g_pd3dDevice.get(), g_pd3dDeviceContext.get());
+    ImGui_ImplDX11_Init(device_.get(), context_.get());
 
     return hwnd;
   }
@@ -118,15 +118,15 @@ struct DxPlatformImpl {
     };
     HRESULT res = D3D11CreateDeviceAndSwapChain(
         NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, createDeviceFlags,
-        featureLevelArray, 2, D3D11_SDK_VERSION, &sd, g_pSwapChain.put(),
-        g_pd3dDevice.put(), &featureLevel, g_pd3dDeviceContext.put());
+        featureLevelArray, 2, D3D11_SDK_VERSION, &sd, swapchain_.put(),
+        device_.put(), &featureLevel, context_.put());
     if (res == DXGI_ERROR_UNSUPPORTED) // Try high-performance WARP software
                                        // driver if hardware is not available.
     {
       res = D3D11CreateDeviceAndSwapChain(
           NULL, D3D_DRIVER_TYPE_WARP, NULL, createDeviceFlags,
-          featureLevelArray, 2, D3D11_SDK_VERSION, &sd, g_pSwapChain.put(),
-          g_pd3dDevice.put(), &featureLevel, g_pd3dDeviceContext.put());
+          featureLevelArray, 2, D3D11_SDK_VERSION, &sd, swapchain_.put(),
+          device_.put(), &featureLevel, context_.put());
     }
     if (res != S_OK) {
       return false;
@@ -138,9 +138,8 @@ struct DxPlatformImpl {
 
   void CreateRenderTarget() {
     winrt::com_ptr<ID3D11Texture2D> pBackBuffer;
-    g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(pBackBuffer.put()));
-    g_pd3dDevice->CreateRenderTargetView(pBackBuffer.get(), NULL,
-                                         g_mainRenderTargetView.put());
+    swapchain_->GetBuffer(0, IID_PPV_ARGS(pBackBuffer.put()));
+    device_->CreateRenderTargetView(pBackBuffer.get(), NULL, rtv_.put());
   }
 
   // Win32 message handler
@@ -158,11 +157,10 @@ struct DxPlatformImpl {
 
     switch (msg) {
     case WM_SIZE:
-      if (g_pd3dDevice != NULL && wParam != SIZE_MINIMIZED) {
+      if (device_ != NULL && wParam != SIZE_MINIMIZED) {
         CleanupRenderTarget();
-        g_pSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam),
-                                    (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN,
-                                    0);
+        swapchain_->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam),
+                                  DXGI_FORMAT_UNKNOWN, 0);
         CreateRenderTarget();
       }
       return 0;
@@ -207,23 +205,32 @@ struct DxPlatformImpl {
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
 
-    // Rendering
+    // clear
     const float clear_color_with_alpha[4] = {
         clear_color[0] * clear_color[3], clear_color[1] * clear_color[3],
         clear_color[2] * clear_color[3], clear_color[3]};
+    /* clear the back buffer to cornflower blue for the new frame */
+    float background_colour[4] = {0x64 / 255.0f, 0x95 / 255.0f, 0xED / 255.0f,
+                                  1.0f};
+    context_->ClearRenderTargetView(rtv_.get(), clear_color_with_alpha);
+    context_->ClearRenderTargetView(rtv_.get(), background_colour);
+
+    // pipeline
     ID3D11RenderTargetView *rtv[] = {
-        g_mainRenderTargetView.get(),
+        rtv_.get(),
     };
-    g_pd3dDeviceContext->OMSetRenderTargets(1, rtv, NULL);
-    g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView.get(),
-                                               clear_color_with_alpha);
+    context_->OMSetRenderTargets(1, rtv, NULL);
+    auto &io = ImGui::GetIO();
+    D3D11_VIEWPORT viewport = {0.0f, 0.0f, io.DisplaySize.x, io.DisplaySize.y,
+                               0.0f, 1.0f};
+    context_->RSSetViewports(1, &viewport);
 
     return std::chrono::milliseconds(timeGetTime());
   }
 
   void EndFrame(ImDrawData *draw_data) {
     ImGui_ImplDX11_RenderDrawData(draw_data);
-    g_pSwapChain->Present(1, 0); // Present with vsync
+    swapchain_->Present(1, 0); // Present with vsync
     // g_pSwapChain->Present(0, 0); // Present without vsync
   }
 };
@@ -255,5 +262,5 @@ DxPlatform::NewFrame(const float clear_color[4]) {
 void DxPlatform::EndFrame(ImDrawData *data) { impl_->EndFrame(data); }
 
 winrt::com_ptr<struct ID3D11Device> DxPlatform::GetDevice() const {
-  return impl_->g_pd3dDevice;
+  return impl_->device_;
 }
