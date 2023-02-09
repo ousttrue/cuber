@@ -95,5 +95,3 @@ void GlfwPlatform::EndFrame(ImDrawData *data) {
   ImGui_ImplOpenGL3_RenderDrawData(data);
   glfwSwapBuffers(window_);
 }
-
-const char *GlfwPlatform::GlslVersion() const { return glsl_version; }

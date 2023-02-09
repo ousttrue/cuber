@@ -4,9 +4,10 @@ executable(
     'cuber_dx11',
     [
         'main.cpp',
+        'DxPlatform.cpp',
     ],
     install: true,
     dependencies: [
-        imgui_dep,
+        bvhutil_dep,
     ],
 )
