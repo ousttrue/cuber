@@ -192,7 +192,8 @@ struct DxPlatformImpl {
     return ::DefWindowProcW(hWnd, msg, wParam, lParam);
   }
 
-  bool NewFrame(const float clear_color[4]) {
+  std::optional<std::chrono::milliseconds>
+  NewFrame(const float clear_color[4]) {
     // Poll and handle messages (inputs, window resize, etc.)
     // See the WndProc() function below for our to dispatch events to the Win32
     // backend.
@@ -201,7 +202,7 @@ struct DxPlatformImpl {
       ::TranslateMessage(&msg);
       ::DispatchMessage(&msg);
       if (msg.message == WM_QUIT) {
-        return false;
+        return {};
       }
     }
 
@@ -216,7 +217,7 @@ struct DxPlatformImpl {
     g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView,
                                                clear_color_with_alpha);
 
-    return true;
+    return std::chrono::milliseconds(timeGetTime());
   }
 
   void EndFrame(ImDrawData *draw_data) {
@@ -246,7 +247,8 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 DxPlatform::DxPlatform() : impl_(new DxPlatformImpl) {}
 DxPlatform::~DxPlatform() { delete impl_; }
 bool DxPlatform::Create() { return impl_->Create() != nullptr; }
-bool DxPlatform::NewFrame(const float clear_color[4]) {
+std::optional<std::chrono::milliseconds>
+DxPlatform::NewFrame(const float clear_color[4]) {
   return impl_->NewFrame(clear_color);
 }
 void DxPlatform::EndFrame(ImDrawData *data) { impl_->EndFrame(data); }

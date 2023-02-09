@@ -19,8 +19,9 @@ int main(int argc, char **argv) {
 
   // bind bvh animation to renderer
   bvhPanel.OnFrame(
-      [&renderer](const BvhFrame &frame) { renderer.SetFrame(frame); });
+      [&renderer](const BvhFrame &frame) { renderer.SyncFrame(frame); });
 
+  // load bvh
   if (argc > 1) {
     if (auto bvh = Bvh::ParseFile(argv[1])) {
       bvhPanel.SetBvh(bvh);

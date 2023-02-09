@@ -2,8 +2,6 @@
 #include <chrono>
 #include <optional>
 
-// using GlfwTime = std::chrono::duration<float, std::ratio<1, 1>>;
-
 class DxPlatform {
   struct DxPlatformImpl *impl_ = nullptr;
 
@@ -13,6 +11,6 @@ public:
   DxPlatform();
   ~DxPlatform();
   bool Create();
-  bool NewFrame(const float clear_color[4]);
+  std::optional<std::chrono::milliseconds> NewFrame(const float clear_color[4]);
   void EndFrame(struct ImDrawData *data);
 };

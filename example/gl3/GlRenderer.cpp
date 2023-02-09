@@ -19,7 +19,7 @@ void GlRenderer::SetBvh(const std::shared_ptr<struct Bvh> &bvh) {
   impl_->bvhSolver_.Initialize(bvh);
 }
 
-void GlRenderer::SetFrame(const BvhFrame &frame) {
+void GlRenderer::SyncFrame(const BvhFrame &frame) {
   auto instances = impl_->bvhSolver_.ResolveFrame(frame);
   {
     std::lock_guard<std::mutex> lock(mutex_);

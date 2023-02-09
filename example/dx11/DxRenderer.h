@@ -9,16 +9,16 @@
 
 using RenderTime = std::chrono::duration<float, std::ratio<1, 1>>;
 
-class GlRenderer {
-  struct GlRendererImpl *impl_ = nullptr;
+class DxRenderer {
+  struct DxRendererImpl *impl_ = nullptr;
   std::vector<DirectX::XMFLOAT4X4> instancies_;
   std::mutex mutex_;
 
 public:
-  GlRenderer(const GlRenderer &) = delete;
-  GlRenderer &operator=(const GlRenderer &) = delete;
-  GlRenderer();
-  ~GlRenderer();
+  DxRenderer(const DxRenderer &) = delete;
+  DxRenderer &operator=(const DxRenderer &) = delete;
+  DxRenderer();
+  ~DxRenderer();
   void SetBvh(const std::shared_ptr<Bvh> &bvh);
   void SyncFrame(const BvhFrame &frame);
   void RenderScene(RenderTime time, const float projection[16],
