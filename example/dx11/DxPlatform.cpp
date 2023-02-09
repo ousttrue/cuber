@@ -4,6 +4,7 @@
 #include <imgui_impl_dx11.h>
 #include <imgui_impl_win32.h>
 #include <tchar.h>
+#include <winrt/base.h>
 
 #ifndef WM_DPICHANGED
 #define WM_DPICHANGED 0x02E0 // From Windows SDK 8.1+ headers
@@ -33,10 +34,10 @@ struct DxPlatformImpl {
                     NULL};
 
   HWND hwnd = {};
-  ID3D11Device *g_pd3dDevice = NULL;
-  ID3D11DeviceContext *g_pd3dDeviceContext = NULL;
-  IDXGISwapChain *g_pSwapChain = NULL;
-  ID3D11RenderTargetView *g_mainRenderTargetView = NULL;
+  winrt::com_ptr<ID3D11Device> g_pd3dDevice;
+  winrt::com_ptr<ID3D11DeviceContext> g_pd3dDeviceContext;
+  winrt::com_ptr<IDXGISwapChain> g_pSwapChain;
+  winrt::com_ptr<ID3D11RenderTargetView> g_mainRenderTargetView;
 
   DxPlatformImpl() {}
 
@@ -46,27 +47,13 @@ struct DxPlatformImpl {
     ImGui_ImplWin32_Shutdown();
 
     CleanupRenderTarget();
-    if (g_pSwapChain) {
-      g_pSwapChain->Release();
-      g_pSwapChain = NULL;
-    }
-    if (g_pd3dDeviceContext) {
-      g_pd3dDeviceContext->Release();
-      g_pd3dDeviceContext = NULL;
-    }
-    if (g_pd3dDevice) {
-      g_pd3dDevice->Release();
-      g_pd3dDevice = NULL;
-    }
-
     ::DestroyWindow(hwnd);
     ::UnregisterClassW(wc.lpszClassName, wc.hInstance);
   }
 
   void CleanupRenderTarget() {
     if (g_mainRenderTargetView) {
-      g_mainRenderTargetView->Release();
-      g_mainRenderTargetView = NULL;
+      g_mainRenderTargetView = nullptr;
     }
   }
 
@@ -89,7 +76,7 @@ struct DxPlatformImpl {
 
     // Setup Platform/Renderer backends
     ImGui_ImplWin32_Init(hwnd);
-    ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
+    ImGui_ImplDX11_Init(g_pd3dDevice.get(), g_pd3dDeviceContext.get());
 
     return hwnd;
   }
@@ -97,21 +84,30 @@ struct DxPlatformImpl {
   // Helper functions
   bool CreateDeviceD3D(HWND hWnd) {
     // Setup swap chain
-    DXGI_SWAP_CHAIN_DESC sd;
-    ZeroMemory(&sd, sizeof(sd));
-    sd.BufferCount = 2;
-    sd.BufferDesc.Width = 0;
-    sd.BufferDesc.Height = 0;
-    sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    sd.BufferDesc.RefreshRate.Numerator = 60;
-    sd.BufferDesc.RefreshRate.Denominator = 1;
-    sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-    sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    sd.OutputWindow = hWnd;
-    sd.SampleDesc.Count = 1;
-    sd.SampleDesc.Quality = 0;
-    sd.Windowed = TRUE;
-    sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+    DXGI_SWAP_CHAIN_DESC sd{
+        .BufferDesc =
+            {
+                .Width = 0,
+                .Height = 0,
+                .RefreshRate =
+                    {
+                        .Numerator = 60,
+                        .Denominator = 1,
+                    },
+                .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+            },
+        .SampleDesc =
+            {
+                .Count = 1,
+                .Quality = 0,
+            },
+        .BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,
+        .BufferCount = 2,
+        .OutputWindow = hWnd,
+        .Windowed = TRUE,
+        .SwapEffect = DXGI_SWAP_EFFECT_DISCARD,
+        .Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH,
+    };
 
     UINT createDeviceFlags = 0;
     // createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
@@ -122,27 +118,29 @@ struct DxPlatformImpl {
     };
     HRESULT res = D3D11CreateDeviceAndSwapChain(
         NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, createDeviceFlags,
-        featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &g_pSwapChain,
-        &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext);
+        featureLevelArray, 2, D3D11_SDK_VERSION, &sd, g_pSwapChain.put(),
+        g_pd3dDevice.put(), &featureLevel, g_pd3dDeviceContext.put());
     if (res == DXGI_ERROR_UNSUPPORTED) // Try high-performance WARP software
                                        // driver if hardware is not available.
+    {
       res = D3D11CreateDeviceAndSwapChain(
           NULL, D3D_DRIVER_TYPE_WARP, NULL, createDeviceFlags,
-          featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &g_pSwapChain,
-          &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext);
-    if (res != S_OK)
+          featureLevelArray, 2, D3D11_SDK_VERSION, &sd, g_pSwapChain.put(),
+          g_pd3dDevice.put(), &featureLevel, g_pd3dDeviceContext.put());
+    }
+    if (res != S_OK) {
       return false;
+    }
 
     CreateRenderTarget();
     return true;
   }
 
   void CreateRenderTarget() {
-    ID3D11Texture2D *pBackBuffer;
-    g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
-    g_pd3dDevice->CreateRenderTargetView(pBackBuffer, NULL,
-                                         &g_mainRenderTargetView);
-    pBackBuffer->Release();
+    winrt::com_ptr<ID3D11Texture2D> pBackBuffer;
+    g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(pBackBuffer.put()));
+    g_pd3dDevice->CreateRenderTargetView(pBackBuffer.get(), NULL,
+                                         g_mainRenderTargetView.put());
   }
 
   // Win32 message handler
@@ -213,8 +211,11 @@ struct DxPlatformImpl {
     const float clear_color_with_alpha[4] = {
         clear_color[0] * clear_color[3], clear_color[1] * clear_color[3],
         clear_color[2] * clear_color[3], clear_color[3]};
-    g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, NULL);
-    g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView,
+    ID3D11RenderTargetView *rtv[] = {
+        g_mainRenderTargetView.get(),
+    };
+    g_pd3dDeviceContext->OMSetRenderTargets(1, rtv, NULL);
+    g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView.get(),
                                                clear_color_with_alpha);
 
     return std::chrono::milliseconds(timeGetTime());
