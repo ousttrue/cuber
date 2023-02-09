@@ -37,7 +37,7 @@ GLFWwindow *GuiWindow::Create() {
   // glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);           // Required on Mac
 
   // Create window with graphics context
-  window_ = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+OpenGL3 example", NULL,
+  window_ = glfwCreateWindow(1280, 720, "CubeR GLFW+OpenGL3 example", NULL,
                              NULL);
   if (!window_) {
     return nullptr;

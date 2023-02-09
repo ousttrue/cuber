@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "cuber_sample",
+            "name": "cuber_gl3",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/prefix/bin/cuber_sample.exe",
+            "program": "${workspaceFolder}/prefix/bin/cuber_gl3.exe",
             "args": [
                 "sample.bvh"
             ],

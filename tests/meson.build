@@ -1,11 +1,12 @@
-catch2_with_main_dep = dependency('catch2-with-main')
+gtest_dep = dependency('gtest')
+gtest_main_dep = dependency('gtest_main')
 meshutils_dep = dependency('meshutils')
 executable(
     'tests',
     ['quat32_test.cpp'],
     dependencies: [
-        catch2_with_main_dep,
+        gtest_dep,
+        gtest_main_dep,
         meshutils_dep,
     ],
 )
-
