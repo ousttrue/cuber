@@ -4,7 +4,7 @@ project(
     default_options: ['cpp_std=c++20'],
     version: '1.0.0',
 )
-subdir('src')
+subdir('src/gl3')
 if get_option('example')
     subdir('example')
 endif

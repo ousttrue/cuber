@@ -1,12 +1,11 @@
 #include "GlRenderer.h"
 #include "BvhSolver.h"
-// #include <GL/glew.h>
-#include <cuber.h>
+#include <GlCubeRenderer.h>
 #include <iostream>
 
 struct GlRendererImpl {
   BvhSolver bvhSolver_;
-  cuber::CubeRenderer renderer_;
+  cuber::GlCubeRenderer renderer_;
 
   GlRendererImpl() {}
   ~GlRendererImpl() {}

@@ -14,6 +14,6 @@ executable(
         glfw_dep,
         gl_dep,
         bvhutil_dep,
-        cuber_dep,
+        cuber_gl3_dep,
     ],
 )

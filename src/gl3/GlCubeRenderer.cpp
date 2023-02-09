@@ -1,4 +1,4 @@
-#include "CubeRenderer.h"
+#include "GlCubeRenderer.h"
 #include <DirectXMath.h>
 #include <GL/glew.h>
 #include <iostream>
@@ -206,7 +206,7 @@ get_location(const std::shared_ptr<cuber::ShaderProgram> &shader,
   return *location;
 }
 
-CubeRenderer::CubeRenderer() {
+GlCubeRenderer::GlCubeRenderer() {
 
   std::cout << "GL_VERSION: " << glGetString(GL_VERSION) << std::endl;
   glewInit();
@@ -319,8 +319,8 @@ CubeRenderer::CubeRenderer() {
     throw std::runtime_error("cuber::Vao::Create");
   }
 }
-CubeRenderer::~CubeRenderer() {}
-void CubeRenderer::Render(const float projection[16], const float view[16],
+GlCubeRenderer::~GlCubeRenderer() {}
+void GlCubeRenderer::Render(const float projection[16], const float view[16],
                           const void *data, uint32_t instanceCount) {
   if (instanceCount == 0) {
     return;
