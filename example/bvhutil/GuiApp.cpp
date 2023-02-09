@@ -1,7 +1,7 @@
 #include "GuiApp.h"
 #include <imgui.h>
 
-GuiApp::GuiApp(const char *glsl_version) {
+GuiApp::GuiApp() {
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();

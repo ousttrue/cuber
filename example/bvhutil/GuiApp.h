@@ -24,7 +24,7 @@ public:
   };
   GuiApp(const GuiApp &) = delete;
   GuiApp &operator=(const GuiApp &) = delete;
-  GuiApp(const char *glsl_version);
+  GuiApp();
   ~GuiApp();
   void UpdateGui();
   struct ImDrawData *RenderGui();

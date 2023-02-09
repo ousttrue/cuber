@@ -4,12 +4,11 @@
 #include "GuiApp.h"
 
 int main(int argc, char **argv) {
-  GlfwPlatform platform;
-
   // imgui
-  GuiApp app(platform.GlslVersion());
+  GuiApp app();
 
   // window
+  GlfwPlatform platform;
   auto window = platform.Create();
   if (!window) {
     return 1;

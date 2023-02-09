@@ -28,6 +28,9 @@ GlfwPlatform::GlfwPlatform() {
 }
 
 GlfwPlatform::~GlfwPlatform() {
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+
   glfwDestroyWindow(window_);
   glfwTerminate();
 }
@@ -56,11 +59,6 @@ GLFWwindow *GlfwPlatform::Create() {
   ImGui_ImplOpenGL3_Init(glsl_version);
 
   return window_;
-}
-
-void GlfwPlatform::ShutdownGuiBackend() {
-  ImGui_ImplOpenGL3_Shutdown();
-  ImGui_ImplGlfw_Shutdown();
 }
 
 std::optional<GlfwTime> GlfwPlatform::NewFrame(const float clear_color[4]) {

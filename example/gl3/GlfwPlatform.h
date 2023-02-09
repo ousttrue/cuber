@@ -16,5 +16,4 @@ public:
   struct GLFWwindow *Create();
   std::optional<GlfwTime> NewFrame(const float clear_color[4]);
   void EndFrame(struct ImDrawData *data);
-  void ShutdownGuiBackend();
 };
