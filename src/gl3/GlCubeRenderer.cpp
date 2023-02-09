@@ -1,4 +1,6 @@
 #include "GlCubeRenderer.h"
+#include "vao.h"
+#include "shader.h"
 #include <DirectXMath.h>
 #include <GL/glew.h>
 #include <iostream>
@@ -36,14 +38,6 @@ void main()
 static const char *fragment_shader_text = R"(
 in vec2 barycentric;
 out vec4 FragColor;
-
-// float grid (vec2 vBC, float width, float feather) {
-//   float w1 = width - feather * 0.5;
-//   vec3 bary = vec3(vBC.x, vBC.y, 1.0 - vBC.x - vBC.y);
-//   vec3 d = fwidth(bary);
-//   vec3 a3 = smoothstep(d * w1, d * (w1 + feather), bary);
-//   return min(min(a3.x, a3.y), a3.z);
-// }
 
 // https://github.com/rreusser/glsl-solid-wireframe
 float grid (vec2 vBC, float width) {
@@ -94,12 +88,12 @@ GlCubeRenderer::GlCubeRenderer() {
     throw std::runtime_error("cuber::ShaderProgram::Create");
   }
 
-  auto vpos_location = get_location(shader_, "vPos");
-  auto vbarycentric_location = get_location(shader_, "vBarycentric");
+  // auto vpos_location = get_location(shader_, "vPos");
+  // auto vbarycentric_location = get_location(shader_, "vBarycentric");
   // auto ipos_location = get_location(shader_, "iPos");
   // auto irot_location = get_location(shader_, "iRot");
 
-  auto [vertices, indices] = Cube();
+  auto [vertices, indices, layouts] = Cube();
 
   auto vbo =
       cuber::Vbo::Create(sizeof(Vertex) * vertices.size(), vertices.data());
@@ -112,67 +106,21 @@ GlCubeRenderer::GlCubeRenderer() {
     throw std::runtime_error("cuber::Vbo::Create");
   }
 
-  cuber::VertexLayout layouts[] = {
-      {
-          .location = vpos_location,
-          .vbo = vbo,
-          .type = GL_FLOAT,
-          .count = 3,
-          .offset = offsetof(Vertex, position),
-          .stride = sizeof(Vertex),
-      },
-      {
-          .location = vbarycentric_location,
-          .vbo = vbo,
-          .type = GL_FLOAT,
-          .count = 3,
-          .offset = offsetof(Vertex, barycentric),
-          .stride = sizeof(Vertex),
-      },
-      //
-      {
-          .location = 2,
-          .vbo = instance_vbo_,
-          .type = GL_FLOAT,
-          .count = 4,
-          .offset = offsetof(Instance, row0),
-          .stride = sizeof(Instance),
-          .divisor = 1,
-      },
-      {
-          .location = 3,
-          .vbo = instance_vbo_,
-          .type = GL_FLOAT,
-          .count = 4,
-          .offset = offsetof(Instance, row1),
-          .stride = sizeof(Instance),
-          .divisor = 1,
-      },
-      {
-          .location = 4,
-          .vbo = instance_vbo_,
-          .type = GL_FLOAT,
-          .count = 4,
-          .offset = offsetof(Instance, row2),
-          .stride = sizeof(Instance),
-          .divisor = 1,
-      },
-      {
-          .location = 5,
-          .vbo = instance_vbo_,
-          .type = GL_FLOAT,
-          .count = 4,
-          .offset = offsetof(Instance, row3),
-          .stride = sizeof(Instance),
-          .divisor = 1,
-      },
+  VertexSlot slots[] = {
+      {0, vbo},           //
+      {1, vbo},           //
+      {2, instance_vbo_}, //
+      {3, instance_vbo_}, //
+      {4, instance_vbo_}, //
+      {5, instance_vbo_}, //
   };
+
   auto ibo =
       cuber::Ibo::Create(sizeof(uint32_t) * indices.size(), indices.data());
   if (!ibo) {
     throw std::runtime_error("cuber::Vbo::Create");
   }
-  vao_ = cuber::Vao::Create(layouts, ibo);
+  vao_ = cuber::Vao::Create(layouts, slots, ibo);
   if (!vao_) {
     throw std::runtime_error("cuber::Vao::Create");
   }

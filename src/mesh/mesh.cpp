@@ -1,5 +1,49 @@
 #include "mesh.h"
 
+static VertexLayout layouts[] = {
+    {
+        .type = ValueType::Float,
+        .count = 3,
+        .offset = offsetof(Vertex, position),
+        .stride = sizeof(Vertex),
+    },
+    {
+        .type = ValueType::Float,
+        .count = 3,
+        .offset = offsetof(Vertex, barycentric),
+        .stride = sizeof(Vertex),
+    },
+    //
+    {
+        .type = ValueType::Float,
+        .count = 4,
+        .offset = offsetof(Instance, row0),
+        .stride = sizeof(Instance),
+        .divisor = 1,
+    },
+    {
+        .type = ValueType::Float,
+        .count = 4,
+        .offset = offsetof(Instance, row1),
+        .stride = sizeof(Instance),
+        .divisor = 1,
+    },
+    {
+        .type = ValueType::Float,
+        .count = 4,
+        .offset = offsetof(Instance, row2),
+        .stride = sizeof(Instance),
+        .divisor = 1,
+    },
+    {
+        .type = ValueType::Float,
+        .count = 4,
+        .offset = offsetof(Instance, row3),
+        .stride = sizeof(Instance),
+        .divisor = 1,
+    },
+};
+
 const float s = 0.5f;
 XYZ positions[8] = {
     {-s, -s, +s}, //
@@ -59,8 +103,7 @@ Face cube_faces[6] = {
 };
 
 struct Builder {
-  std::vector<Vertex> vertices;
-  std::vector<uint32_t> indices;
+  Mesh mesh;
   void Quad(const XYZ &p0, const XYZ &p1, const XYZ &p2, const XYZ &p3,
             const RGBA &color) {
     // 01   00
@@ -84,31 +127,29 @@ struct Builder {
         .position = p3,
         .barycentric = {0, 0},
     };
-    auto index = vertices.size();
-    vertices.push_back(v0);
-    vertices.push_back(v1);
-    vertices.push_back(v2);
-    vertices.push_back(v3);
+    auto index = mesh.vertices.size();
+    mesh.vertices.push_back(v0);
+    mesh.vertices.push_back(v1);
+    mesh.vertices.push_back(v2);
+    mesh.vertices.push_back(v3);
     // 0, 1, 2
-    indices.push_back(index);
-    indices.push_back(index + 1);
-    indices.push_back(index + 2);
+    mesh.indices.push_back(index);
+    mesh.indices.push_back(index + 1);
+    mesh.indices.push_back(index + 2);
     // 2, 3, 0
-    indices.push_back(index + 2);
-    indices.push_back(index + 3);
-    indices.push_back(index);
+    mesh.indices.push_back(index + 2);
+    mesh.indices.push_back(index + 3);
+    mesh.indices.push_back(index);
   }
 };
 
 Mesh Cube() {
   Builder builder;
+  builder.mesh.layouts.assign(layouts, layouts + std::size(layouts));
   for (auto face : cube_faces) {
     builder.Quad(positions[face.indices[0]], positions[face.indices[1]],
                  positions[face.indices[2]], positions[face.indices[3]],
                  face.color);
   }
-  return {
-      builder.vertices,
-      builder.indices,
-  };
+  return builder.mesh;
 }

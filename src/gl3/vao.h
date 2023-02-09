@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <mesh.h>
 #include <span>
 #include <stdint.h>
 #include <vector>
@@ -29,14 +30,10 @@ public:
   void Unbind();
 };
 
-struct VertexLayout {
+struct VertexSlot
+{
   uint32_t location;
   std::shared_ptr<Vbo> vbo;
-  uint32_t type;
-  uint32_t count;
-  uint32_t offset;
-  uint32_t stride;
-  uint32_t divisor;
 };
 
 class Vao {
@@ -45,10 +42,10 @@ class Vao {
   std::shared_ptr<Ibo> ibo_;
 
 public:
-  Vao(uint32_t vao, std::span<VertexLayout> layouts,
+  Vao(uint32_t vao, std::span<VertexLayout> layouts, std::span<VertexSlot> slots,
       const std::shared_ptr<Ibo> &ibo);
   ~Vao();
-  static std::shared_ptr<Vao> Create(std::span<VertexLayout> layouts,
+  static std::shared_ptr<Vao> Create(std::span<VertexLayout> layouts, std::span<VertexSlot> slots,
                                      const std::shared_ptr<Ibo> &ibo = {});
   void Bind();
   void Unbind();

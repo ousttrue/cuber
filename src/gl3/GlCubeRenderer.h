@@ -1,6 +1,4 @@
 #pragma once
-#include "shader.h"
-#include "vao.h"
 #include <array>
 #include <memory>
 #include <span>
@@ -9,11 +7,10 @@ namespace cuber {
 
 template <typename T>
 concept Float16 = sizeof(T) == sizeof(float) * 16;
-
 class GlCubeRenderer {
-  std::shared_ptr<Vao> vao_;
-  std::shared_ptr<ShaderProgram> shader_;
-  std::shared_ptr<Vbo> instance_vbo_;
+  std::shared_ptr<class Vao> vao_;
+  std::shared_ptr<class ShaderProgram> shader_;
+  std::shared_ptr<class Vbo> instance_vbo_;
 
 public:
   GlCubeRenderer(const GlCubeRenderer &) = delete;

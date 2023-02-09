@@ -1,6 +1,19 @@
 #pragma once
 #include <vector>
+
 const int CUBE_INDEX_COUNT = 36;
+
+enum class ValueType {
+  Float,
+};
+
+struct VertexLayout {
+  ValueType type;
+  uint32_t count;
+  uint32_t offset;
+  uint32_t stride;
+  uint32_t divisor;
+};
 
 struct XY {
   float x;
@@ -21,6 +34,7 @@ struct Vertex {
 struct Mesh {
   std::vector<Vertex> vertices;
   std::vector<uint32_t> indices;
+  std::vector<VertexLayout> layouts;
 };
 
 struct XYZW {

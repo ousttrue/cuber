@@ -1,6 +1,17 @@
 #include "vao.h"
 #include <GL/glew.h>
+#include <assert.h>
 #include <stdexcept>
+
+static uint32_t GLType(ValueType type) {
+  switch (type) {
+  case ValueType::Float:
+    return GL_FLOAT;
+
+  default:
+    throw std::runtime_error("GLType");
+  }
+}
 
 namespace cuber {
 
@@ -55,22 +66,25 @@ void Ibo::Unbind() { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); }
 // Vao
 //
 Vao::Vao(uint32_t vao, std::span<VertexLayout> layouts,
-         const std::shared_ptr<Ibo> &ibo)
+         std::span<VertexSlot> slots, const std::shared_ptr<Ibo> &ibo)
     : vao_(vao), layouts_(layouts.begin(), layouts.end()), ibo_(ibo) {
+  assert(layouts.size() == slots.size());
   Bind();
   if (ibo_) {
     ibo_->Bind();
   }
   for (int i = 0; i < layouts.size(); ++i) {
     auto &layout = layouts[i];
-    glEnableVertexAttribArray(layout.location);
-    layout.vbo->Bind();
+    auto &slot = slots[i];
+    glEnableVertexAttribArray(slot.location);
+    slot.vbo->Bind();
     glVertexAttribPointer(
-        layout.location, layout.count, layout.type, GL_FALSE, layout.stride,
+        slot.location, layout.count, GLType(layout.type), GL_FALSE,
+        layout.stride,
         reinterpret_cast<void *>(static_cast<uint64_t>(layout.offset)));
     if (layout.divisor) {
       auto a = glVertexAttribDivisor;
-      glVertexAttribDivisor(layout.location, layout.divisor);
+      glVertexAttribDivisor(slot.location, layout.divisor);
     }
   }
   Unbind();
@@ -81,10 +95,11 @@ Vao::Vao(uint32_t vao, std::span<VertexLayout> layouts,
 }
 Vao::~Vao() {}
 std::shared_ptr<Vao> Vao::Create(std::span<VertexLayout> layouts,
+                                 std::span<VertexSlot> slots,
                                  const std::shared_ptr<Ibo> &ibo) {
   GLuint vao;
   glGenVertexArrays(1, &vao);
-  auto ptr = std::shared_ptr<Vao>(new Vao(vao, layouts, ibo));
+  auto ptr = std::shared_ptr<Vao>(new Vao(vao, layouts, slots, ibo));
   return ptr;
 }
 void Vao::Bind() { glBindVertexArray(vao_); }
