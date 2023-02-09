@@ -6,7 +6,7 @@ cuber_gl3_lib = static_library(
         'GlCubeRenderer.cpp',
         'vao.cpp',
     ],
-    dependencies: [glew_dep],
+    dependencies: [glew_dep, mesh_dep],
 )
 cuber_gl3_dep = declare_dependency(
     include_directories: include_directories('.'),

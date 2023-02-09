@@ -3,6 +3,7 @@
 #include "vao.h"
 #include <array>
 #include <memory>
+#include <span>
 
 namespace cuber {
 
