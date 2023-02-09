@@ -51,18 +51,14 @@ GLFWwindow *GlfwPlatform::Create() {
   glfwMakeContextCurrent(window_);
   glfwSwapInterval(1); // Enable vsync
 
-  InitGui(window_);
+  // Setup Platform/Renderer backends
+  ImGui_ImplGlfw_InitForOpenGL(window_, true);
+  ImGui_ImplOpenGL3_Init(glsl_version);
 
   return window_;
 }
 
-void GlfwPlatform::InitGui(GLFWwindow *window) {
-  // Setup Platform/Renderer backends
-  ImGui_ImplGlfw_InitForOpenGL(window, true);
-  ImGui_ImplOpenGL3_Init(glsl_version);
-}
-
-void GlfwPlatform::ShutdownGuiPlatform() {
+void GlfwPlatform::ShutdownGuiBackend() {
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
 }

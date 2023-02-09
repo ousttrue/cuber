@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
       }
     }
 
-    platform.ShutdownGuiPlatform();
+    platform.ShutdownGuiBackend();
   }
 
   return 0;
