@@ -6,7 +6,7 @@
 // Main code
 int main(int argc, char **argv) {
   // imgui
-  GuiApp app;
+  GuiApp app(true);
 
   DxPlatform platform;
   if (!platform.Create()) {

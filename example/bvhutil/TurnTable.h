@@ -13,6 +13,11 @@ class TurnTable {
   float shift_[3] = {0, -1, -4};
 
 public:
+  TurnTable(bool leftHanded) {
+    if (leftHanded) {
+      // shift_[2] = -shift_[2];
+    }
+  }
   void SetSize(int w, int h);
   void YawPitch(int dx, int dy);
   void Shift(int dx, int dy);

@@ -3,6 +3,15 @@
 #include <d3dcompiler.h>
 
 auto SHADER = R"(
+#pragma pack_matrix(row_major)
+
+// 定義
+cbuffer c0
+{
+    float4x4 ProjectionMatrix;
+    float4x4 ViewMatrix;
+};
+
 /* vertex attributes go here to input to the vertex shader */
 struct vs_in {
     float3 position_local : POS;
@@ -15,7 +24,7 @@ struct vs_out {
 
 vs_out vs_main(vs_in input) {
   vs_out output = (vs_out)0; // zero the memory first
-  output.position_clip = float4(input.position_local, 1.0);
+  output.position_clip = mul(float4(input.position_local, 1.0), mul(ViewMatrix, ProjectionMatrix));
   return output;
 }
 
@@ -46,14 +55,21 @@ CompileShader(std::string_view src, const char *entry, const char *target) {
   return vs_blob_ptr;
 }
 
+const float size = 5.0f;
 float vertex_data_array[] = {
-    0.0f,  0.5f,  0.0f, // point at top
-    0.5f,  -0.5f, 0.0f, // point at bottom-right
-    -0.5f, -0.5f, 0.0f, // point at bottom-left
+    0.0f,  size,  0.0f, // point at top
+    size,  -size, 0.0f, // point at bottom-right
+    -size, -size, 0.0f, // point at bottom-left
 };
 UINT vertex_stride = 3 * sizeof(float);
 UINT vertex_offset = 0;
 UINT vertex_count = 3;
+
+struct Constant {
+  DirectX::XMFLOAT4X4 projection;
+  DirectX::XMFLOAT4X4 view;
+};
+
 namespace cuber {
 struct DxCubeRendererImpl {
   winrt::com_ptr<ID3D11Device> device_;
@@ -61,6 +77,8 @@ struct DxCubeRendererImpl {
   winrt::com_ptr<ID3D11PixelShader> pixel_shader_;
   winrt::com_ptr<ID3D11InputLayout> input_layout_;
   winrt::com_ptr<ID3D11Buffer> vertex_buffer_;
+
+  winrt::com_ptr<ID3D11Buffer> constant_buffer_;
 
   DxCubeRendererImpl(const winrt::com_ptr<ID3D11Device> &device)
       : device_(device) {
@@ -103,6 +121,17 @@ struct DxCubeRendererImpl {
                                  vertex_buffer_.put());
       assert(SUCCEEDED(hr));
     }
+
+    {
+      D3D11_BUFFER_DESC desc = {
+          .ByteWidth = sizeof(Constant),
+          .Usage = D3D11_USAGE_DEFAULT,
+          .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+      };
+      HRESULT hr =
+          device_->CreateBuffer(&desc, nullptr, constant_buffer_.put());
+      assert(SUCCEEDED(hr));
+    };
   }
 
   void Render(const float projection[16], const float view[16],
@@ -118,6 +147,15 @@ struct DxCubeRendererImpl {
     ID3D11Buffer *vb[] = {vertex_buffer_.get()};
     context->IASetVertexBuffers(0, 1, vb, &vertex_stride, &vertex_offset);
 
+    Constant constant_value{
+        *((const DirectX::XMFLOAT4X4 *)projection),
+        *((const DirectX::XMFLOAT4X4 *)view),
+    };
+    context->UpdateSubresource(constant_buffer_.get(), 0, NULL, &constant_value,
+                               0, 0);
+
+    ID3D11Buffer *cb[]{constant_buffer_.get()};
+    context->VSSetConstantBuffers(0, 1, cb);
     context->Draw(vertex_count, 0);
   }
 };

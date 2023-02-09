@@ -1,7 +1,7 @@
 #include "GuiApp.h"
 #include <imgui.h>
 
-GuiApp::GuiApp() {
+GuiApp::GuiApp(bool leftHanded) : turntable_(leftHanded) {
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
