@@ -115,9 +115,9 @@ Face cube_faces[6] = {
 };
 
 struct Builder {
-  Mesh mesh;
-  bool ccw;
-  Builder(bool isCCW) : ccw(isCCW) {}
+  Mesh mesh_;
+  bool ccw_;
+  Builder(bool isCCW) : ccw_(isCCW) {}
 
   void Quad(const XYZ &p0, const XYZ &p1, const XYZ &p2, const XYZ &p3,
             const RGBA &color) {
@@ -142,40 +142,43 @@ struct Builder {
         .position = p3,
         .barycentric = {0, 0},
     };
-    auto index = mesh.vertices.size();
-    mesh.vertices.push_back(v0);
-    mesh.vertices.push_back(v1);
-    mesh.vertices.push_back(v2);
-    mesh.vertices.push_back(v3);
-    if (ccw) {
+    auto index = mesh_.vertices.size();
+    mesh_.vertices.push_back(v0);
+    mesh_.vertices.push_back(v1);
+    mesh_.vertices.push_back(v2);
+    mesh_.vertices.push_back(v3);
+    if (ccw_) {
       // 0, 1, 2
-      mesh.indices.push_back(index);
-      mesh.indices.push_back(index + 1);
-      mesh.indices.push_back(index + 2);
+      mesh_.indices.push_back(index);
+      mesh_.indices.push_back(index + 1);
+      mesh_.indices.push_back(index + 2);
       // 2, 3, 0
-      mesh.indices.push_back(index + 2);
-      mesh.indices.push_back(index + 3);
-      mesh.indices.push_back(index);
+      mesh_.indices.push_back(index + 2);
+      mesh_.indices.push_back(index + 3);
+      mesh_.indices.push_back(index);
     } else {
       // 0, 3, 2
-      mesh.indices.push_back(index);
-      mesh.indices.push_back(index + 3);
-      mesh.indices.push_back(index + 2);
+      mesh_.indices.push_back(index);
+      mesh_.indices.push_back(index + 3);
+      mesh_.indices.push_back(index + 2);
       // 2, 1, 0
-      mesh.indices.push_back(index + 2);
-      mesh.indices.push_back(index + 1);
-      mesh.indices.push_back(index);
+      mesh_.indices.push_back(index + 2);
+      mesh_.indices.push_back(index + 1);
+      mesh_.indices.push_back(index);
     }
   }
 };
 
-Mesh Cube(bool isCCW) {
+Mesh Cube(bool isCCW, bool isStereo) {
   Builder builder(isCCW);
-  builder.mesh.layouts.assign(layouts, layouts + std::size(layouts));
+  for (auto layout : layouts) {
+    layout.divisor *= (isStereo ? 2 : 1);
+    builder.mesh_.layouts.push_back(layout);
+  }
   for (auto face : cube_faces) {
     builder.Quad(positions[face.indices[0]], positions[face.indices[1]],
                  positions[face.indices[2]], positions[face.indices[3]],
                  face.color);
   }
-  return builder.mesh;
+  return builder.mesh_;
 }

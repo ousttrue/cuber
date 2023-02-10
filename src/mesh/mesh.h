@@ -61,4 +61,4 @@ struct Instance {
   XYZW row3;
 };
 
-Mesh Cube(bool isCCW);
+Mesh Cube(bool isCCW, bool isStereo);

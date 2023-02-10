@@ -24,17 +24,5 @@ public:
               std::span<const T> instances) {
     Render(projection, view, instances.data(), instances.size());
   }
-
-  // VR
-  void RenderStereo(const float projection[16], const float view[16],
-                    const float rightProjection[16], const float rightView[16],
-                    const void *data, uint32_t instanceCount);
-  template <Float16 T>
-  void RenderStereo(const float projection[16], const float view[16],
-                    const float rightProjection[16], const float rightView[16],
-                    std::span<const T> instances) {
-    RenderStereo(projection, view, rightProjection, rightView, instances.data(),
-                 instances.size());
-  }
 };
 } // namespace cuber

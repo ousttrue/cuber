@@ -93,7 +93,7 @@ GlCubeRenderer::GlCubeRenderer() {
   // auto ipos_location = get_location(shader_, "iPos");
   // auto irot_location = get_location(shader_, "iRot");
 
-  auto [vertices, indices, layouts] = Cube(true);
+  auto [vertices, indices, layouts] = Cube(true, false);
 
   auto vbo =
       cuber::Vbo::Create(sizeof(Vertex) * vertices.size(), vertices.data());
