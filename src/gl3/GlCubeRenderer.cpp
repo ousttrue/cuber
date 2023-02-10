@@ -65,10 +65,6 @@ get_location(const std::shared_ptr<cuber::ShaderProgram> &shader,
 
 GlCubeRenderer::GlCubeRenderer() {
 
-  std::cout << "GL_VERSION: " << glGetString(GL_VERSION) << std::endl;
-  glewInit();
-  std::cout << "GLEW_VERSION: " << glewGetString(GLEW_VERSION) << std::endl;
-
   // auto glsl_version = "#version 150";
   auto glsl_version = "#version 310 es\nprecision highp float;";
 

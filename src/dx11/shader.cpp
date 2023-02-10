@@ -20,9 +20,9 @@ winrt::com_ptr<ID3DBlob> CompileShader(std::string_view src, const char *entry,
   return vs_blob_ptr;
 }
 
-DXGI_FORMAT DxgiFormat(const VertexLayout &layout) {
+DXGI_FORMAT DxgiFormat(const cuber::VertexLayout &layout) {
   switch (layout.type) {
-  case ValueType::Float:
+  case cuber::ValueType::Float:
     switch (layout.count) {
     case 2:
       return DXGI_FORMAT_R32G32_FLOAT;

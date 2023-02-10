@@ -3,9 +3,9 @@
 #include <assert.h>
 #include <stdexcept>
 
-static uint32_t GLType(ValueType type) {
+static uint32_t GLType(cuber::ValueType type) {
   switch (type) {
-  case ValueType::Float:
+  case cuber::ValueType::Float:
     return GL_FLOAT;
 
   default:

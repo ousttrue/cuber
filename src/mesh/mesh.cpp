@@ -1,5 +1,7 @@
 #include "mesh.h"
 
+namespace cuber {
+
 static VertexLayout layouts[] = {
     {
         .semantic_name = "POSITION",
@@ -182,3 +184,5 @@ Mesh Cube(bool isCCW, bool isStereo) {
   }
   return builder.mesh_;
 }
+
+} // namespace cuber

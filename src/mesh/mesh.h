@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 
+namespace cuber {
 const int CUBE_INDEX_COUNT = 36;
 
 enum class ValueType {
@@ -33,11 +34,15 @@ struct Vertex {
   XYZ position;
   XY barycentric;
 };
+static_assert(sizeof(Vertex) == sizeof(float) * 5, "Vertex");
 
 struct Mesh {
   std::vector<Vertex> vertices;
   std::vector<uint32_t> indices;
   std::vector<VertexLayout> layouts;
+
+  Mesh() {}
+  ~Mesh() {}
 };
 
 struct XYZW {
@@ -62,3 +67,4 @@ struct Instance {
 };
 
 Mesh Cube(bool isCCW, bool isStereo);
+} // namespace cuber

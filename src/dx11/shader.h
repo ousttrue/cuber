@@ -7,4 +7,4 @@
 
 winrt::com_ptr<ID3DBlob> CompileShader(std::string_view src, const char *entry,
                                        const char *target);
-DXGI_FORMAT DxgiFormat(const VertexLayout &layout);
+DXGI_FORMAT DxgiFormat(const cuber::VertexLayout &layout);

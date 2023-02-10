@@ -77,7 +77,7 @@ struct DxCubeRendererImpl {
                                     NULL, pixel_shader_.put());
     assert(SUCCEEDED(hr));
 
-    auto [vertices, indices, layouts] = Cube(false, false);
+    auto [vertices, indices, layouts] = cuber::Cube(false, false);
 
     uint32_t slots[] = {
         0, 0, 1, 1, 1, 1,
