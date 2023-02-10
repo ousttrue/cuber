@@ -6,7 +6,6 @@ executable(
     'cuber_gl3',
     [
         'main.cpp',
-        'GlRenderer.cpp',
         'GlfwPlatform.cpp',
     ],
     install: true,

@@ -1,6 +1,6 @@
 #include "BvhPanel.h"
+#include "DxCubeRenderer.h"
 #include "DxPlatform.h"
-#include "DxRenderer.h"
 #include "GuiApp.h"
 
 // Main code
@@ -14,20 +14,17 @@ int main(int argc, char **argv) {
   }
 
   // bvh scene
-  DxRenderer renderer(platform.GetDevice());
   BvhPanel bvhPanel;
-
-  // bind bvh animation to renderer
-  bvhPanel.OnFrame(
-      [&renderer](const BvhFrame &frame) { renderer.SyncFrame(frame); });
 
   // load bvh
   if (argc > 1) {
     if (auto bvh = Bvh::ParseFile(argv[1])) {
       bvhPanel.SetBvh(bvh);
-      renderer.SetBvh(bvh);
     }
   }
+
+  // renderer
+  cuber::DxCubeRenderer renderer(platform.GetDevice());
 
   // main loop
   while (auto time = platform.NewFrame(app.clear_color)) {
@@ -40,7 +37,7 @@ int main(int argc, char **argv) {
 
     // scene
     {
-      renderer.RenderScene(*time, app.projection, app.view);
+      renderer.Render(app.projection, app.view, bvhPanel.GetCubes());
       platform.EndFrame(data);
     }
   }

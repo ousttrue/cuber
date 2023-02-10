@@ -1,6 +1,7 @@
 #include "BvhPanel.h"
 #include "Animation.h"
 #include "Bvh.h"
+#include "BvhSolver.h"
 #include "UdpSender.h"
 #include <asio.hpp>
 #include <imgui.h>
@@ -16,6 +17,10 @@ class BvhPanelImpl {
   asio::ip::udp::endpoint ep_;
   bool enablePackQuat_ = false;
   std::vector<int> parentMap_;
+
+  std::vector<DirectX::XMFLOAT4X4> instancies_;
+  std::mutex mutex_;
+  BvhSolver bvhSolver_;
 
 public:
   BvhPanelImpl()
@@ -33,12 +38,18 @@ public:
         std::cout << "[asio] catch" << e.what() << std::endl;
       }
     });
+
+    // bind bvh animation to renderer
+    animation_.OnFrame(
+        [self = this](const BvhFrame &frame) { self->SyncFrame(frame); });
   }
+
   ~BvhPanelImpl() {
     animation_.Stop();
     work_.reset();
     thread_.join();
   }
+
   void SetBvh(const std::shared_ptr<Bvh> &bvh) {
     bvh_ = bvh;
     if (!bvh_) {
@@ -49,7 +60,10 @@ public:
       parentMap_.push_back(joint.parent);
     }
     sender_.SendSkeleton(ep_, bvh_);
+
+    bvhSolver_.Initialize(bvh);
   }
+
   void UpdateGui() {
     if (!bvh_) {
       return;
@@ -67,15 +81,25 @@ public:
 
     ImGui::End();
   }
-  void OnFrame(const Animation::OnFrameFunc &onFrame) {
-    animation_.OnFrame(onFrame);
+
+  void SyncFrame(const BvhFrame &frame) {
+    auto instances = bvhSolver_.ResolveFrame(frame);
+    {
+      std::lock_guard<std::mutex> lock(mutex_);
+      instancies_.assign(instances.begin(), instances.end());
+    }
+  }
+
+  std::span<const DirectX::XMFLOAT4X4> GetCubes() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return instancies_;
   }
 };
 
 BvhPanel::BvhPanel() : impl_(new BvhPanelImpl) {}
 BvhPanel::~BvhPanel() { delete impl_; }
 void BvhPanel::SetBvh(const std::shared_ptr<Bvh> &bvh) { impl_->SetBvh(bvh); }
-void BvhPanel::OnFrame(const Animation::OnFrameFunc &onFrame) {
-  impl_->OnFrame(onFrame);
-}
 void BvhPanel::UpdateGui() { impl_->UpdateGui(); }
+std::span<const DirectX::XMFLOAT4X4> BvhPanel::GetCubes() {
+  return impl_->GetCubes();
+}

@@ -6,7 +6,6 @@ executable(
     [
         'main.cpp',
         'DxPlatform.cpp',
-        'DxRenderer.cpp',
     ],
     install: true,
     dependencies: [
