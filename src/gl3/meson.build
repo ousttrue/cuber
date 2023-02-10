@@ -1,4 +1,5 @@
 glew_dep = dependency('glew')
+cuber_gl_inc = include_directories('include')
 cuber_gl3_lib = static_library(
     'cuber_gl3',
     [
@@ -6,10 +7,11 @@ cuber_gl3_lib = static_library(
         'GlCubeRenderer.cpp',
         'vao.cpp',
     ],
+    include_directories: cuber_gl_inc,
     dependencies: [glew_dep, mesh_dep],
 )
 cuber_gl3_dep = declare_dependency(
-    include_directories: include_directories('.'),
+    include_directories: [cuber_gl_inc],
     link_with: cuber_gl3_lib,
     dependencies: [glew_dep],
 )

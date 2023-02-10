@@ -1,4 +1,4 @@
-#include "GlCubeRenderer.h"
+#include <cuber/GlCubeRenderer.h>
 #include "shader.h"
 #include "vao.h"
 #include <DirectXMath.h>

@@ -1,7 +1,7 @@
 #include "BvhPanel.h"
-#include "GlCubeRenderer.h"
 #include "GlfwPlatform.h"
 #include "GuiApp.h"
+#include <cuber/GlCubeRenderer.h>
 
 int main(int argc, char **argv) {
   // imgui
