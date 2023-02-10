@@ -53,6 +53,9 @@ struct DxPlatformImpl {
   }
 
   void CleanupRenderTarget() {
+    if (context_) {
+      context_->OMSetRenderTargets(0, {}, {});
+    }
     rtv_ = nullptr;
     dsv_ = nullptr;
   }
