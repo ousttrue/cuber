@@ -38,6 +38,7 @@ struct DxPlatformImpl {
   winrt::com_ptr<ID3D11DeviceContext> context_;
   winrt::com_ptr<IDXGISwapChain> swapchain_;
   winrt::com_ptr<ID3D11RenderTargetView> rtv_;
+  winrt::com_ptr<ID3D11DepthStencilView> dsv_;
 
   DxPlatformImpl() {}
 
@@ -52,9 +53,8 @@ struct DxPlatformImpl {
   }
 
   void CleanupRenderTarget() {
-    if (rtv_) {
-      rtv_ = nullptr;
-    }
+    rtv_ = nullptr;
+    dsv_ = nullptr;
   }
 
   HWND Create() {
@@ -141,7 +141,45 @@ struct DxPlatformImpl {
   void CreateRenderTarget() {
     winrt::com_ptr<ID3D11Texture2D> pBackBuffer;
     swapchain_->GetBuffer(0, IID_PPV_ARGS(pBackBuffer.put()));
-    device_->CreateRenderTargetView(pBackBuffer.get(), NULL, rtv_.put());
+    auto hr =
+        device_->CreateRenderTargetView(pBackBuffer.get(), NULL, rtv_.put());
+    assert(SUCCEEDED(hr));
+
+    D3D11_TEXTURE2D_DESC backBufferDesc;
+    pBackBuffer->GetDesc(&backBufferDesc);
+
+    {
+      winrt::com_ptr<ID3D11Texture2D> depth;
+      D3D11_TEXTURE2D_DESC txDesc{
+          .Width = backBufferDesc.Width,
+          .Height = backBufferDesc.Height,
+          .MipLevels = 1,
+          .ArraySize = 1,
+          .Format = DXGI_FORMAT_D24_UNORM_S8_UINT,
+          .SampleDesc =
+              {
+                  .Count = 1,
+                  .Quality = 0,
+              },
+          .Usage = D3D11_USAGE_DEFAULT,
+          .BindFlags = D3D11_BIND_DEPTH_STENCIL,
+          .CPUAccessFlags = 0,
+          .MiscFlags = 0,
+      };
+      hr = device_->CreateTexture2D(&txDesc, NULL, depth.put());
+      assert(SUCCEEDED(hr));
+
+      D3D11_DEPTH_STENCIL_VIEW_DESC dsDesc{
+          .Format = txDesc.Format,
+          .ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D,
+          .Texture2D =
+              {
+                  .MipSlice = 0,
+              },
+      };
+      hr = device_->CreateDepthStencilView(depth.get(), &dsDesc, dsv_.put());
+      assert(SUCCEEDED(hr));
+    }
   }
 
   // Win32 message handler
@@ -208,12 +246,14 @@ struct DxPlatformImpl {
     ImGui_ImplWin32_NewFrame();
 
     context_->ClearRenderTargetView(rtv_.get(), clear_color);
+    context_->ClearDepthStencilView(
+        dsv_.get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
     // pipeline
     ID3D11RenderTargetView *rtv[] = {
         rtv_.get(),
     };
-    context_->OMSetRenderTargets(1, rtv, NULL);
+    context_->OMSetRenderTargets(1, rtv, dsv_.get());
     auto &io = ImGui::GetIO();
     D3D11_VIEWPORT viewport = {0.0f, 0.0f, io.DisplaySize.x, io.DisplaySize.y,
                                0.0f, 1.0f};
