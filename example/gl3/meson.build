@@ -3,7 +3,7 @@ c = meson.get_compiler('c')
 gl_dep = c.find_library('OpenGL32')
 
 executable(
-    'cuber_gl3',
+    'cuber_gl',
     [
         'main.cpp',
         'GlfwPlatform.cpp',
@@ -13,6 +13,6 @@ executable(
         glfw_dep,
         gl_dep,
         bvhutil_dep,
-        cuber_gl3_dep,
+        cuber_gl_dep,
     ],
 )

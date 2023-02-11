@@ -18,10 +18,10 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "cuber_gl3",
+            "name": "cuber_gl",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/prefix/bin/cuber_gl3.exe",
+            "program": "${workspaceFolder}/prefix/bin/cuber_gl.exe",
             "args": [
                 "sample.bvh"
             ],
