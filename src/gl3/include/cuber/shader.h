@@ -22,6 +22,13 @@ public:
   static std::shared_ptr<ShaderProgram> Create(const ErrorHandler &onError,
                                                std::span<std::string_view> vs,
                                                std::span<std::string_view> fs);
+  static std::shared_ptr<ShaderProgram> Create(const ErrorHandler &onError,
+                                               std::string_view vs,
+                                               std::string_view fs) {
+    std::string_view vss[] = {vs};
+    std::string_view fss[] = {fs};
+    return Create(onError, vss, fss);
+  }
   void Bind();
   void Unbind();
   std::optional<uint32_t> AttributeLocation(const char *name);

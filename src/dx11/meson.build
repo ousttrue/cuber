@@ -12,4 +12,5 @@ cuber_dx_lib = static_library(
 cuber_dx_dep = declare_dependency(
     include_directories: cuber_dx_inc,
     link_with: cuber_dx_lib,
+    dependencies: [mesh_dep],
 )

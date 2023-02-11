@@ -1,4 +1,4 @@
-#include "shader.h"
+#include <cuber/shader.h>
 #include <GL/glew.h>
 
 static GLuint compile(const std::function<void(std::string_view)> &onError,

@@ -90,8 +90,8 @@ struct DxCubeStereoRendererImpl {
     for (uint32_t i = 0; i < layouts.size(); ++i) {
       auto &layout = layouts[i];
       inputElementDesc.push_back(D3D11_INPUT_ELEMENT_DESC{
-          .SemanticName = layout.semantic_name.c_str(),
-          .SemanticIndex = layout.semantic_index,
+          .SemanticName = layout.id.semantic_name.c_str(),
+          .SemanticIndex = layout.id.semantic_index,
           .Format = DxgiFormat(layout),
           .InputSlot = slots[i],
           .AlignedByteOffset = layout.offset,

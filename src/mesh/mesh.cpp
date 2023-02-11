@@ -4,16 +4,22 @@ namespace cuber {
 
 static VertexLayout layouts[] = {
     {
-        .semantic_name = "POSITION",
-        .semantic_index = 0,
+        .id =
+            {
+                .semantic_name = "POSITION",
+                .semantic_index = 0,
+            },
         .type = ValueType::Float,
         .count = 3,
         .offset = offsetof(Vertex, position),
         .stride = sizeof(Vertex),
     },
     {
-        .semantic_name = "BARYCENTRIC",
-        .semantic_index = 0,
+        .id =
+            {
+                .semantic_name = "BARYCENTRIC",
+                .semantic_index = 0,
+            },
         .type = ValueType::Float,
         .count = 2,
         .offset = offsetof(Vertex, barycentric),
@@ -21,8 +27,11 @@ static VertexLayout layouts[] = {
     },
     //
     {
-        .semantic_name = "ROW",
-        .semantic_index = 0,
+        .id =
+            {
+                .semantic_name = "ROW",
+                .semantic_index = 0,
+            },
         .type = ValueType::Float,
         .count = 4,
         .offset = offsetof(Instance, row0),
@@ -30,8 +39,11 @@ static VertexLayout layouts[] = {
         .divisor = 1,
     },
     {
-        .semantic_name = "ROW",
-        .semantic_index = 1,
+        .id =
+            {
+                .semantic_name = "ROW",
+                .semantic_index = 1,
+            },
         .type = ValueType::Float,
         .count = 4,
         .offset = offsetof(Instance, row1),
@@ -39,8 +51,11 @@ static VertexLayout layouts[] = {
         .divisor = 1,
     },
     {
-        .semantic_name = "ROW",
-        .semantic_index = 2,
+        .id =
+            {
+                .semantic_name = "ROW",
+                .semantic_index = 2,
+            },
         .type = ValueType::Float,
         .count = 4,
         .offset = offsetof(Instance, row2),
@@ -48,8 +63,11 @@ static VertexLayout layouts[] = {
         .divisor = 1,
     },
     {
-        .semantic_name = "ROW",
-        .semantic_index = 3,
+        .id =
+            {
+                .semantic_name = "ROW",
+                .semantic_index = 3,
+            },
         .type = ValueType::Float,
         .count = 4,
         .offset = offsetof(Instance, row3),

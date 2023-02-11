@@ -1,6 +1,6 @@
 #include <cuber/GlCubeRenderer.h>
-#include "shader.h"
-#include "vao.h"
+#include <cuber/shader.h>
+#include <cuber/vao.h>
 #include <DirectXMath.h>
 #include <GL/glew.h>
 #include <iostream>
