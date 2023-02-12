@@ -1,10 +1,10 @@
-#include <cuber/GlCubeRenderer.h>
-#include <cuber/shader.h>
-#include <cuber/vao.h>
 #include <DirectXMath.h>
 #include <GL/glew.h>
+#include <cuber/gl3/GlCubeRenderer.h>
+#include <cuber/gl3/shader.h>
+#include <cuber/gl3/vao.h>
+#include <cuber/mesh.h>
 #include <iostream>
-#include <mesh.h>
 
 namespace cuber {
 

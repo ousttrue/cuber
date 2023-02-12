@@ -3,6 +3,7 @@
 #include <imgui_impl_opengl3.h>
 #include <stdexcept>
 #include <stdio.h>
+#include <GL/glew.h>
 
 const char *glsl_version = nullptr;
 
@@ -11,9 +12,6 @@ const char *glsl_version = nullptr;
 #include <GLES2/gl2.h>
 #endif
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
-
-// must after Windows.h
-#include <GL/GL.h>
 
 static void glfw_error_callback(int error, const char *description) {
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
@@ -53,6 +51,8 @@ GLFWwindow *GlfwPlatform::Create() {
   }
   glfwMakeContextCurrent(window_);
   glfwSwapInterval(1); // Enable vsync
+
+  glewInit();
 
   // Setup Platform/Renderer backends
   ImGui_ImplGlfw_InitForOpenGL(window_, true);

@@ -11,6 +11,6 @@ executable(
     dependencies: [
         bvhutil_dep,
         winmm_dep,
-        cuber_dx_dep,
+        cuber_dep,
     ],
 )

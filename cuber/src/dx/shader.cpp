@@ -1,4 +1,4 @@
-#include "shader.h"
+#include <cuber/dx/shader.h>
 
 namespace cuber {
 

@@ -1,4 +1,4 @@
-#include "mesh.h"
+#include <cuber/mesh.h>
 
 namespace cuber {
 

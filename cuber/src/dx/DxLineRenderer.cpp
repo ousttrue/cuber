@@ -1,8 +1,8 @@
-#include "shader.h"
-#include <cuber/DxLineRenderer.h>
+#include <cuber/dx/DxLineRenderer.h>
+#include <cuber/dx/shader.h>
+#include <cuber/mesh.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
-#include <mesh.h>
 
 static auto SHADER = R"(
 #pragma pack_matrix(row_major)

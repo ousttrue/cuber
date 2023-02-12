@@ -1,8 +1,8 @@
 #include "BvhPanel.h"
 #include "DxPlatform.h"
 #include "GuiApp.h"
-#include <cuber/DxCubeRenderer.h>
-#include <cuber/DxLineRenderer.h>
+#include <cuber/dx/DxCubeRenderer.h>
+#include <cuber/dx/DxLineRenderer.h>
 
 // Main code
 int main(int argc, char **argv) {

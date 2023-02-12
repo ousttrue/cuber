@@ -1,5 +1,5 @@
 #pragma once
-#include "error_handler.h"
+#include <cuber/error_handler.h>
 #include <functional>
 #include <memory>
 #include <optional>

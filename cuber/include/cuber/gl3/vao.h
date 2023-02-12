@@ -1,6 +1,6 @@
 #pragma once
+#include <cuber/mesh.h>
 #include <memory>
-#include <mesh.h>
 #include <span>
 #include <stdint.h>
 #include <vector>
@@ -18,8 +18,7 @@ public:
   ~Vbo();
   static std::shared_ptr<Vbo> Create(uint32_t size, const void *data = nullptr);
 
-  template <ArrayType T>
-  static std::shared_ptr<Vbo> Create(const T &array) {
+  template <ArrayType T> static std::shared_ptr<Vbo> Create(const T &array) {
     return Create(sizeof(array), array);
   }
 

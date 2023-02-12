@@ -1,6 +1,6 @@
 #include <GL/glew.h>
 #include <assert.h>
-#include <cuber/vao.h>
+#include <cuber/gl3/vao.h>
 #include <stdexcept>
 
 static uint32_t GLType(cuber::ValueType type) {

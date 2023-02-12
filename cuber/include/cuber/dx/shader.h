@@ -1,5 +1,5 @@
 #pragma once
-#include "mesh.h"
+#include <cuber/mesh.h>
 #include <d3dcompiler.h>
 #include <dxgi.h>
 #include <string_view>

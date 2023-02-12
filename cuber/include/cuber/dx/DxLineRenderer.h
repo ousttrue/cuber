@@ -1,5 +1,4 @@
 #pragma once
-#include "concept.h"
 #include <DirectXMath.h>
 #include <array>
 #include <memory>

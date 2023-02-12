@@ -1,24 +1,28 @@
-#include "shader.h"
-#include <cuber/DxCubeRenderer.h>
+#include <cuber/dx/DxCubeStereoRenderer.h>
+#include <cuber/dx/shader.h>
+#include <cuber/mesh.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
-#include <mesh.h>
 
 static auto SHADER = R"(
 #pragma pack_matrix(row_major)
-float4x4 VP;
-struct vs_in {
-    float3 pos: POSITION;
+
+cbuffer ViewProjectionConstantBuffer : register(b0) {
+    float4x4 ViewProjection[2]; // VPAndRTArrayIndexFromAnyShaderFeedingRasterizer
+};
+struct VSInput {
+    float3 Pos : POSITION;
     float2 barycentric: BARYCENTRIC;
-    float4 row0: ROW0;
-    float4 row1: ROW1;
-    float4 row2: ROW2;
-    float4 row3: ROW3;    
-    uint instanceID : SV_InstanceID;
- };
-struct vs_out {
-    float4 position_clip: SV_POSITION;
+    float4 Row0: ROW0;
+    float4 Row1: ROW1;
+    float4 Row2: ROW2;
+    float4 Row3: ROW3;
+    uint instId : SV_InstanceID;
+};
+struct VSOutput {
+    float4 Pos : SV_POSITION;
     float2 barycentric: TEXCOORD;
+    uint viewId : SV_RenderTargetArrayIndex;
 };
 
 float4x4 transform(float4 r0, float4 r1, float4 r2, float4 r3)
@@ -31,11 +35,12 @@ float4x4 transform(float4 r0, float4 r1, float4 r2, float4 r3)
   );
 }
 
-vs_out vs_main(vs_in IN) {
-  vs_out OUT = (vs_out)0; // zero the memory first
-  OUT.position_clip = mul(float4(IN.pos, 1.0), mul(transform(IN.row0, IN.row1, IN.row2, IN.row3), VP));
-  OUT.barycentric = IN.barycentric;
-  return OUT;
+VSOutput vs_main(VSInput IN) {
+    VSOutput OUT;
+    OUT.Pos = mul(mul(float4(IN.Pos, 1), transform(IN.Row0, IN.Row1, IN.Row2, IN.Row3)), ViewProjection[IN.instId % 2]);
+    OUT.barycentric = IN.barycentric;
+    OUT.viewId = IN.instId % 2;
+    return OUT;
 }
 
 float grid (float2 vBC, float width) {
@@ -45,14 +50,14 @@ float grid (float2 vBC, float width) {
   return min(a3.x, a3.y);
 }
 
-float4 ps_main(vs_out IN) : SV_TARGET {
+float4 ps_main(VSOutput IN) : SV_TARGET {
   float value = grid(IN.barycentric, 1.0);
   return float4(value, value, value, 1.0);
 }
 )";
 
 namespace cuber {
-struct DxCubeRendererImpl {
+struct DxCubeStereoRendererImpl {
   winrt::com_ptr<ID3D11Device> device_;
   winrt::com_ptr<ID3D11VertexShader> vertex_shader_;
   winrt::com_ptr<ID3D11PixelShader> pixel_shader_;
@@ -63,7 +68,7 @@ struct DxCubeRendererImpl {
   winrt::com_ptr<ID3D11Buffer> instance_buffer_;
   winrt::com_ptr<ID3D11Buffer> constant_buffer_;
 
-  DxCubeRendererImpl(const winrt::com_ptr<ID3D11Device> &device)
+  DxCubeStereoRendererImpl(const winrt::com_ptr<ID3D11Device> &device)
       : device_(device) {
     auto vs = CompileShader(SHADER, "vs_main", "vs_5_0");
     auto hr =
@@ -76,7 +81,7 @@ struct DxCubeRendererImpl {
                                     NULL, pixel_shader_.put());
     assert(SUCCEEDED(hr));
 
-    auto [vertices, indices, layouts] = cuber::Cube(false, false);
+    auto [vertices, indices, layouts] = Cube(false, true);
 
     uint32_t slots[] = {
         0, 0, 1, 1, 1, 1,
@@ -144,7 +149,8 @@ struct DxCubeRendererImpl {
 
     {
       D3D11_BUFFER_DESC desc = {
-          .ByteWidth = sizeof(DirectX::XMFLOAT4X4),
+          // 2
+          .ByteWidth = sizeof(DirectX::XMFLOAT4X4) * 2,
           .Usage = D3D11_USAGE_DEFAULT,
           .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
       };
@@ -155,6 +161,7 @@ struct DxCubeRendererImpl {
   }
 
   void Render(const float projection[16], const float view[16],
+              const float rightProjection[16], const float rightView[16],
               const void *data, uint32_t instanceCount) {
     if (instanceCount == 0) {
       return;
@@ -191,24 +198,41 @@ struct DxCubeRendererImpl {
     context->IASetVertexBuffers(0, std::size(vb), vb, strides, offsets);
     context->IASetIndexBuffer(index_buffer_.get(), DXGI_FORMAT_R32_UINT, 0);
 
-    auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)view);
-    auto p = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)projection);
-    DirectX::XMFLOAT4X4 vp;
-    DirectX::XMStoreFloat4x4(&vp, v * p);
-    context->UpdateSubresource(constant_buffer_.get(), 0, NULL, &vp, 0, 0);
+    // 2
+    DirectX::XMFLOAT4X4 vp[2];
+    {
+      // left
+      auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)view);
+      auto p = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)projection);
+      DirectX::XMStoreFloat4x4(&vp[0], v * p);
+    }
+    {
+      // right
+      auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)rightView);
+      auto p =
+          DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)rightProjection);
+      DirectX::XMStoreFloat4x4(&vp[1], v * p);
+    }
+    context->UpdateSubresource(constant_buffer_.get(), 0, NULL, vp, 0, 0);
 
     ID3D11Buffer *cb[]{constant_buffer_.get()};
     context->VSSetConstantBuffers(0, 1, cb);
-    context->DrawIndexedInstanced(CUBE_INDEX_COUNT, instanceCount, 0, 0, 0);
+    // 2
+    context->DrawIndexedInstanced(CUBE_INDEX_COUNT, instanceCount * 2, 0, 0, 0);
   }
 };
 
-DxCubeRenderer::DxCubeRenderer(const winrt::com_ptr<ID3D11Device> &device)
-    : impl_(new DxCubeRendererImpl(device)) {}
-DxCubeRenderer::~DxCubeRenderer() { delete impl_; }
-void DxCubeRenderer::Render(const float projection[16], const float view[16],
-                            const void *data, uint32_t instanceCount) {
-  impl_->Render(projection, view, data, instanceCount);
+DxCubeStereoRenderer::DxCubeStereoRenderer(
+    const winrt::com_ptr<ID3D11Device> &device)
+    : impl_(new DxCubeStereoRendererImpl(device)) {}
+DxCubeStereoRenderer::~DxCubeStereoRenderer() { delete impl_; }
+void DxCubeStereoRenderer::Render(const float projection[16],
+                                  const float view[16],
+                                  const float rightProjection[16],
+                                  const float rightView[16], const void *data,
+                                  uint32_t instanceCount) {
+  impl_->Render(projection, view, rightProjection, rightView, data,
+                instanceCount);
 }
 
 } // namespace cuber

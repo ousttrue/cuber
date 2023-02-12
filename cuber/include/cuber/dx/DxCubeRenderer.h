@@ -1,5 +1,5 @@
 #pragma once
-#include "concept.h"
+#include <cuber/concept.h>
 #include <array>
 #include <memory>
 #include <span>
