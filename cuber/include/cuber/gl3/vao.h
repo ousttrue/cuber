@@ -57,8 +57,8 @@ public:
                                      const std::shared_ptr<Ibo> &ibo = {});
   void Bind();
   void Unbind();
-  void Draw(uint32_t count, uint32_t offset = 0);
-  void DrawInstance(uint32_t primcount, uint32_t count, uint32_t offset = 0);
+  void Draw(uint32_t mode, uint32_t count, uint32_t offset);
+  void DrawInstance(uint32_t primcount, uint32_t count, uint32_t offset);
 };
 
 } // namespace cuber

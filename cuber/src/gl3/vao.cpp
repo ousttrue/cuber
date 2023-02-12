@@ -104,13 +104,13 @@ std::shared_ptr<Vao> Vao::Create(std::span<VertexLayout> layouts,
 }
 void Vao::Bind() { glBindVertexArray(vao_); }
 void Vao::Unbind() { glBindVertexArray(0); }
-void Vao::Draw(uint32_t count, uint32_t offset) {
+void Vao::Draw(uint32_t mode, uint32_t count, uint32_t offset) {
   Bind();
   if (ibo_) {
-    glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT,
+    glDrawElements(mode, count, GL_UNSIGNED_INT,
                    reinterpret_cast<void *>(static_cast<uint64_t>(offset)));
   } else {
-    glDrawArrays(GL_TRIANGLES, offset, count);
+    glDrawArrays(mode, offset, count);
   }
   Unbind();
 }

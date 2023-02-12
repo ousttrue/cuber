@@ -139,7 +139,7 @@ void GlCubeRenderer::Render(const float projection[16], const float view[16],
   shader_->SetUniformMatrix([](auto err) {}, "VP", vp);
 
   instance_vbo_->Upload(sizeof(float) * 16 * instanceCount, data);
-  vao_->DrawInstance(instanceCount, CUBE_INDEX_COUNT);
+  vao_->DrawInstance(instanceCount, CUBE_INDEX_COUNT, 0);
 }
 
 } // namespace cuber

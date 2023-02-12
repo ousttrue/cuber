@@ -26,10 +26,9 @@ int main(int argc, char **argv) {
 
   // renderer
   cuber::dx11::DxCubeRenderer cubeRenderer(platform.GetDevice());
-  cuber::dx11::DxLineRenderer lineRendrer(platform.GetDevice());
+  cuber::dx11::DxLineRenderer lineRenderer(platform.GetDevice());
 
   std::vector<cuber::LineVertex> lines;
-
   cuber::PushGrid(lines);
 
   // main loop
@@ -44,7 +43,7 @@ int main(int argc, char **argv) {
     // scene
     {
       cubeRenderer.Render(app.projection, app.view, bvhPanel.GetCubes());
-      lineRendrer.Render(app.projection, app.view, lines);
+      lineRenderer.Render(app.projection, app.view, lines);
       platform.EndFrame(data);
     }
   }

@@ -2,6 +2,7 @@
 #include "GlfwPlatform.h"
 #include "GuiApp.h"
 #include <cuber/gl3/GlCubeRenderer.h>
+#include <cuber/gl3/GlLineRenderer.h>
 
 int main(int argc, char **argv) {
   // imgui
@@ -24,7 +25,11 @@ int main(int argc, char **argv) {
   }
 
   // cuber
-  cuber::gl3::GlCubeRenderer renderer;
+  cuber::gl3::GlCubeRenderer cubeRenderer;
+  cuber::gl3::GlLineRenderer lineRenderer;
+
+  std::vector<cuber::LineVertex> lines;
+  cuber::PushGrid(lines);
 
   // main loop
   while (auto time = platform.NewFrame(app.clear_color)) {
@@ -37,7 +42,8 @@ int main(int argc, char **argv) {
 
     // scene
     {
-      renderer.Render(app.projection, app.view, bvhPanel.GetCubes());
+      cubeRenderer.Render(app.projection, app.view, bvhPanel.GetCubes());
+      lineRenderer.Render(app.projection, app.view, lines);
       platform.EndFrame(data);
     }
   }
