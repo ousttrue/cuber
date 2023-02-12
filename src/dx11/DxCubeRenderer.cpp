@@ -4,7 +4,7 @@
 #include <d3dcompiler.h>
 #include <mesh.h>
 
-auto SHADER = R"(
+static auto SHADER = R"(
 #pragma pack_matrix(row_major)
 float4x4 VP;
 struct vs_in {
@@ -50,7 +50,6 @@ float4 ps_main(vs_out IN) : SV_TARGET {
   return float4(value, value, value, 1.0);
 }
 )";
-
 
 namespace cuber {
 struct DxCubeRendererImpl {

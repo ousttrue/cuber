@@ -4,7 +4,7 @@
 #include <d3dcompiler.h>
 #include <mesh.h>
 
-auto SHADER = R"(
+static auto SHADER = R"(
 #pragma pack_matrix(row_major)
 
 cbuffer ViewProjectionConstantBuffer : register(b0) {

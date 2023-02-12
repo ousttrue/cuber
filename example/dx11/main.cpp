@@ -2,6 +2,7 @@
 #include "DxPlatform.h"
 #include "GuiApp.h"
 #include <cuber/DxCubeRenderer.h>
+#include <cuber/DxLineRenderer.h>
 
 // Main code
 int main(int argc, char **argv) {
@@ -24,7 +25,12 @@ int main(int argc, char **argv) {
   }
 
   // renderer
-  cuber::DxCubeRenderer renderer(platform.GetDevice());
+  cuber::DxCubeRenderer cubeRenderer(platform.GetDevice());
+  cuber::DxLineRenderer lineRendrer(platform.GetDevice());
+
+  std::vector<cuber::LineVertex> lines;
+
+  cuber::PushGrid(lines);
 
   // main loop
   while (auto time = platform.NewFrame(app.clear_color)) {
@@ -37,7 +43,8 @@ int main(int argc, char **argv) {
 
     // scene
     {
-      renderer.Render(app.projection, app.view, bvhPanel.GetCubes());
+      cubeRenderer.Render(app.projection, app.view, bvhPanel.GetCubes());
+      lineRendrer.Render(app.projection, app.view, lines);
       platform.EndFrame(data);
     }
   }

@@ -2,9 +2,10 @@ cuber_dx_inc = include_directories('include')
 cuber_dx_lib = static_library(
     'cuber_dx',
     [
+        'shader.cpp',
         'DxCubeRenderer.cpp',
         'DxCubeStereoRenderer.cpp',
-        'shader.cpp',
+        'DxLineRenderer.cpp',
     ],
     include_directories: cuber_dx_inc,
     dependencies: [mesh_dep],

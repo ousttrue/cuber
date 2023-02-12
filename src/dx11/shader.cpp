@@ -1,5 +1,7 @@
 #include "shader.h"
 
+namespace cuber {
+
 winrt::com_ptr<ID3DBlob> CompileShader(std::string_view src, const char *entry,
                                        const char *target) {
   UINT flags = D3DCOMPILE_ENABLE_STRICTNESS;
@@ -34,3 +36,5 @@ DXGI_FORMAT DxgiFormat(const cuber::VertexLayout &layout) {
   }
   throw std::invalid_argument("not implemented");
 }
+
+} // namespace cuber

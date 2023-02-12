@@ -1,4 +1,5 @@
 #pragma once
+#include "concept.h"
 #include <array>
 #include <memory>
 #include <span>
@@ -7,9 +8,6 @@
 struct ID3D11Device;
 
 namespace cuber {
-
-template <typename T>
-concept Float16 = sizeof(T) == sizeof(float) * 16;
 
 class DxCubeRenderer {
   struct DxCubeRendererImpl *impl_ = nullptr;

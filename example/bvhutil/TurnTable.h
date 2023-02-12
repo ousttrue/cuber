@@ -10,7 +10,7 @@ class TurnTable {
 
   float yaw_ = 0;
   float pitch_ = 0;
-  float shift_[3] = {0, -1, -4};
+  float shift_[3] = {0, -0.8, -5};
 
 public:
   TurnTable(bool leftHanded) {

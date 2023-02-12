@@ -5,6 +5,10 @@
 #include <string_view>
 #include <winrt/base.h>
 
+namespace cuber {
+
 winrt::com_ptr<ID3DBlob> CompileShader(std::string_view src, const char *entry,
                                        const char *target);
 DXGI_FORMAT DxgiFormat(const cuber::VertexLayout &layout);
+
+} // namespace cuber
