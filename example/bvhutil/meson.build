@@ -27,5 +27,5 @@ bvhutil_lib = static_library(
 bvhutil_dep = declare_dependency(
     include_directories: include_directories('.'),
     link_with: bvhutil_lib,
-    dependencies: [imgui_dep],
+    dependencies: [imgui_dep, spanmath_dep],
 )

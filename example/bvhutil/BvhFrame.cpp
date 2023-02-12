@@ -1,5 +1,5 @@
 #include "BvhFrame.h"
-#include <spanmath.h>
+#include <spanmath/spanmath.h>
 #include <numbers>
 
 BvhMat3 BvhMat3::operator*(const BvhMat3 &rhs) {
