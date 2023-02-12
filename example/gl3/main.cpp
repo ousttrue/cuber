@@ -6,7 +6,7 @@
 
 int main(int argc, char **argv) {
   // imgui
-  GuiApp app(false);
+  GuiApp app;
 
   // window
   GlfwPlatform platform;

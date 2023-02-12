@@ -7,7 +7,6 @@ bvhutil_lib = static_library(
     'bvhutil',
     [
         'GuiApp.cpp',
-        'TurnTable.cpp',
         'Bvh.cpp',
         'BvhSolver.cpp',
         'BvhNode.cpp',
