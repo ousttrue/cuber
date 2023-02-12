@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
   }
 
   // cuber
-  cuber::GlCubeRenderer renderer;
+  cuber::gl3::GlCubeRenderer renderer;
 
   // main loop
   while (auto time = platform.NewFrame(app.clear_color)) {

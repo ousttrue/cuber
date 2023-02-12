@@ -25,8 +25,8 @@ int main(int argc, char **argv) {
   }
 
   // renderer
-  cuber::DxCubeRenderer cubeRenderer(platform.GetDevice());
-  cuber::DxLineRenderer lineRendrer(platform.GetDevice());
+  cuber::dx11::DxCubeRenderer cubeRenderer(platform.GetDevice());
+  cuber::dx11::DxLineRenderer lineRendrer(platform.GetDevice());
 
   std::vector<cuber::LineVertex> lines;
 

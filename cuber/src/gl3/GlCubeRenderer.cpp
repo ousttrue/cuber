@@ -6,7 +6,7 @@
 #include <cuber/mesh.h>
 #include <iostream>
 
-namespace cuber {
+namespace cuber::gl3 {
 
 static const char *vertex_shader_text = R"(
 uniform mat4 VP;
@@ -54,7 +54,7 @@ void main()
 )";
 
 static uint32_t
-get_location(const std::shared_ptr<cuber::ShaderProgram> &shader,
+get_location(const std::shared_ptr<ShaderProgram> &shader,
              const char *name) {
   auto location = shader->AttributeLocation(name);
   if (!location) {
@@ -78,7 +78,7 @@ GlCubeRenderer::GlCubeRenderer() {
       "\n",
       fragment_shader_text,
   };
-  shader_ = cuber::ShaderProgram::Create(
+  shader_ = ShaderProgram::Create(
       [](auto msg) { std::cout << msg << std::endl; }, vs, fs);
   if (!shader_) {
     throw std::runtime_error("cuber::ShaderProgram::Create");
@@ -92,12 +92,12 @@ GlCubeRenderer::GlCubeRenderer() {
   auto [vertices, indices, layouts] = Cube(true, false);
 
   auto vbo =
-      cuber::Vbo::Create(sizeof(Vertex) * vertices.size(), vertices.data());
+      Vbo::Create(sizeof(Vertex) * vertices.size(), vertices.data());
   if (!vbo) {
     throw std::runtime_error("cuber::Vbo::Create");
   }
 
-  instance_vbo_ = cuber::Vbo::Create(sizeof(float) * 16 * 65535);
+  instance_vbo_ = Vbo::Create(sizeof(float) * 16 * 65535);
   if (!instance_vbo_) {
     throw std::runtime_error("cuber::Vbo::Create");
   }
@@ -112,11 +112,11 @@ GlCubeRenderer::GlCubeRenderer() {
   };
 
   auto ibo =
-      cuber::Ibo::Create(sizeof(uint32_t) * indices.size(), indices.data());
+      Ibo::Create(sizeof(uint32_t) * indices.size(), indices.data());
   if (!ibo) {
     throw std::runtime_error("cuber::Vbo::Create");
   }
-  vao_ = cuber::Vao::Create(layouts, slots, ibo);
+  vao_ = Vao::Create(layouts, slots, ibo);
   if (!vao_) {
     throw std::runtime_error("cuber::Vao::Create");
   }

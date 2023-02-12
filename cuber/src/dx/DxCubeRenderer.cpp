@@ -51,7 +51,7 @@ float4 ps_main(vs_out IN) : SV_TARGET {
 }
 )";
 
-namespace cuber {
+namespace cuber::dx11 {
 struct DxCubeRendererImpl {
   winrt::com_ptr<ID3D11Device> device_;
   winrt::com_ptr<ID3D11VertexShader> vertex_shader_;

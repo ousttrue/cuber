@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <string_view>
 
-namespace cuber {
+namespace cuber::gl3 {
 
 template <typename T>
 concept Mat4 = sizeof(T) == 4 * 16;

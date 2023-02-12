@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <vector>
 
-namespace cuber {
+namespace cuber::gl3 {
 
 template <typename T>
 concept ArrayType = std::is_array<T>::value == true;

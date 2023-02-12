@@ -28,71 +28,7 @@ float4 ps_main(vs_out IN) : SV_TARGET {
 }
 )";
 
-namespace cuber {
-
-DirectX::XMFLOAT4 RED{0.8f, 0.2, 0, 1};
-DirectX::XMFLOAT4 DARK_RED{0.4f, 0, 0, 1};
-DirectX::XMFLOAT4 BLUE{0, 0.4, 0.8f, 1};
-DirectX::XMFLOAT4 DARK_BLUE{0, 0, 0.4f, 1};
-DirectX::XMFLOAT4 WHITE{0.8f, 0.8f, 0.9f, 1};
-
-void PushGrid(std::vector<LineVertex> &lines, float interval, int half_count) {
-  const float half = interval * half_count;
-  for (int i = -half_count; i <= half_count; ++i) {
-    if (i) {
-      lines.push_back({
-          .position = {-half, 0, static_cast<float>(i)},
-          .color = WHITE,
-      });
-      lines.push_back({
-          .position = {half, 0, static_cast<float>(i)},
-          .color = WHITE,
-      });
-      lines.push_back({
-          .position = {static_cast<float>(i), 0, -half},
-          .color = WHITE,
-      });
-      lines.push_back({
-          .position = {static_cast<float>(i), 0, half},
-          .color = WHITE,
-      });
-    }
-  }
-
-  lines.push_back({
-      .position = {half, 0, 0},
-      .color = RED,
-  });
-  lines.push_back({
-      .position = {0, 0, 0},
-      .color = RED,
-  });
-  lines.push_back({
-      .position = {-half, 0, 0},
-      .color = DARK_RED,
-  });
-  lines.push_back({
-      .position = {0, 0, 0},
-      .color = DARK_RED,
-  });
-
-  lines.push_back({
-      .position = {0, 0, half},
-      .color = BLUE,
-  });
-  lines.push_back({
-      .position = {0, 0, 0},
-      .color = BLUE,
-  });
-  lines.push_back({
-      .position = {0, 0, -half},
-      .color = DARK_BLUE,
-  });
-  lines.push_back({
-      .position = {0, 0, 0},
-      .color = DARK_BLUE,
-  });
-}
+namespace cuber::dx11 {
 
 struct DxLineRendererImpl {
   winrt::com_ptr<ID3D11Device> device_;
@@ -220,4 +156,4 @@ void DxLineRenderer::Render(const float projection[16], const float view[16],
   impl_->Render(projection, view, lines);
 }
 
-} // namespace cuber
+} // namespace cuber::dx11

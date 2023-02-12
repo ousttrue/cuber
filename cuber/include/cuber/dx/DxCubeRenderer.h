@@ -7,7 +7,7 @@
 
 struct ID3D11Device;
 
-namespace cuber {
+namespace cuber::dx11 {
 
 class DxCubeRenderer {
   struct DxCubeRendererImpl *impl_ = nullptr;

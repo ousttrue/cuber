@@ -13,7 +13,7 @@ static uint32_t GLType(cuber::ValueType type) {
   }
 }
 
-namespace cuber {
+namespace cuber::gl3 {
 
 //
 // Vbo

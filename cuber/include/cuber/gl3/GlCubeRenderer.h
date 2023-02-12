@@ -3,7 +3,7 @@
 #include <memory>
 #include <span>
 
-namespace cuber {
+namespace cuber::gl3 {
 
 template <typename T>
 concept Float16 = sizeof(T) == sizeof(float) * 16;

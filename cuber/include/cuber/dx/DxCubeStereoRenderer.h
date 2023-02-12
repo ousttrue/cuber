@@ -6,7 +6,7 @@
 
 struct ID3D11Device;
 
-namespace cuber {
+namespace cuber::dx11 {
 
 template <typename T>
 concept Float16 = sizeof(T) == sizeof(float) * 16;

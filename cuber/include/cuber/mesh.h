@@ -71,4 +71,14 @@ struct Instance {
 };
 
 Mesh Cube(bool isCCW, bool isStereo);
+
+struct LineVertex {
+  XYZ position;
+  RGBA color;
+};
+static_assert(sizeof(LineVertex) == 28);
+
+void PushGrid(std::vector<LineVertex> &lines, float interval = 1.0f,
+              int half_count = 5);
+
 } // namespace cuber

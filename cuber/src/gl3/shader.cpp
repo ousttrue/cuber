@@ -65,7 +65,7 @@ static GLuint link(const std::function<void(std::string_view)> &onError,
   return program;
 }
 
-namespace cuber {
+namespace cuber::gl3 {
 
 ShaderProgram::ShaderProgram(uint32_t program) : program_(program) {}
 

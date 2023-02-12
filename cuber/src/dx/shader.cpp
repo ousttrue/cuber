@@ -1,6 +1,6 @@
 #include <cuber/dx/shader.h>
 
-namespace cuber {
+namespace cuber::dx11 {
 
 winrt::com_ptr<ID3DBlob> CompileShader(std::string_view src, const char *entry,
                                        const char *target) {
