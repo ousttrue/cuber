@@ -15,8 +15,10 @@ struct AnimationImpl {
   AnimationImpl(asio::io_context &io) : io_(io) {}
 
   void Stop() {
-    timer_->cancel();
-    timer_.reset();
+    if (timer_) {
+      timer_->cancel();
+      timer_.reset();
+    }
   }
 
   void BeginTimer(std::chrono::nanoseconds interval) {
