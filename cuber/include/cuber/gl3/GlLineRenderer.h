@@ -6,12 +6,18 @@
 #include <span>
 #include <winrt/base.h>
 
+namespace grapho::gl3 {
+class Vbo;
+struct Vao;
+class ShaderProgram;
+} // namespace grapho::gl3
+
 namespace cuber::gl3 {
 
 class GlLineRenderer {
-  std::shared_ptr<class Vbo> vbo_;
-  std::shared_ptr<class Vao> vao_;
-  std::shared_ptr<class ShaderProgram> shader_;
+  std::shared_ptr<grapho::gl3::Vbo> vbo_;
+  std::shared_ptr<grapho::gl3::Vao> vao_;
+  std::shared_ptr<grapho::gl3::ShaderProgram> shader_;
 
 public:
   GlLineRenderer(const GlLineRenderer &) = delete;
@@ -22,4 +28,4 @@ public:
               std::span<const LineVertex> data);
 };
 
-} // namespace cuber::dx11
+} // namespace cuber::gl3

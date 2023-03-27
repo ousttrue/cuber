@@ -3,14 +3,20 @@
 #include <memory>
 #include <span>
 
+namespace grapho::gl3 {
+struct Vao;
+class ShaderProgram;
+class Vbo;
+} // namespace grapho::gl3
+
 namespace cuber::gl3 {
 
 template <typename T>
 concept Float16 = sizeof(T) == sizeof(float) * 16;
 class GlCubeRenderer {
-  std::shared_ptr<class Vao> vao_;
-  std::shared_ptr<class ShaderProgram> shader_;
-  std::shared_ptr<class Vbo> instance_vbo_;
+  std::shared_ptr<grapho::gl3::Vao> vao_;
+  std::shared_ptr<grapho::gl3::ShaderProgram> shader_;
+  std::shared_ptr<grapho::gl3::Vbo> instance_vbo_;
 
 public:
   GlCubeRenderer(const GlCubeRenderer &) = delete;
@@ -25,4 +31,4 @@ public:
     Render(projection, view, instances.data(), instances.size());
   }
 };
-} // namespace cuber
+} // namespace cuber::gl3

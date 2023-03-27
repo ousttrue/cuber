@@ -1,5 +1,7 @@
 #include <cuber/mesh.h>
 
+using namespace grapho;
+
 namespace cuber {
 
 static VertexLayout layouts[] = {

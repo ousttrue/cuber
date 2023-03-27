@@ -1,10 +1,12 @@
 #include <DirectXMath.h>
 #include <GL/glew.h>
 #include <cuber/gl3/GlCubeRenderer.h>
-#include <cuber/gl3/shader.h>
-#include <cuber/gl3/vao.h>
 #include <cuber/mesh.h>
+#include <grapho/gl3/shader.h>
+#include <grapho/gl3/vao.h>
 #include <iostream>
+
+using namespace grapho::gl3;
 
 namespace cuber::gl3 {
 
@@ -53,9 +55,8 @@ void main()
 }
 )";
 
-static uint32_t
-get_location(const std::shared_ptr<ShaderProgram> &shader,
-             const char *name) {
+static uint32_t get_location(const std::shared_ptr<ShaderProgram> &shader,
+                             const char *name) {
   auto location = shader->AttributeLocation(name);
   if (!location) {
     throw std::runtime_error("glGetUniformLocation");
@@ -78,10 +79,10 @@ GlCubeRenderer::GlCubeRenderer() {
       "\n",
       fragment_shader_text,
   };
-  shader_ = ShaderProgram::Create(
-      [](auto msg) { std::cout << msg << std::endl; }, vs, fs);
-  if (!shader_) {
-    throw std::runtime_error("cuber::ShaderProgram::Create");
+  if (auto shader = ShaderProgram::Create(vs, fs)) {
+    shader_ = *shader;
+  } else {
+    throw std::runtime_error(shader.error());
   }
 
   // auto vpos_location = get_location(shader_, "vPos");
@@ -91,13 +92,12 @@ GlCubeRenderer::GlCubeRenderer() {
 
   auto [vertices, indices, layouts] = Cube(true, false);
 
-  auto vbo =
-      Vbo::Create(sizeof(Vertex) * vertices.size(), vertices.data());
+  auto vbo = Vbo::Create(sizeof(Vertex) * vertices.size(), vertices.data());
   if (!vbo) {
     throw std::runtime_error("cuber::Vbo::Create");
   }
 
-  instance_vbo_ = Vbo::Create(sizeof(float) * 16 * 65535);
+  instance_vbo_ = Vbo::Create(sizeof(float) * 16 * 65535, nullptr);
   if (!instance_vbo_) {
     throw std::runtime_error("cuber::Vbo::Create");
   }
@@ -111,8 +111,8 @@ GlCubeRenderer::GlCubeRenderer() {
       {5, instance_vbo_}, //
   };
 
-  auto ibo =
-      Ibo::Create(sizeof(uint32_t) * indices.size(), indices.data());
+  auto ibo = Ibo::Create(sizeof(uint32_t) * indices.size(), indices.data(),
+                         GL_UNSIGNED_INT);
   if (!ibo) {
     throw std::runtime_error("cuber::Vbo::Create");
   }
@@ -136,10 +136,10 @@ void GlCubeRenderer::Render(const float projection[16], const float view[16],
   DirectX::XMStoreFloat4x4(&vp, v * p);
 
   shader_->Bind();
-  shader_->SetUniformMatrix([](auto err) {}, "VP", vp);
+  shader_->SetUniformMatrix("VP", vp);
 
   instance_vbo_->Upload(sizeof(float) * 16 * instanceCount, data);
   vao_->DrawInstance(instanceCount, CUBE_INDEX_COUNT, 0);
 }
 
-} // namespace cuber
+} // namespace cuber::gl3

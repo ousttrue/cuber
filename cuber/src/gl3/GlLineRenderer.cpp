@@ -1,10 +1,12 @@
 #include <DirectXMath.h>
 #include <GL/glew.h>
 #include <cuber/gl3/GlLineRenderer.h>
-#include <cuber/gl3/shader.h>
-#include <cuber/gl3/vao.h>
 #include <cuber/mesh.h>
+#include <grapho/gl3/shader.h>
+#include <grapho/gl3/vao.h>
 #include <iostream>
+
+using namespace grapho::gl3;
 
 namespace cuber::gl3 {
 
@@ -55,10 +57,10 @@ GlLineRenderer::GlLineRenderer() {
       "\n",
       fragment_shader_text,
   };
-  shader_ = ShaderProgram::Create(
-      [](auto msg) { std::cout << msg << std::endl; }, vs, fs);
-  if (!shader_) {
-    throw std::runtime_error("cuber::ShaderProgram::Create");
+  if (auto shader = ShaderProgram::Create(vs, fs)) {
+    shader_ = *shader;
+  } else {
+    throw std::runtime_error(shader.error());
   }
 
   // auto vpos_location = get_location(shader_, "vPos");
@@ -71,13 +73,13 @@ GlLineRenderer::GlLineRenderer() {
     throw std::runtime_error("cuber::Vbo::Create");
   }
 
-  VertexLayout layouts[] = {
+  grapho::VertexLayout layouts[] = {
       {
           .id =
               {
                   .semantic_name = "vPos",
               },
-          .type = cuber::ValueType::Float,
+          .type = grapho::ValueType::Float,
           .count = 3,
           .offset = 0,
           .stride = sizeof(LineVertex),
@@ -87,7 +89,7 @@ GlLineRenderer::GlLineRenderer() {
               {
                   .semantic_name = "vColor",
               },
-          .type = cuber::ValueType::Float,
+          .type = grapho::ValueType::Float,
           .count = 4,
           .offset = offsetof(LineVertex, color),
           .stride = sizeof(LineVertex),
@@ -118,7 +120,7 @@ void GlLineRenderer::Render(const float projection[16], const float view[16],
   DirectX::XMStoreFloat4x4(&vp, v * p);
 
   shader_->Bind();
-  shader_->SetUniformMatrix([](auto err) {}, "VP", vp);
+  shader_->SetUniformMatrix("VP", vp);
 
   vbo_->Upload(sizeof(LineVertex) * lines.size(), lines.data());
   vao_->Draw(GL_LINES, lines.size(), 0);
