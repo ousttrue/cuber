@@ -1,7 +1,6 @@
 directxmath_dep = dependency('directxmath')
 directxtk_dep = dependency('directxtk')
 asio_dep = dependency('asio')
-spanmath_dep = dependency('spanmath')
 
 bvhutil_lib = static_library(
     'bvhutil',
@@ -21,11 +20,10 @@ bvhutil_lib = static_library(
         directxmath_dep,
         directxtk_dep,
         asio_dep,
-        spanmath_dep,
     ],
 )
 bvhutil_dep = declare_dependency(
     include_directories: include_directories('.'),
     link_with: bvhutil_lib,
-    dependencies: [imgui_dep, spanmath_dep],
+    dependencies: [imgui_dep],
 )

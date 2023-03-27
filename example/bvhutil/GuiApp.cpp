@@ -92,7 +92,7 @@ void GuiApp::UpdateGui() {
     }
     turntable_.Dolly(static_cast<int>(io.MouseWheel));
   }
-  turntable_.Update(spanmath::Mat4(projection), spanmath::Mat4(view));
+  turntable_.Update(projection, view);
 
   // Widgets
   UpdateGuiDockspace();

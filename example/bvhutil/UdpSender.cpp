@@ -4,7 +4,6 @@
 #include "Payload.h"
 #include <DirectXMath.h>
 #include <iostream>
-#include <spanmath/spanmath.h>
 
 UdpSender::UdpSender(asio::io_context &io)
     : socket_(io, asio::ip::udp::endpoint(asio::ip::udp::v4(), 0)) {}
