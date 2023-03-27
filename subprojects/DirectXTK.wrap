@@ -1,9 +1,0 @@
-
-[wrap-git]
-url = https://github.com/microsoft/DirectXTK.git
-revision = dec2022
-depth = 1
-patch_directory = directxtk
-
-[provide]
-directxtk = directxtk_dep

@@ -8,6 +8,20 @@ BvhNode::BvhNode(const BvhJoint &joint) : joint_(joint) {
       DirectX::XMMatrixScaling(DEFAULT_SIZE, DEFAULT_SIZE, DEFAULT_SIZE));
 }
 
+static DirectX::XMVECTOR Float3(float x, float y, float z) {
+  DirectX::XMFLOAT3 v{x, y, z};
+  return DirectX::XMLoadFloat3(&v);
+}
+static float Float3Len(DirectX::XMVECTOR v) {
+  DirectX::XMFLOAT3 l;
+  DirectX::XMStoreFloat3(&l, DirectX::XMVector3Length(v));
+  return l.x;
+}
+static DirectX::XMVECTOR Float4(float x, float y, float z, float w) {
+  DirectX::XMFLOAT4 v{x, y, z, w};
+  return DirectX::XMLoadFloat4(&v);
+}
+
 void BvhNode::CalcShape(float scaling) {
   auto isRoot_ = joint_.index == 0;
   if (!isRoot_) {
@@ -32,20 +46,20 @@ void BvhNode::CalcShape(float scaling) {
       }
     }
 
-    auto Y = DirectX::SimpleMath::Vector3(tail->joint_.localOffset.x * scaling,
-                                          tail->joint_.localOffset.y * scaling,
-                                          tail->joint_.localOffset.z * scaling);
-    auto length = Y.Length();
-    // std::cout << name_ << "=>" << tail->name_ << "=" << length << std::endl;
-    Y.Normalize();
-    DirectX::SimpleMath::Vector3 Z(0, 0, 1);
-    auto X = Y.Cross(Z);
-    Z = X.Cross(Y);
+    auto Y = Float3(tail->joint_.localOffset.x * scaling,
+                    tail->joint_.localOffset.y * scaling,
+                    tail->joint_.localOffset.z * scaling);
 
-    auto center = DirectX::SimpleMath::Matrix::CreateTranslation(0, 0.5f, 0);
-    auto scale = DirectX::SimpleMath::Matrix::CreateScale(DEFAULT_SIZE, length,
-                                                          DEFAULT_SIZE);
-    auto r = DirectX::SimpleMath::Matrix(X, Y, Z);
+    auto length = Float3Len(Y);
+    // std::cout << name_ << "=>" << tail->name_ << "=" << length << std::endl;
+    Y = DirectX::XMVector3Normalize(Y);
+    auto Z = Float3(0, 0, 1);
+    auto X = DirectX::XMVector3Cross(Y, Z);
+    Z = DirectX::XMVector3Cross(X, Y);
+
+    auto center = DirectX::XMMatrixTranslation(0, 0.5f, 0);
+    auto scale = DirectX::XMMatrixScaling(DEFAULT_SIZE, length, DEFAULT_SIZE);
+    auto r = DirectX::XMMATRIX(X, Y, Z, Float4(0, 0, 0, 1));
 
     auto shape = center * scale * r;
     DirectX::XMStoreFloat4x4(&shape_, shape);

@@ -1,6 +1,5 @@
 #pragma once
 #include "Bvh.h"
-#include <SimpleMath.h>
 #include <list>
 #include <memory>
 #include <vector>
