@@ -191,7 +191,7 @@ struct DxCubeStereoRendererImpl {
         instance_buffer_.get(),
     };
     uint32_t strides[] = {
-        sizeof(Vertex),
+        sizeof(grapho::Vertex),
         sizeof(DirectX::XMFLOAT4X4),
     };
     uint32_t offsets[] = {0, 0};
@@ -235,4 +235,4 @@ void DxCubeStereoRenderer::Render(const float projection[16],
                 instanceCount);
 }
 
-} // namespace cuber
+} // namespace cuber::dx11

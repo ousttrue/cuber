@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
   cuber::dx11::DxCubeRenderer cubeRenderer(platform.GetDevice());
   cuber::dx11::DxLineRenderer lineRenderer(platform.GetDevice());
 
-  std::vector<cuber::LineVertex> lines;
+  std::vector<grapho::LineVertex> lines;
   cuber::PushGrid(lines);
 
   // main loop

@@ -68,9 +68,9 @@ GlLineRenderer::GlLineRenderer() {
   // auto ipos_location = get_location(shader_, "iPos");
   // auto irot_location = get_location(shader_, "iRot");
 
-  vbo_ = Vbo::Create(sizeof(LineVertex) * 65535, nullptr);
+  vbo_ = Vbo::Create(sizeof(grapho::LineVertex) * 65535, nullptr);
   if (!vbo_) {
-    throw std::runtime_error("cuber::Vbo::Create");
+    throw std::runtime_error("grapho::gl3::Vbo::Create");
   }
 
   grapho::VertexLayout layouts[] = {
@@ -82,7 +82,7 @@ GlLineRenderer::GlLineRenderer() {
           .type = grapho::ValueType::Float,
           .count = 3,
           .offset = 0,
-          .stride = sizeof(LineVertex),
+          .stride = sizeof(grapho::LineVertex),
       },
       {
           .id =
@@ -91,8 +91,8 @@ GlLineRenderer::GlLineRenderer() {
               },
           .type = grapho::ValueType::Float,
           .count = 4,
-          .offset = offsetof(LineVertex, color),
-          .stride = sizeof(LineVertex),
+          .offset = offsetof(grapho::LineVertex, color),
+          .stride = sizeof(grapho::LineVertex),
       },
   };
   VertexSlot slots[] = {
@@ -102,12 +102,12 @@ GlLineRenderer::GlLineRenderer() {
 
   vao_ = Vao::Create(layouts, slots);
   if (!vao_) {
-    throw std::runtime_error("cuber::Vao::Create");
+    throw std::runtime_error("grapho::gl3::Vao::Create");
   }
 }
 GlLineRenderer::~GlLineRenderer() {}
 void GlLineRenderer::Render(const float projection[16], const float view[16],
-                            std::span<const LineVertex> lines) {
+                            std::span<const grapho::LineVertex> lines) {
   if (lines.empty()) {
     return;
   }
@@ -122,7 +122,7 @@ void GlLineRenderer::Render(const float projection[16], const float view[16],
   shader_->Bind();
   shader_->SetUniformMatrix("VP", vp);
 
-  vbo_->Upload(sizeof(LineVertex) * lines.size(), lines.data());
+  vbo_->Upload(sizeof(grapho::LineVertex) * lines.size(), lines.data());
   vao_->Draw(GL_LINES, lines.size(), 0);
 }
 

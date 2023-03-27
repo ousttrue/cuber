@@ -67,7 +67,7 @@ struct DxLineRendererImpl {
             .SemanticIndex = 0,
             .Format = DXGI_FORMAT_R32G32B32A32_FLOAT,
             .InputSlot = 0,
-            .AlignedByteOffset = offsetof(LineVertex, color),
+            .AlignedByteOffset = offsetof(grapho::LineVertex, color),
             .InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA,
             .InstanceDataStepRate = 0,
         },
@@ -79,7 +79,7 @@ struct DxLineRendererImpl {
 
     {
       D3D11_BUFFER_DESC vertex_buff_desc = {
-          .ByteWidth = static_cast<uint32_t>(sizeof(Vertex) * 65535),
+          .ByteWidth = static_cast<uint32_t>(sizeof(grapho::Vertex) * 65535),
           .Usage = D3D11_USAGE_DEFAULT,
           .BindFlags = D3D11_BIND_VERTEX_BUFFER,
       };
@@ -101,7 +101,7 @@ struct DxLineRendererImpl {
   }
 
   void Render(const float projection[16], const float view[16],
-              std::span<const LineVertex> lines) {
+              std::span<const grapho::LineVertex> lines) {
     if (lines.empty()) {
       return;
     }
@@ -126,7 +126,8 @@ struct DxLineRendererImpl {
         .left = 0,
         .top = 0,
         .front = 0,
-        .right = static_cast<uint32_t>(sizeof(LineVertex) * lines.size()),
+        .right =
+            static_cast<uint32_t>(sizeof(grapho::LineVertex) * lines.size()),
         .bottom = 1,
         .back = 1,
     };
@@ -138,7 +139,7 @@ struct DxLineRendererImpl {
         vertex_buffer_.get(),
     };
     uint32_t strides[] = {
-        sizeof(LineVertex),
+        sizeof(grapho::LineVertex),
     };
     uint32_t offsets[] = {
         0,
@@ -152,7 +153,7 @@ DxLineRenderer::DxLineRenderer(const winrt::com_ptr<ID3D11Device> &device)
     : impl_(new DxLineRendererImpl(device)) {}
 DxLineRenderer::~DxLineRenderer() { delete impl_; }
 void DxLineRenderer::Render(const float projection[16], const float view[16],
-                            std::span<const LineVertex> lines) {
+                            std::span<const grapho::LineVertex> lines) {
   impl_->Render(projection, view, lines);
 }
 
