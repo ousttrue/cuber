@@ -1,7 +1,7 @@
 project(
     'cuber',
     'cpp',
-    default_options: ['cpp_std=latest'],
+    default_options: ['cpp_std=c++latest'],
     version: '1.0.0',
 )
 
