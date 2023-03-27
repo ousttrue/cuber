@@ -1,6 +1,6 @@
 #include "BvhFrame.h"
-#include <spanmath/spanmath.h>
 #include <numbers>
+#include <spanmath/spanmath.h>
 
 BvhMat3 BvhMat3::operator*(const BvhMat3 &rhs) {
   return spanmath::cast<BvhMat3>(spanmath::Mat3(*this) * spanmath::Mat3(rhs));
@@ -11,9 +11,9 @@ BvhMat3 BvhMat3::RotateXDegrees(float degree) {
   auto s = std::sin(rad);
   auto c = std::cos(rad);
   return {
-      1, 0, 0,  //
-      0, c, s, //
-      0, -s, c   //
+      1, 0,  0, //
+      0, c,  s, //
+      0, -s, c  //
   };
 }
 BvhMat3 BvhMat3::RotateYDegrees(float degree) {
@@ -21,9 +21,9 @@ BvhMat3 BvhMat3::RotateYDegrees(float degree) {
   auto s = std::sin(rad);
   auto c = std::cos(rad);
   return {
-      c,  0, -s, //
-      0,  1, 0, //
-      s, 0, c, //
+      c, 0, -s, //
+      0, 1, 0,  //
+      s, 0, c,  //
   };
 }
 BvhMat3 BvhMat3::RotateZDegrees(float degree) {
@@ -31,19 +31,19 @@ BvhMat3 BvhMat3::RotateZDegrees(float degree) {
   auto s = std::sin(rad);
   auto c = std::cos(rad);
   return {
-      c, s, 0, //
-      -s, c,  0, //
-      0, 0,  1  //
+      c,  s, 0, //
+      -s, c, 0, //
+      0,  0, 1  //
   };
 }
 
 std::tuple<BvhOffset, BvhMat3>
 BvhFrame::Resolve(const BvhChannels &channels) const {
-  BvhOffset pos = {};
+  BvhOffset pos = channels.init;
   auto rot = BvhMat3{};
   auto index = channels.startIndex;
   for (int ch = 0; ch < channels.size(); ++ch, ++index) {
-    switch (channels.values[ch]) {
+    switch (channels.types[ch]) {
     case BvhChannelTypes::Xposition:
       pos.x = values[index];
       break;
