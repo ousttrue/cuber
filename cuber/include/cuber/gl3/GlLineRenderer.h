@@ -4,7 +4,6 @@
 #include <cuber/mesh.h>
 #include <memory>
 #include <span>
-#include <winrt/base.h>
 
 namespace grapho::gl3 {
 class Vbo;

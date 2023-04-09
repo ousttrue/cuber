@@ -1,5 +1,5 @@
 #pragma once
-#include <gl/glew.h>
+#include <GL/glew.h>
 
 #include <grapho/mesh.h>
 #include <string>
