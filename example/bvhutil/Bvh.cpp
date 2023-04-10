@@ -11,6 +11,7 @@
 #include <stdlib.h>
 
 template <typename T> std::optional<T> to_num(std::string_view view) {
+#ifdef _MSC_VER
   T value;
   auto [ptr, ec] =
       std::from_chars(view.data(), view.data() + view.size(), value);
@@ -19,6 +20,9 @@ template <typename T> std::optional<T> to_num(std::string_view view) {
   } else {
     return {};
   }
+#else
+  return std::stof(view.data());
+#endif
 }
 
 using It = std::string_view::iterator;
@@ -240,7 +244,9 @@ private:
         });
         if (stack_.size()) {
           auto &parent = joints_[stack_.back()];
-          joints_.back().worldOffset += parent.worldOffset;
+          joints_.back().worldOffset.x += parent.worldOffset.x;
+          joints_.back().worldOffset.y += parent.worldOffset.y;
+          joints_.back().worldOffset.z += parent.worldOffset.z;
         }
 
         max_height_ = std::max(max_height_, joints_.back().worldOffset.y);

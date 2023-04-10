@@ -78,8 +78,7 @@ void BvhNode::ResolveFrame(const BvhFrame &frame, DirectX::XMMATRIX m,
 
   auto t = DirectX::XMMatrixTranslation(pos.x * scaling, pos.y * scaling,
                                         pos.z * scaling);
-  auto r = DirectX::XMLoadFloat3x3((const DirectX::XMFLOAT3X3 *)&rot);
-  auto local = r * t;
+  auto local = rot * t;
 
   m = local * m;
   auto shape = DirectX::XMLoadFloat4x4(&shape_);

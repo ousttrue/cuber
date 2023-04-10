@@ -1,6 +1,6 @@
 directxmath_dep = dependency('directxmath')
-directxtk_dep = dependency('directxtk')
 asio_dep = dependency('asio')
+meshutils_dep = dependency('meshutils')
 
 bvhutil_lib = static_library(
     'bvhutil',
@@ -18,12 +18,12 @@ bvhutil_lib = static_library(
     dependencies: [
         imgui_dep,
         directxmath_dep,
-        directxtk_dep,
         asio_dep,
+        meshutils_dep,
     ],
 )
 bvhutil_dep = declare_dependency(
     include_directories: include_directories('.'),
     link_with: bvhutil_lib,
-    dependencies: [imgui_dep],
+    dependencies: [imgui_dep, directxmath_dep],
 )

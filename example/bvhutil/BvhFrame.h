@@ -4,22 +4,7 @@
 #include <ostream>
 #include <span>
 
-struct BvhOffset {
-  float x;
-  float y;
-  float z;
-
-  BvhOffset &operator+=(const BvhOffset &rhs) {
-    x += rhs.x;
-    y += rhs.y;
-    z += rhs.z;
-    return *this;
-  }
-};
-inline std::ostream &operator<<(std::ostream &os, const BvhOffset &offset) {
-  os << "[" << offset.x << ", " << offset.y << ", " << offset.z << "]";
-  return os;
-}
+using BvhOffset = DirectX::XMFLOAT3;
 
 ///
 /// Mat3 for bvh rotation
@@ -31,28 +16,7 @@ inline std::ostream &operator<<(std::ostream &os, const BvhOffset &offset) {
 /// [x,y,z][3, 4, 5] => [0x + 3y + 6z][1x + 4y + 7z][2x + 5y + 8z]
 ///        [6, 7, 8]
 ///
-struct BvhMat3 {
-  float _0 = 1;
-  float _1 = 0;
-  float _2 = 0;
-  float _3 = 0;
-  float _4 = 1;
-  float _5 = 0;
-  float _6 = 0;
-  float _7 = 0;
-  float _8 = 1;
-  static BvhMat3 RotateXDegrees(float degree);
-  static BvhMat3 RotateYDegrees(float degree);
-  static BvhMat3 RotateZDegrees(float degree);
-  BvhMat3 operator*(const BvhMat3 &rhs);
-  BvhMat3 Transpose() const {
-    return {
-        _0, _3, _6, //
-        _1, _4, _7, //
-        _2, _5, _8  //
-    };
-  }
-};
+using BvhMat3 = DirectX::XMFLOAT3X3;
 
 enum class BvhChannelTypes {
   None,
@@ -122,5 +86,5 @@ struct BvhFrame {
   BvhTime time;
   std::span<const float> values;
 
-  std::tuple<BvhOffset, BvhMat3> Resolve(const BvhChannels &channels) const;
+  std::tuple<BvhOffset, DirectX::XMMATRIX> Resolve(const BvhChannels &channels) const;
 };

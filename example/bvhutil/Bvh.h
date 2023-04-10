@@ -16,10 +16,10 @@ struct BvhJoint {
   BvhChannels channels;
 };
 
-inline std::ostream &operator<<(std::ostream &os, const BvhJoint &joint) {
-  os << joint.name << ": " << joint.worldOffset << " " << joint.channels;
-  return os;
-}
+// inline std::ostream &operator<<(std::ostream &os, const BvhJoint &joint) {
+//   os << joint.name << ": " << joint.worldOffset << " " << joint.channels;
+//   return os;
+// }
 
 struct Bvh {
   std::vector<BvhJoint> joints;
@@ -77,13 +77,13 @@ inline std::ostream &operator<<(std::ostream &os, const Bvh &bvh) {
   }
 
   os << "<BVH: " << bvh.joints.size()
-     << " joints: " << (bvh.frames.size() / channel_count) //
-     << " frames/" << bvh.frame_time                       //
-     << " max_height: " << bvh.max_height                  //
+     // << " joints: " << (bvh.frames.size() / channel_count) //
+     // << " frames/" << bvh.frame_time                       //
+     // << " max_height: " << bvh.max_height                  //
      << std::endl;
-  for (auto joint : bvh.joints) {
-    os << "  " << joint << std::endl;
-  }
+  // for (auto joint : bvh.joints) {
+  //   os << "  " << joint << std::endl;
+  // }
   os << ">" << std::endl;
 
   return os;

@@ -1,6 +1,6 @@
-glfw_dep = dependency('glfw3', default_options: ['install=true'])
+glfw_dep = dependency('glfw3', default_options: ['default_library=static'])
 c = meson.get_compiler('c')
-gl_dep = c.find_library('OpenGL32')
+gl_dep = dependency('OpenGL')
 
 executable(
     'cuber_gl',

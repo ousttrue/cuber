@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <list>
 
 struct AnimationImpl {
   asio::io_context &io_;
