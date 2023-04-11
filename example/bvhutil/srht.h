@@ -125,8 +125,9 @@ inline void Unpack(uint32_t src, float values[4]) {
 namespace srht {
 
 enum class HumanoidBones : uint16_t {
+  UNKNOWN = 0,
   // body: 6
-  HIPS,
+  HIPS = 1,
   SPINE,
   CHEST,
   UPPERCHEST,
@@ -181,6 +182,65 @@ enum class HumanoidBones : uint16_t {
   RIGHT_LITTLE_PROXIMAL,
   RIGHT_LITTLE_INTERMEDIATE,
   RIGHT_LITTLE_DISTAL,
+};
+static const char *HumanoidBoneNames[] = {
+    "UNKNOWN",
+    // body: 6
+    "HIPS",
+    "SPINE",
+    "CHEST",
+    "UPPERCHEST",
+    "NECK",
+    "HEAD",
+    // legs: 4 x 2
+    "LEFT_UPPERLEG",
+    "LEFT_LOWERLEG",
+    "LEFT_FOOT",
+    "LEFT_TOES",
+    "RIGHT_UPPERLEG",
+    "RIGHT_LOWERLEG",
+    "RIGHT_FOOT",
+    "RIGHT_TOES",
+    // arms: 4 x 2
+    "LEFT_SHOULDER",
+    "LEFT_UPPERARM",
+    "LEFT_LOWERARM",
+    "LEFT_HAND",
+    "RIGHT_SHOULDER",
+    "RIGHT_UPPERARM",
+    "RIGHT_LOWERARM",
+    "RIGHT_HAND",
+    // fingers: 3 x 5 x 2
+    "LEFT_THUMB_METACARPAL",
+    "LEFT_THUMB_PROXIMAL",
+    "LEFT_THUMB_DISTAL",
+    "LEFT_INDEX_PROXIMAL",
+    "LEFT_INDEX_INTERMEDIATE",
+    "LEFT_INDEX_DISTAL",
+    "LEFT_MIDDLE_PROXIMAL",
+    "LEFT_MIDDLE_INTERMEDIATE",
+    "LEFT_MIDDLE_DISTAL",
+    "LEFT_RING_PROXIMAL",
+    "LEFT_RING_INTERMEDIATE",
+    "LEFT_RING_DISTAL",
+    "LEFT_LITTLE_PROXIMAL",
+    "LEFT_LITTLE_INTERMEDIATE",
+    "LEFT_LITTLE_DISTAL",
+    "RIGHT_THUMB_METACARPAL",
+    "RIGHT_THUMB_PROXIMAL",
+    "RIGHT_THUMB_DISTAL",
+    "RIGHT_INDEX_PROXIMAL",
+    "RIGHT_INDEX_INTERMEDIATE",
+    "RIGHT_INDEX_DISTAL",
+    "RIGHT_MIDDLE_PROXIMAL",
+    "RIGHT_MIDDLE_INTERMEDIATE",
+    "RIGHT_MIDDLE_DISTAL",
+    "RIGHT_RING_PROXIMAL",
+    "RIGHT_RING_INTERMEDIATE",
+    "RIGHT_RING_DISTAL",
+    "RIGHT_LITTLE_PROXIMAL",
+    "RIGHT_LITTLE_INTERMEDIATE",
+    "RIGHT_LITTLE_DISTAL",
 };
 
 union PackQuat {

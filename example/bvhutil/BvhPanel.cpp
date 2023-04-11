@@ -1,6 +1,7 @@
 #include "BvhPanel.h"
 #include "Animation.h"
 #include "Bvh.h"
+#include "BvhNode.h"
 #include "BvhSolver.h"
 #include "UdpSender.h"
 #include <asio.hpp>
@@ -64,6 +65,51 @@ public:
     bvhSolver_.Initialize(bvh);
   }
 
+  void SelectBone(const std::shared_ptr<BvhNode> &node) {
+    char id[256];
+    snprintf(id, sizeof(id), "##%p", node.get());
+    if (ImGui::BeginCombo(id, srht::HumanoidBoneNames[(int)node->bone_])) {
+      for (int n = 0; n < (int)srht::HumanoidBones::RIGHT_LITTLE_DISTAL; n++) {
+        // ImFont *font = io.Fonts->Fonts[n];
+        ImGui::PushID((void *)n);
+        if (ImGui::Selectable(srht::HumanoidBoneNames[n],
+                              n == (int)node->bone_)) {
+          node->bone_ = (srht::HumanoidBones)n;
+        }
+        ImGui::PopID();
+      }
+      ImGui::EndCombo();
+    }
+  }
+
+  void TreeGui(const std::shared_ptr<BvhNode> &node) {
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+    const bool is_folder = (node->children_.size() > 0);
+
+    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+    bool open = false;
+    if (is_folder) {
+      open = ImGui::TreeNodeEx(node->joint_.name.c_str(),
+                               ImGuiTreeNodeFlags_SpanFullWidth);
+    } else {
+      ImGui::TreeNodeEx(node->joint_.name.c_str(),
+                        ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet |
+                            ImGuiTreeNodeFlags_NoTreePushOnOpen |
+                            ImGuiTreeNodeFlags_SpanFullWidth);
+    }
+
+    ImGui::TableNextColumn();
+    SelectBone(node);
+
+    if (open) {
+      for (auto &child : node->children_) {
+        TreeGui(child);
+      }
+      ImGui::TreePop();
+    }
+  }
+
   void UpdateGui() {
     if (!bvh_) {
       return;
@@ -77,6 +123,19 @@ public:
 
     if (ImGui::Button("send skeleton")) {
       sender_.SendSkeleton(ep_, bvh_);
+    }
+
+    // TREE
+    // NAME, BONETYPE
+    static ImGuiTableFlags flags =
+        ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders;
+    if (ImGui::BeginTable("tree", 2, flags)) {
+      ImGui::TableSetupColumn("Name");
+      ImGui::TableSetupColumn("HumanBone");
+      // ImGui::TableSetupScrollFreeze(0, 1);
+      ImGui::TableHeadersRow();
+      TreeGui(bvhSolver_.root_);
+      ImGui::EndTable();
     }
 
     ImGui::End();
