@@ -15,7 +15,7 @@ void BvhSolver::Initialize(const std::shared_ptr<Bvh> &bvh) {
   CalcShape();
 }
 
-void BvhSolver::PushJoint(const BvhJoint &joint) {
+void BvhSolver::PushJoint(BvhJoint &joint) {
   auto node = std::make_shared<BvhNode>(joint);
   nodes_.push_back(node);
   instances_.push_back({});

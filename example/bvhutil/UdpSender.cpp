@@ -32,7 +32,7 @@ void UdpSender::SendSkeleton(asio::ip::udp::endpoint ep,
   for (auto joint : bvh->joints) {
     joints_.push_back({
         .parentBoneIndex = joint.parent,
-        .boneType = 0,
+        .boneType = (uint16_t)joint.bone_,
         .xFromParent = joint.localOffset.x * scaling,
         .yFromParent = joint.localOffset.y * scaling,
         .zFromParent = joint.localOffset.z * scaling,

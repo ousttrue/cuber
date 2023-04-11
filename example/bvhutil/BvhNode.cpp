@@ -2,7 +2,7 @@
 
 const float DEFAULT_SIZE = 0.04f;
 
-BvhNode::BvhNode(const BvhJoint &joint) : joint_(joint) {
+BvhNode::BvhNode(BvhJoint &joint) : joint_(joint) {
   DirectX::XMStoreFloat4x4(
       &shape_,
       DirectX::XMMatrixScaling(DEFAULT_SIZE, DEFAULT_SIZE, DEFAULT_SIZE));

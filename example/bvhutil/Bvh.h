@@ -1,5 +1,6 @@
 #pragma once
 #include "BvhFrame.h"
+#include "srht.h"
 #include <chrono>
 #include <iostream>
 #include <memory>
@@ -14,6 +15,7 @@ struct BvhJoint {
   BvhOffset localOffset;
   BvhOffset worldOffset;
   BvhChannels channels;
+  srht::HumanoidBones bone_ = {};
 };
 
 // inline std::ostream &operator<<(std::ostream &os, const BvhJoint &joint) {
@@ -76,7 +78,8 @@ inline std::ostream &operator<<(std::ostream &os, const Bvh &bvh) {
     channel_count += joint.channels.size();
   }
 
-  os << "<BVH: " << bvh.joints.size()
+  os << "<BVH: "
+     << bvh.joints.size()
      // << " joints: " << (bvh.frames.size() / channel_count) //
      // << " frames/" << bvh.frame_time                       //
      // << " max_height: " << bvh.max_height                  //

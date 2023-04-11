@@ -18,6 +18,6 @@ public:
   std::span<DirectX::XMFLOAT4X4> ResolveFrame(const BvhFrame &frame);
 
 private:
-  void PushJoint(const BvhJoint &joint);
+  void PushJoint(BvhJoint &joint);
   void CalcShape();
 };

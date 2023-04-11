@@ -68,13 +68,14 @@ public:
   void SelectBone(const std::shared_ptr<BvhNode> &node) {
     char id[256];
     snprintf(id, sizeof(id), "##%p", node.get());
-    if (ImGui::BeginCombo(id, srht::HumanoidBoneNames[(int)node->bone_])) {
+    if (ImGui::BeginCombo(id,
+                          srht::HumanoidBoneNames[(int)node->joint_.bone_])) {
       for (int n = 0; n < (int)srht::HumanoidBones::RIGHT_LITTLE_DISTAL; n++) {
         // ImFont *font = io.Fonts->Fonts[n];
         ImGui::PushID((void *)n);
         if (ImGui::Selectable(srht::HumanoidBoneNames[n],
-                              n == (int)node->bone_)) {
-          node->bone_ = (srht::HumanoidBones)n;
+                              n == (int)node->joint_.bone_)) {
+          node->joint_.bone_ = (srht::HumanoidBones)n;
         }
         ImGui::PopID();
       }
