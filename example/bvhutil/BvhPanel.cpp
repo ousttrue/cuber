@@ -4,34 +4,34 @@
 #include "BvhNode.h"
 #include "BvhSolver.h"
 #include "UdpSender.h"
+#include <algorithm>
 #include <asio.hpp>
 #include <imgui.h>
 #include <thread>
 
-class BvhPanelImpl {
+struct BvhPanelImpl {
   asio::io_context io_;
-  asio::executor_work_guard<asio::io_context::executor_type> work_;
-  Animation animation_;
-  UdpSender sender_;
-  std::thread thread_;
-  std::shared_ptr<Bvh> bvh_;
-  asio::ip::udp::endpoint ep_;
-  bool enablePackQuat_ = false;
-  std::vector<int> parentMap_;
+  asio::executor_work_guard<asio::io_context::executor_type> m_work;
+  Animation m_animation;
+  UdpSender m_sender;
+  std::thread m_thread;
+  std::shared_ptr<Bvh> m_bvh;
+  asio::ip::udp::endpoint m_ep;
+  bool m_enablePackQuat = false;
+  std::vector<int> m_parentMap;
 
-  std::vector<DirectX::XMFLOAT4X4> instancies_;
-  std::mutex mutex_;
-  BvhSolver bvhSolver_;
+  std::vector<DirectX::XMFLOAT4X4> m_instances;
+  std::mutex m_mutex;
+  BvhSolver m_bvhSolver;
 
-public:
   BvhPanelImpl()
-      : work_(asio::make_work_guard(io_)), animation_(io_), sender_(io_),
-        ep_(asio::ip::address::from_string("127.0.0.1"), 54345) {
-    animation_.OnFrame([self = this](const BvhFrame &frame) {
-      self->sender_.SendFrame(self->ep_, self->bvh_, frame,
-                              self->enablePackQuat_);
+      : m_work(asio::make_work_guard(io_)), m_animation(io_), m_sender(io_),
+        m_ep(asio::ip::address::from_string("127.0.0.1"), 54345) {
+    m_animation.OnFrame([self = this](const BvhFrame &frame) {
+      self->m_sender.SendFrame(self->m_ep, self->m_bvh, frame,
+                               self->m_enablePackQuat);
     });
-    thread_ = std::thread([self = this]() {
+    m_thread = std::thread([self = this]() {
       try {
         self->io_.run();
         std::cout << "[asio] end" << std::endl;
@@ -41,28 +41,28 @@ public:
     });
 
     // bind bvh animation to renderer
-    animation_.OnFrame(
+    m_animation.OnFrame(
         [self = this](const BvhFrame &frame) { self->SyncFrame(frame); });
   }
 
   ~BvhPanelImpl() {
-    animation_.Stop();
-    work_.reset();
-    thread_.join();
+    m_animation.Stop();
+    m_work.reset();
+    m_thread.join();
   }
 
   void SetBvh(const std::shared_ptr<Bvh> &bvh) {
-    bvh_ = bvh;
-    if (!bvh_) {
+    m_bvh = bvh;
+    if (!m_bvh) {
       return;
     }
-    animation_.SetBvh(bvh);
-    for (auto &joint : bvh_->joints) {
-      parentMap_.push_back(joint.parent);
+    m_animation.SetBvh(bvh);
+    for (auto &joint : m_bvh->joints) {
+      m_parentMap.push_back(joint.parent);
     }
-    sender_.SendSkeleton(ep_, bvh_);
+    m_sender.SendSkeleton(m_ep, m_bvh);
 
-    bvhSolver_.Initialize(bvh);
+    m_bvhSolver.Initialize(bvh);
   }
 
   void SelectBone(const std::shared_ptr<BvhNode> &node) {
@@ -72,7 +72,7 @@ public:
                           srht::HumanoidBoneNames[(int)node->joint_.bone_])) {
       for (int n = 0; n < (int)srht::HumanoidBones::RIGHT_LITTLE_DISTAL; n++) {
         // ImFont *font = io.Fonts->Fonts[n];
-        ImGui::PushID((void *)n);
+        ImGui::PushID((void *)(uint64_t)n);
         if (ImGui::Selectable(srht::HumanoidBoneNames[n],
                               n == (int)node->joint_.bone_)) {
           node->joint_.bone_ = (srht::HumanoidBones)n;
@@ -83,7 +83,8 @@ public:
     }
   }
 
-  void TreeGui(const std::shared_ptr<BvhNode> &node) {
+  void TreeGui(const std::shared_ptr<BvhNode> &node,
+               std::span<DirectX::XMFLOAT4>::iterator &it) {
     ImGui::TableNextRow();
     ImGui::TableNextColumn();
     const bool is_folder = (node->children_.size() > 0);
@@ -103,39 +104,46 @@ public:
     ImGui::TableNextColumn();
     SelectBone(node);
 
+    // color picker
+    ImGui::TableNextColumn();
+    ImGui::ColorEdit4("##color", &it->x,
+                      ImGuiColorEditFlags_NoInputs |
+                          ImGuiColorEditFlags_NoLabel);
+
     if (open) {
       for (auto &child : node->children_) {
-        TreeGui(child);
+        TreeGui(child, ++it);
       }
       ImGui::TreePop();
     }
   }
 
-  void UpdateGui() {
-    if (!bvh_) {
+  void UpdateGui(std::span<DirectX::XMFLOAT4>::iterator &it) {
+    if (!m_bvh) {
       return;
     }
     // bvh panel
     ImGui::Begin("BVH");
 
-    ImGui::LabelText("bvh", "%zu joints", bvh_->joints.size());
+    ImGui::LabelText("bvh", "%zu joints", m_bvh->joints.size());
 
-    ImGui::Checkbox("use quaternion pack32", &enablePackQuat_);
+    ImGui::Checkbox("use quaternion pack32", &m_enablePackQuat);
 
     if (ImGui::Button("send skeleton")) {
-      sender_.SendSkeleton(ep_, bvh_);
+      m_sender.SendSkeleton(m_ep, m_bvh);
     }
 
     // TREE
-    // NAME, BONETYPE
+    // NAME, BONETYPE, COLOR
     static ImGuiTableFlags flags =
         ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders;
-    if (ImGui::BeginTable("tree", 2, flags)) {
+    if (ImGui::BeginTable("tree", 3, flags)) {
       ImGui::TableSetupColumn("Name");
       ImGui::TableSetupColumn("HumanBone");
+      ImGui::TableSetupColumn("Color");
       // ImGui::TableSetupScrollFreeze(0, 1);
       ImGui::TableHeadersRow();
-      TreeGui(bvhSolver_.root_);
+      TreeGui(m_bvhSolver.root_, it);
       ImGui::EndTable();
     }
 
@@ -143,23 +151,32 @@ public:
   }
 
   void SyncFrame(const BvhFrame &frame) {
-    auto instances = bvhSolver_.ResolveFrame(frame);
+    auto instances = m_bvhSolver.ResolveFrame(frame);
     {
-      std::lock_guard<std::mutex> lock(mutex_);
-      instancies_.assign(instances.begin(), instances.end());
+      std::lock_guard<std::mutex> lock(m_mutex);
+      m_instances.assign(instances.begin(), instances.end());
     }
   }
 
   std::span<const DirectX::XMFLOAT4X4> GetCubes() {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return instancies_;
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_instances;
   }
 };
 
-BvhPanel::BvhPanel() : impl_(new BvhPanelImpl) {}
-BvhPanel::~BvhPanel() { delete impl_; }
-void BvhPanel::SetBvh(const std::shared_ptr<Bvh> &bvh) { impl_->SetBvh(bvh); }
-void BvhPanel::UpdateGui() { impl_->UpdateGui(); }
+BvhPanel::BvhPanel() : m_impl(new BvhPanelImpl) {}
+BvhPanel::~BvhPanel() { delete m_impl; }
+void BvhPanel::SetBvh(const std::shared_ptr<Bvh> &bvh) {
+  m_impl->SetBvh(bvh);
+  m_attributes.resize(bvh->joints.size());
+  std::fill(m_attributes.begin(), m_attributes.end(),
+            DirectX::XMFLOAT4{1, 1, 1, 1});
+}
+void BvhPanel::UpdateGui() {
+  std::span<DirectX::XMFLOAT4> span{m_attributes};
+  auto it = span.begin();
+  m_impl->UpdateGui(it);
+}
 std::span<const DirectX::XMFLOAT4X4> BvhPanel::GetCubes() {
-  return impl_->GetCubes();
+  return m_impl->GetCubes();
 }
