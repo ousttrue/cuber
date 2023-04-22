@@ -103,7 +103,7 @@ GlCubeRenderer::GlCubeRenderer() {
   }
 
   m_attribute_vbo = Vbo::Create(sizeof(float) * 4 * 65535, nullptr);
-  if (m_attribute_vbo) {
+  if (!m_attribute_vbo) {
     throw std::runtime_error("cuber::Vbo::Create: m_attribute_vbo");
   }
 
