@@ -36,7 +36,7 @@ static VertexLayout layouts[] = {
             },
         .type = ValueType::Float,
         .count = 4,
-        .offset = offsetof(Instance, row0),
+        .offset = offsetof(Instance, Row0),
         .stride = sizeof(Instance),
         .divisor = 1,
     },
@@ -48,7 +48,7 @@ static VertexLayout layouts[] = {
             },
         .type = ValueType::Float,
         .count = 4,
-        .offset = offsetof(Instance, row1),
+        .offset = offsetof(Instance, Row1),
         .stride = sizeof(Instance),
         .divisor = 1,
     },
@@ -60,7 +60,7 @@ static VertexLayout layouts[] = {
             },
         .type = ValueType::Float,
         .count = 4,
-        .offset = offsetof(Instance, row2),
+        .offset = offsetof(Instance, Row2),
         .stride = sizeof(Instance),
         .divisor = 1,
     },
@@ -72,7 +72,7 @@ static VertexLayout layouts[] = {
             },
         .type = ValueType::Float,
         .count = 4,
-        .offset = offsetof(Instance, row3),
+        .offset = offsetof(Instance, Row3),
         .stride = sizeof(Instance),
         .divisor = 1,
     },
@@ -85,22 +85,22 @@ static VertexLayout layouts[] = {
             },
         .type = ValueType::Float,
         .count = 4,
-        .offset = 0,
-        .stride = sizeof(float) * 4,
+        .offset = offsetof(Instance, Color),
+        .stride = sizeof(Instance),
         .divisor = 1,
     },
 };
 
 const float s = 0.5f;
 XYZ positions[8] = {
-    {-s, -s, +s}, //
-    {-s, +s, +s}, //
-    {+s, +s, +s}, //
-    {+s, -s, +s}, //
-    {-s, -s, -s}, //
-    {-s, +s, -s}, //
-    {+s, +s, -s}, //
-    {+s, -s, -s}, //
+  { -s, -s, +s }, //
+  { -s, +s, +s }, //
+  { +s, +s, +s }, //
+  { +s, -s, +s }, //
+  { -s, -s, -s }, //
+  { -s, +s, -s }, //
+  { +s, +s, -s }, //
+  { +s, -s, -s }, //
 };
 
 //   5+-+6
@@ -116,66 +116,75 @@ XYZ positions[8] = {
 //  /
 // L
 //
-struct Face {
+struct Face
+{
   int indices[4];
   RGBA color;
 };
 
 // CCW
 Face cube_faces[6] = {
-    {
-        .indices = {0, 3, 2, 1},
-        .color = {1, 0, 0, 1},
-    },
-    {
-        .indices = {3, 7, 6, 2},
-        .color = {0, 1, 0, 1},
-    },
-    {
-        .indices = {7, 4, 5, 6},
-        .color = {0, 0, 1, 1},
-    },
-    {
-        .indices = {4, 0, 1, 5},
-        .color = {0, 1, 1, 1},
-    },
-    {
-        .indices = {1, 2, 6, 5},
-        .color = {1, 0, 1, 1},
-    },
-    {
-        .indices = {3, 0, 4, 7},
-        .color = {1, 1, 0, 1},
-    },
+  {
+    .indices = { 0, 3, 2, 1 },
+    .color = { 1, 0, 0, 1 },
+  },
+  {
+    .indices = { 3, 7, 6, 2 },
+    .color = { 0, 1, 0, 1 },
+  },
+  {
+    .indices = { 7, 4, 5, 6 },
+    .color = { 0, 0, 1, 1 },
+  },
+  {
+    .indices = { 4, 0, 1, 5 },
+    .color = { 0, 1, 1, 1 },
+  },
+  {
+    .indices = { 1, 2, 6, 5 },
+    .color = { 1, 0, 1, 1 },
+  },
+  {
+    .indices = { 3, 0, 4, 7 },
+    .color = { 1, 1, 0, 1 },
+  },
 };
 
-struct Builder {
+struct Builder
+{
   Mesh mesh_;
   bool ccw_;
-  Builder(bool isCCW) : ccw_(isCCW) {}
+  Builder(bool isCCW)
+    : ccw_(isCCW)
+  {
+  }
 
-  void Quad(const XYZ &p0, const XYZ &p1, const XYZ &p2, const XYZ &p3,
-            const RGBA &color) {
+  void Quad(const XYZ& p0,
+            const XYZ& p1,
+            const XYZ& p2,
+            const XYZ& p3,
+            const RGBA& color)
+  {
     // 01   00
     //  3+-+2
     //   | |
     //  0+-+1
     // 00   10
     Vertex v0{
-        .position = p0,
-        .barycentric = {1, 0},
+      .position = p0,
+      .barycentric = { 1, 0 },
     };
     Vertex v1{
-        .position = p1,
-        .barycentric = {0, 0},
+      .position = p1,
+      .barycentric = { 0, 0 },
     };
     Vertex v2{
-        .position = p2,
-        .barycentric = {0, 1},
+      .position = p2,
+      .barycentric = { 0, 1 },
     };
     Vertex v3{
-        .position = p3,
-        .barycentric = {0, 0},
+      .position = p3,
+      .barycentric = { 0, 0 },
     };
     auto index = mesh_.vertices.size();
     mesh_.vertices.push_back(v0);
@@ -204,81 +213,87 @@ struct Builder {
   }
 };
 
-Mesh Cube(bool isCCW, bool isStereo) {
+Mesh
+Cube(bool isCCW, bool isStereo)
+{
   Builder builder(isCCW);
   for (auto layout : layouts) {
     layout.divisor *= (isStereo ? 2 : 1);
     builder.mesh_.layouts.push_back(layout);
   }
   for (auto face : cube_faces) {
-    builder.Quad(positions[face.indices[0]], positions[face.indices[1]],
-                 positions[face.indices[2]], positions[face.indices[3]],
+    builder.Quad(positions[face.indices[0]],
+                 positions[face.indices[1]],
+                 positions[face.indices[2]],
+                 positions[face.indices[3]],
                  face.color);
   }
   return builder.mesh_;
 }
 
-RGBA RED{0.8f, 0.2f, 0, 1};
-RGBA DARK_RED{0.4f, 0, 0, 1};
-RGBA BLUE{0, 0.4f, 0.8f, 1};
-RGBA DARK_BLUE{0, 0, 0.4f, 1};
-RGBA WHITE{0.8f, 0.8f, 0.9f, 1};
+RGBA RED{ 0.8f, 0.2f, 0, 1 };
+RGBA DARK_RED{ 0.4f, 0, 0, 1 };
+RGBA BLUE{ 0, 0.4f, 0.8f, 1 };
+RGBA DARK_BLUE{ 0, 0, 0.4f, 1 };
+RGBA WHITE{ 0.8f, 0.8f, 0.9f, 1 };
 
-void PushGrid(std::vector<LineVertex> &lines, float interval, int half_count) {
+void
+PushGrid(std::vector<LineVertex>& lines, float interval, int half_count)
+{
   const float half = interval * half_count;
   for (int i = -half_count; i <= half_count; ++i) {
     if (i) {
       lines.push_back({
-          .position = {-half, 0, static_cast<float>(i)},
-          .color = WHITE,
+        .position = { -half, 0, static_cast<float>(i) },
+        .color = WHITE,
       });
       lines.push_back({
-          .position = {half, 0, static_cast<float>(i)},
-          .color = WHITE,
+        .position = { half, 0, static_cast<float>(i) },
+        .color = WHITE,
       });
       lines.push_back({
-          .position = {static_cast<float>(i), 0, -half},
-          .color = WHITE,
+        .position = { static_cast<float>(i), 0, -half },
+        .color = WHITE,
       });
       lines.push_back({
-          .position = {static_cast<float>(i), 0, half},
-          .color = WHITE,
+        .position = { static_cast<float>(i), 0, half },
+        .color = WHITE,
       });
     }
   }
 
   lines.push_back({
-      .position = {half, 0, 0},
-      .color = RED,
+    .position = { half, 0, 0 },
+    .color = RED,
   });
   lines.push_back({
-      .position = {0, 0, 0},
-      .color = RED,
+    .position = { 0, 0, 0 },
+    .color = RED,
   });
   lines.push_back({
-      .position = {-half, 0, 0},
-      .color = DARK_RED,
+    .position = { -half, 0, 0 },
+    .color = DARK_RED,
   });
   lines.push_back({
-      .position = {0, 0, 0},
-      .color = DARK_RED,
+    .position = { 0, 0, 0 },
+    .color = DARK_RED,
   });
 
   lines.push_back({
-      .position = {0, 0, half},
-      .color = BLUE,
+    .position = { 0, 0, half },
+    .color = BLUE,
   });
   lines.push_back({
-      .position = {0, 0, 0},
-      .color = BLUE,
+    .position = { 0, 0, 0 },
+    .color = BLUE,
   });
   lines.push_back({
-      .position = {0, 0, -half},
-      .color = DARK_BLUE,
+    .position = { 0, 0, -half },
+    .color = DARK_BLUE,
   });
   lines.push_back({
-      .position = {0, 0, 0},
-      .color = DARK_BLUE,
+    .position = { 0, 0, 0 },
+    .color = DARK_BLUE,
   });
 }
 

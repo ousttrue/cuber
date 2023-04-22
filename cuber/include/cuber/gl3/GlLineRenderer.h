@@ -1,6 +1,4 @@
 #pragma once
-#include <DirectXMath.h>
-#include <array>
 #include <cuber/mesh.h>
 #include <memory>
 #include <span>
@@ -13,17 +11,19 @@ class ShaderProgram;
 
 namespace cuber::gl3 {
 
-class GlLineRenderer {
+class GlLineRenderer
+{
   std::shared_ptr<grapho::gl3::Vbo> vbo_;
   std::shared_ptr<grapho::gl3::Vao> vao_;
   std::shared_ptr<grapho::gl3::ShaderProgram> shader_;
 
 public:
-  GlLineRenderer(const GlLineRenderer &) = delete;
-  GlLineRenderer &operator=(const GlLineRenderer &) = delete;
+  GlLineRenderer(const GlLineRenderer&) = delete;
+  GlLineRenderer& operator=(const GlLineRenderer&) = delete;
   GlLineRenderer();
   ~GlLineRenderer();
-  void Render(const float projection[16], const float view[16],
+  void Render(const float projection[16],
+              const float view[16],
               std::span<const grapho::LineVertex> data);
 };
 

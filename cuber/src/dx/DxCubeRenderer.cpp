@@ -55,7 +55,8 @@ float4 ps_main(vs_out IN) : SV_TARGET {
 )";
 
 namespace cuber::dx11 {
-struct DxCubeRendererImpl {
+struct DxCubeRendererImpl
+{
   winrt::com_ptr<ID3D11Device> device_;
   winrt::com_ptr<ID3D11VertexShader> vertex_shader_;
   winrt::com_ptr<ID3D11PixelShader> pixel_shader_;
@@ -64,112 +65,105 @@ struct DxCubeRendererImpl {
   winrt::com_ptr<ID3D11Buffer> vertex_buffer_;
   winrt::com_ptr<ID3D11Buffer> index_buffer_;
   winrt::com_ptr<ID3D11Buffer> instance_buffer_;
-  winrt::com_ptr<ID3D11Buffer> attribute_buffer_;
   winrt::com_ptr<ID3D11Buffer> constant_buffer_;
 
-  DxCubeRendererImpl(const winrt::com_ptr<ID3D11Device> &device)
-      : device_(device) {
+  DxCubeRendererImpl(const winrt::com_ptr<ID3D11Device>& device)
+    : device_(device)
+  {
     auto vs = CompileShader(SHADER, "vs_main", "vs_5_0");
-    auto hr =
-        device_->CreateVertexShader(vs->GetBufferPointer(), vs->GetBufferSize(),
-                                    NULL, vertex_shader_.put());
+    auto hr = device_->CreateVertexShader(
+      vs->GetBufferPointer(), vs->GetBufferSize(), NULL, vertex_shader_.put());
     assert(SUCCEEDED(hr));
 
     auto ps = CompileShader(SHADER, "ps_main", "ps_5_0");
-    hr = device_->CreatePixelShader(ps->GetBufferPointer(), ps->GetBufferSize(),
-                                    NULL, pixel_shader_.put());
+    hr = device_->CreatePixelShader(
+      ps->GetBufferPointer(), ps->GetBufferSize(), NULL, pixel_shader_.put());
     assert(SUCCEEDED(hr));
 
     auto [vertices, indices, layouts] = cuber::Cube(false, false);
 
     uint32_t slots[] = {
-        0, 0, 1, 1, 1, 1, 2,
+      0, 0, 1, 1, 1, 1, 1,
     };
     std::vector<D3D11_INPUT_ELEMENT_DESC> inputElementDesc;
     for (uint32_t i = 0; i < layouts.size(); ++i) {
-      auto &layout = layouts[i];
+      auto& layout = layouts[i];
       inputElementDesc.push_back(D3D11_INPUT_ELEMENT_DESC{
-          .SemanticName = layout.id.semantic_name.c_str(),
-          .SemanticIndex = layout.id.semantic_index,
-          .Format = DxgiFormat(layout),
-          .InputSlot = slots[i],
-          .AlignedByteOffset = layout.offset,
-          .InputSlotClass = layout.divisor ? D3D11_INPUT_PER_INSTANCE_DATA
-                                           : D3D11_INPUT_PER_VERTEX_DATA,
-          .InstanceDataStepRate = layout.divisor,
+        .SemanticName = layout.id.semantic_name.c_str(),
+        .SemanticIndex = layout.id.semantic_index,
+        .Format = DxgiFormat(layout),
+        .InputSlot = slots[i],
+        .AlignedByteOffset = layout.offset,
+        .InputSlotClass = layout.divisor ? D3D11_INPUT_PER_INSTANCE_DATA
+                                         : D3D11_INPUT_PER_VERTEX_DATA,
+        .InstanceDataStepRate = layout.divisor,
       });
     }
 
-    hr = device_->CreateInputLayout(
-        inputElementDesc.data(), inputElementDesc.size(),
-        vs->GetBufferPointer(), vs->GetBufferSize(), input_layout_.put());
+    hr = device_->CreateInputLayout(inputElementDesc.data(),
+                                    inputElementDesc.size(),
+                                    vs->GetBufferPointer(),
+                                    vs->GetBufferSize(),
+                                    input_layout_.put());
     assert(SUCCEEDED(hr));
 
     {
       D3D11_BUFFER_DESC vertex_buff_desc = {
-          .ByteWidth =
-              static_cast<uint32_t>(sizeof(vertices[0]) * vertices.size()),
-          .Usage = D3D11_USAGE_DEFAULT,
-          .BindFlags = D3D11_BIND_VERTEX_BUFFER,
+        .ByteWidth =
+          static_cast<uint32_t>(sizeof(vertices[0]) * vertices.size()),
+        .Usage = D3D11_USAGE_DEFAULT,
+        .BindFlags = D3D11_BIND_VERTEX_BUFFER,
       };
       D3D11_SUBRESOURCE_DATA sr_data = {
-          .pSysMem = vertices.data(),
+        .pSysMem = vertices.data(),
       };
-      hr = device_->CreateBuffer(&vertex_buff_desc, &sr_data,
-                                 vertex_buffer_.put());
+      hr = device_->CreateBuffer(
+        &vertex_buff_desc, &sr_data, vertex_buffer_.put());
       assert(SUCCEEDED(hr));
     }
 
     {
       D3D11_BUFFER_DESC index_buff_desc = {
-          .ByteWidth = static_cast<uint32_t>(sizeof(uint32_t) * indices.size()),
-          .Usage = D3D11_USAGE_DEFAULT,
-          .BindFlags = D3D11_BIND_INDEX_BUFFER,
+        .ByteWidth = static_cast<uint32_t>(sizeof(uint32_t) * indices.size()),
+        .Usage = D3D11_USAGE_DEFAULT,
+        .BindFlags = D3D11_BIND_INDEX_BUFFER,
       };
       D3D11_SUBRESOURCE_DATA sr_data = {
-          .pSysMem = indices.data(),
+        .pSysMem = indices.data(),
       };
-      hr = device_->CreateBuffer(&index_buff_desc, &sr_data,
-                                 index_buffer_.put());
+      hr =
+        device_->CreateBuffer(&index_buff_desc, &sr_data, index_buffer_.put());
       assert(SUCCEEDED(hr));
     }
 
     {
       D3D11_BUFFER_DESC instance_buff_desc = {
-          .ByteWidth =
-              static_cast<uint32_t>(sizeof(DirectX::XMFLOAT4X4) * 65535),
-          .Usage = D3D11_USAGE_DEFAULT,
-          .BindFlags = D3D11_BIND_VERTEX_BUFFER,
+        .ByteWidth = static_cast<uint32_t>(sizeof(cuber::Instance) * 65535),
+        .Usage = D3D11_USAGE_DEFAULT,
+        .BindFlags = D3D11_BIND_VERTEX_BUFFER,
       };
-      hr = device_->CreateBuffer(&instance_buff_desc, nullptr,
-                                 instance_buffer_.put());
-      assert(SUCCEEDED(hr));
-    }
-    {
-      D3D11_BUFFER_DESC attribute_buff_desc = {
-          .ByteWidth = static_cast<uint32_t>(sizeof(DirectX::XMFLOAT4) * 65535),
-          .Usage = D3D11_USAGE_DEFAULT,
-          .BindFlags = D3D11_BIND_VERTEX_BUFFER,
-      };
-      hr = device_->CreateBuffer(&attribute_buff_desc, nullptr,
-                                 attribute_buffer_.put());
+      hr = device_->CreateBuffer(
+        &instance_buff_desc, nullptr, instance_buffer_.put());
       assert(SUCCEEDED(hr));
     }
 
     {
       D3D11_BUFFER_DESC desc = {
-          .ByteWidth = sizeof(DirectX::XMFLOAT4X4),
-          .Usage = D3D11_USAGE_DEFAULT,
-          .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+        .ByteWidth = sizeof(DirectX::XMFLOAT4X4),
+        .Usage = D3D11_USAGE_DEFAULT,
+        .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
       };
       HRESULT hr =
-          device_->CreateBuffer(&desc, nullptr, constant_buffer_.put());
+        device_->CreateBuffer(&desc, nullptr, constant_buffer_.put());
       assert(SUCCEEDED(hr));
     };
   }
 
-  void Render(const float projection[16], const float view[16],
-              const void *data, uint32_t instanceCount, const void *attribute) {
+  void Render(const float projection[16],
+              const float view[16],
+              const void* data,
+              uint32_t instanceCount)
+  {
     if (instanceCount == 0) {
       return;
     }
@@ -180,59 +174,60 @@ struct DxCubeRendererImpl {
     context->PSSetShader(pixel_shader_.get(), NULL, 0);
 
     D3D11_BOX box{
-        .left = 0,
-        .top = 0,
-        .front = 0,
-        .right =
-            static_cast<uint32_t>(sizeof(DirectX::XMFLOAT4X4) * instanceCount),
-        .bottom = 1,
-        .back = 1,
+      .left = 0,
+      .top = 0,
+      .front = 0,
+      .right = static_cast<uint32_t>(sizeof(cuber::Instance) * instanceCount),
+      .bottom = 1,
+      .back = 1,
     };
-    context->UpdateSubresource(instance_buffer_.get(), 0, &box, data,
-                               sizeof(DirectX::XMFLOAT4X4), 0);
-
-    if (attribute) {
-      box.right =
-          static_cast<uint32_t>(sizeof(DirectX::XMFLOAT4) * instanceCount);
-      context->UpdateSubresource(attribute_buffer_.get(), 0, &box, attribute,
-                                 sizeof(DirectX::XMFLOAT4), 0);
-    }
+    context->UpdateSubresource(
+      instance_buffer_.get(), 0, &box, data, sizeof(Instance), 0);
 
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     context->IASetInputLayout(input_layout_.get());
-    ID3D11Buffer *vb[] = {
-        vertex_buffer_.get(),
-        instance_buffer_.get(),
-        attribute_buffer_.get(),
+    ID3D11Buffer* vb[] = {
+      vertex_buffer_.get(),
+      instance_buffer_.get(),
     };
     uint32_t strides[] = {
-        sizeof(grapho::Vertex),
-        sizeof(DirectX::XMFLOAT4X4),
-        sizeof(DirectX::XMFLOAT4),
+      sizeof(grapho::Vertex),
+      sizeof(Instance),
     };
-    uint32_t offsets[] = {0, 0, 0};
+    uint32_t offsets[] = {
+      0,
+      0,
+    };
     context->IASetVertexBuffers(0, std::size(vb), vb, strides, offsets);
     context->IASetIndexBuffer(index_buffer_.get(), DXGI_FORMAT_R32_UINT, 0);
 
-    auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)view);
-    auto p = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)projection);
+    auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)view);
+    auto p = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)projection);
     DirectX::XMFLOAT4X4 vp;
     DirectX::XMStoreFloat4x4(&vp, v * p);
     context->UpdateSubresource(constant_buffer_.get(), 0, NULL, &vp, 0, 0);
 
-    ID3D11Buffer *cb[]{constant_buffer_.get()};
+    ID3D11Buffer* cb[]{ constant_buffer_.get() };
     context->VSSetConstantBuffers(0, 1, cb);
     context->DrawIndexedInstanced(CUBE_INDEX_COUNT, instanceCount, 0, 0, 0);
   }
 };
 
-DxCubeRenderer::DxCubeRenderer(const winrt::com_ptr<ID3D11Device> &device)
-    : impl_(new DxCubeRendererImpl(device)) {}
-DxCubeRenderer::~DxCubeRenderer() { delete impl_; }
-void DxCubeRenderer::Render(const float projection[16], const float view[16],
-                            const void *data, uint32_t instanceCount,
-                            const void *attribute) {
-  impl_->Render(projection, view, data, instanceCount, attribute);
+DxCubeRenderer::DxCubeRenderer(const winrt::com_ptr<ID3D11Device>& device)
+  : m_impl(new DxCubeRendererImpl(device))
+{
+}
+DxCubeRenderer::~DxCubeRenderer()
+{
+  delete m_impl;
+}
+void
+DxCubeRenderer::Render(const float projection[16],
+                       const float view[16],
+                       const Instance* data,
+                       uint32_t instanceCount)
+{
+  m_impl->Render(projection, view, data, instanceCount);
 }
 
 } // namespace cuber::dx11

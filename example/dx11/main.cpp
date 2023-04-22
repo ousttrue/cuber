@@ -5,7 +5,9 @@
 #include <cuber/dx/DxLineRenderer.h>
 
 // Main code
-int main(int argc, char **argv) {
+int
+main(int argc, char** argv)
+{
   // imgui
   GuiApp app;
 
@@ -42,8 +44,8 @@ int main(int argc, char **argv) {
 
     // scene
     {
-      cubeRenderer.Render(app.projection, app.view, bvhPanel.GetCubes(),
-                          bvhPanel.GetCubeAttributes());
+      auto cubes = bvhPanel.GetCubes();
+      cubeRenderer.Render(app.projection, app.view, cubes.data(), cubes.size());
       lineRenderer.Render(app.projection, app.view, lines);
       platform.EndFrame(data);
     }

@@ -20,6 +20,7 @@ bvhutil_lib = static_library(
         directxmath_dep,
         asio_dep,
         meshutils_dep,
+        cuber_dep,
     ],
 )
 bvhutil_dep = declare_dependency(
