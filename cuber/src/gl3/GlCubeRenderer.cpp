@@ -10,7 +10,7 @@ using namespace grapho::gl3;
 
 namespace cuber::gl3 {
 
-static const char *vertex_shader_text = R"(
+static const char *vertex_m_shadertext = R"(
 uniform mat4 VP;
 in vec3 vPos;
 in vec2 vBarycentric;
@@ -18,7 +18,9 @@ in vec4 iRow0;
 in vec4 iRow1;
 in vec4 iRow2;
 in vec4 iRow3;
-out vec2 barycentric;
+in vec4 iColor;
+out vec2 oBarycentric;
+out vec4 oColor;
 
 mat4 transform(vec4 r0, vec4 r1, vec4 r2, vec4 r3)
 {
@@ -33,12 +35,14 @@ mat4 transform(vec4 r0, vec4 r1, vec4 r2, vec4 r3)
 void main()
 {
     gl_Position = VP * transform(iRow0, iRow1, iRow2, iRow3) * vec4(vPos, 1.0);
-    barycentric = vBarycentric;
+    oBarycentric = vBarycentric;
+    oColor = iColor;
 }
 )";
 
-static const char *fragment_shader_text = R"(
-in vec2 barycentric;
+static const char *fragment_m_shadertext = R"(
+in vec2 oBarycentric;
+in vec4 oColor;
 out vec4 FragColor;
 
 // https://github.com/rreusser/glsl-solid-wireframe
@@ -51,18 +55,18 @@ float grid (vec2 vBC, float width) {
 
 void main()
 {
-    FragColor = vec4(vec3(grid(barycentric, 1.0)), 1);
+    FragColor = oColor * vec4(vec3(grid(oBarycentric, 1.0)), 1);
 }
 )";
 
-static uint32_t get_location(const std::shared_ptr<ShaderProgram> &shader,
-                             const char *name) {
-  auto location = shader->AttributeLocation(name);
-  if (!location) {
-    throw std::runtime_error("glGetUniformLocation");
-  }
-  return *location;
-}
+// static uint32_t get_location(const std::shared_ptr<ShaderProgram> &shader,
+//                              const char *name) {
+//   auto location = shader->AttributeLocation(name);
+//   if (!location) {
+//     throw std::runtime_error("glGetUniformLocation");
+//   }
+//   return *location;
+// }
 
 GlCubeRenderer::GlCubeRenderer() {
 
@@ -72,23 +76,18 @@ GlCubeRenderer::GlCubeRenderer() {
   std::string_view vs[] = {
       glsl_version,
       "\n",
-      vertex_shader_text,
+      vertex_m_shadertext,
   };
   std::string_view fs[] = {
       glsl_version,
       "\n",
-      fragment_shader_text,
+      fragment_m_shadertext,
   };
   if (auto shader = ShaderProgram::Create(vs, fs)) {
-    shader_ = *shader;
+    m_shader = *shader;
   } else {
     throw std::runtime_error(shader.error());
   }
-
-  // auto vpos_location = get_location(shader_, "vPos");
-  // auto vbarycentric_location = get_location(shader_, "vBarycentric");
-  // auto ipos_location = get_location(shader_, "iPos");
-  // auto irot_location = get_location(shader_, "iRot");
 
   auto [vertices, indices, layouts] = Cube(true, false);
 
@@ -98,18 +97,24 @@ GlCubeRenderer::GlCubeRenderer() {
     throw std::runtime_error("cuber::Vbo::Create");
   }
 
-  instance_vbo_ = Vbo::Create(sizeof(float) * 16 * 65535, nullptr);
-  if (!instance_vbo_) {
-    throw std::runtime_error("cuber::Vbo::Create");
+  m_instance_vbo = Vbo::Create(sizeof(float) * 16 * 65535, nullptr);
+  if (!m_instance_vbo) {
+    throw std::runtime_error("cuber::Vbo::Create: m_instance_vbo");
+  }
+
+  m_attribute_vbo = Vbo::Create(sizeof(float) * 4 * 65535, nullptr);
+  if (m_attribute_vbo) {
+    throw std::runtime_error("cuber::Vbo::Create: m_attribute_vbo");
   }
 
   VertexSlot slots[] = {
-      {0, vbo},           //
-      {1, vbo},           //
-      {2, instance_vbo_}, //
-      {3, instance_vbo_}, //
-      {4, instance_vbo_}, //
-      {5, instance_vbo_}, //
+      {0, vbo},             //
+      {1, vbo},             //
+      {2, m_instance_vbo},  //
+      {3, m_instance_vbo},  //
+      {4, m_instance_vbo},  //
+      {5, m_instance_vbo},  //
+      {6, m_attribute_vbo}, //
   };
 
   auto ibo = Ibo::Create(sizeof(uint32_t) * indices.size(), indices.data(),
@@ -117,14 +122,17 @@ GlCubeRenderer::GlCubeRenderer() {
   if (!ibo) {
     throw std::runtime_error("cuber::Vbo::Create");
   }
-  vao_ = Vao::Create(layouts, slots, ibo);
-  if (!vao_) {
+  m_vao = Vao::Create(layouts, slots, ibo);
+  if (!m_vao) {
     throw std::runtime_error("cuber::Vao::Create");
   }
 }
+
 GlCubeRenderer::~GlCubeRenderer() {}
+
 void GlCubeRenderer::Render(const float projection[16], const float view[16],
-                            const void *data, uint32_t instanceCount) {
+                            const void *data, uint32_t instanceCount,
+                            const void *attributes) {
   if (instanceCount == 0) {
     return;
   }
@@ -136,11 +144,14 @@ void GlCubeRenderer::Render(const float projection[16], const float view[16],
   DirectX::XMFLOAT4X4 vp;
   DirectX::XMStoreFloat4x4(&vp, v * p);
 
-  shader_->Bind();
-  shader_->SetUniformMatrix("VP", vp);
+  m_shader->Bind();
+  m_shader->SetUniformMatrix("VP", vp);
 
-  instance_vbo_->Upload(sizeof(float) * 16 * instanceCount, data);
-  vao_->DrawInstance(instanceCount, CUBE_INDEX_COUNT, 0);
+  m_instance_vbo->Upload(sizeof(float) * 16 * instanceCount, data);
+  if (attributes) {
+    m_attribute_vbo->Upload(sizeof(float) * 4 * instanceCount, attributes);
+  }
+  m_vao->DrawInstance(instanceCount, CUBE_INDEX_COUNT, 0);
 }
 
 } // namespace cuber::gl3

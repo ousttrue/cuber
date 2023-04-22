@@ -42,7 +42,8 @@ int main(int argc, char **argv) {
 
     // scene
     {
-      cubeRenderer.Render(app.projection, app.view, bvhPanel.GetCubes());
+      cubeRenderer.Render(app.projection, app.view, bvhPanel.GetCubes(),
+                          bvhPanel.GetCubeAttributes());
       lineRenderer.Render(app.projection, app.view, lines);
       platform.EndFrame(data);
     }

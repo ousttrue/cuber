@@ -1,6 +1,6 @@
 #pragma once
-#include <cuber/concept.h>
 #include <array>
+#include <cuber/concept.h>
 #include <memory>
 #include <span>
 #include <winrt/base.h>
@@ -18,12 +18,22 @@ public:
   DxCubeRenderer(const winrt::com_ptr<ID3D11Device> &device);
   ~DxCubeRenderer();
   void Render(const float projection[16], const float view[16],
-              const void *data, uint32_t instanceCount);
+              const void *data, uint32_t instanceCount,
+              const void *attribute = nullptr);
+
   template <Float16 T>
   void Render(const float projection[16], const float view[16],
               std::span<const T> instances) {
     Render(projection, view, instances.data(), instances.size());
   }
+
+  template <typename T, typename A>
+    requires Float16_4<T, A>
+  void Render(const float projection[16], const float view[16],
+              std::span<const T> instances, std::span<const A> attributes) {
+    Render(projection, view, instances.data(), instances.size(),
+           attributes.data());
+  }
 };
 
-} // namespace cuber
+} // namespace cuber::dx11

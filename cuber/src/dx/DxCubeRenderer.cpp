@@ -14,11 +14,13 @@ struct vs_in {
     float4 row1: ROW1;
     float4 row2: ROW2;
     float4 row3: ROW3;    
+    float4 color: COLOR0;
     uint instanceID : SV_InstanceID;
  };
 struct vs_out {
     float4 position_clip: SV_POSITION;
     float2 barycentric: TEXCOORD;
+    float4 color: COLOR;
 };
 
 float4x4 transform(float4 r0, float4 r1, float4 r2, float4 r3)
@@ -35,6 +37,7 @@ vs_out vs_main(vs_in IN) {
   vs_out OUT = (vs_out)0; // zero the memory first
   OUT.position_clip = mul(float4(IN.pos, 1.0), mul(transform(IN.row0, IN.row1, IN.row2, IN.row3), VP));
   OUT.barycentric = IN.barycentric;
+  OUT.color = IN.color;
   return OUT;
 }
 
@@ -47,7 +50,7 @@ float grid (float2 vBC, float width) {
 
 float4 ps_main(vs_out IN) : SV_TARGET {
   float value = grid(IN.barycentric, 1.0);
-  return float4(value, value, value, 1.0);
+  return IN.color * float4(value, value, value, 1.0);
 }
 )";
 
@@ -61,6 +64,7 @@ struct DxCubeRendererImpl {
   winrt::com_ptr<ID3D11Buffer> vertex_buffer_;
   winrt::com_ptr<ID3D11Buffer> index_buffer_;
   winrt::com_ptr<ID3D11Buffer> instance_buffer_;
+  winrt::com_ptr<ID3D11Buffer> attribute_buffer_;
   winrt::com_ptr<ID3D11Buffer> constant_buffer_;
 
   DxCubeRendererImpl(const winrt::com_ptr<ID3D11Device> &device)
@@ -79,7 +83,7 @@ struct DxCubeRendererImpl {
     auto [vertices, indices, layouts] = cuber::Cube(false, false);
 
     uint32_t slots[] = {
-        0, 0, 1, 1, 1, 1,
+        0, 0, 1, 1, 1, 1, 2,
     };
     std::vector<D3D11_INPUT_ELEMENT_DESC> inputElementDesc;
     for (uint32_t i = 0; i < layouts.size(); ++i) {
@@ -141,6 +145,16 @@ struct DxCubeRendererImpl {
                                  instance_buffer_.put());
       assert(SUCCEEDED(hr));
     }
+    {
+      D3D11_BUFFER_DESC attribute_buff_desc = {
+          .ByteWidth = static_cast<uint32_t>(sizeof(DirectX::XMFLOAT4) * 65535),
+          .Usage = D3D11_USAGE_DEFAULT,
+          .BindFlags = D3D11_BIND_VERTEX_BUFFER,
+      };
+      hr = device_->CreateBuffer(&attribute_buff_desc, nullptr,
+                                 attribute_buffer_.put());
+      assert(SUCCEEDED(hr));
+    }
 
     {
       D3D11_BUFFER_DESC desc = {
@@ -155,7 +169,7 @@ struct DxCubeRendererImpl {
   }
 
   void Render(const float projection[16], const float view[16],
-              const void *data, uint32_t instanceCount) {
+              const void *data, uint32_t instanceCount, const void *attribute) {
     if (instanceCount == 0) {
       return;
     }
@@ -177,17 +191,26 @@ struct DxCubeRendererImpl {
     context->UpdateSubresource(instance_buffer_.get(), 0, &box, data,
                                sizeof(DirectX::XMFLOAT4X4), 0);
 
+    if (attribute) {
+      box.right =
+          static_cast<uint32_t>(sizeof(DirectX::XMFLOAT4) * instanceCount);
+      context->UpdateSubresource(attribute_buffer_.get(), 0, &box, attribute,
+                                 sizeof(DirectX::XMFLOAT4), 0);
+    }
+
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     context->IASetInputLayout(input_layout_.get());
     ID3D11Buffer *vb[] = {
         vertex_buffer_.get(),
         instance_buffer_.get(),
+        attribute_buffer_.get(),
     };
     uint32_t strides[] = {
         sizeof(grapho::Vertex),
         sizeof(DirectX::XMFLOAT4X4),
+        sizeof(DirectX::XMFLOAT4),
     };
-    uint32_t offsets[] = {0, 0};
+    uint32_t offsets[] = {0, 0, 0};
     context->IASetVertexBuffers(0, std::size(vb), vb, strides, offsets);
     context->IASetIndexBuffer(index_buffer_.get(), DXGI_FORMAT_R32_UINT, 0);
 
@@ -207,8 +230,9 @@ DxCubeRenderer::DxCubeRenderer(const winrt::com_ptr<ID3D11Device> &device)
     : impl_(new DxCubeRendererImpl(device)) {}
 DxCubeRenderer::~DxCubeRenderer() { delete impl_; }
 void DxCubeRenderer::Render(const float projection[16], const float view[16],
-                            const void *data, uint32_t instanceCount) {
-  impl_->Render(projection, view, data, instanceCount);
+                            const void *data, uint32_t instanceCount,
+                            const void *attribute) {
+  impl_->Render(projection, view, data, instanceCount, attribute);
 }
 
 } // namespace cuber::dx11

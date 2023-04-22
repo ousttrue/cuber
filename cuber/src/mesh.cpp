@@ -76,6 +76,19 @@ static VertexLayout layouts[] = {
         .stride = sizeof(Instance),
         .divisor = 1,
     },
+    //
+    {
+        .id =
+            {
+                .semantic_name = "COLOR",
+                .semantic_index = 0,
+            },
+        .type = ValueType::Float,
+        .count = 4,
+        .offset = 0,
+        .stride = sizeof(float) * 4,
+        .divisor = 1,
+    },
 };
 
 const float s = 0.5f;
