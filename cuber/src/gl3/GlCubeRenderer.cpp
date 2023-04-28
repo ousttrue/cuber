@@ -44,6 +44,8 @@ static const char* fragment_m_shadertext = R"(
 in vec4 oUvBarycentric;
 in vec4 oColor;
 out vec4 FragColor;
+uniform sampler2D sampler;
+
 
 // https://github.com/rreusser/glsl-solid-wireframe
 float grid (vec2 vBC, float width) {
@@ -55,7 +57,8 @@ float grid (vec2 vBC, float width) {
 
 void main()
 {
-    FragColor = oColor * vec4(vec3(grid(oUvBarycentric.zw, 1.0)), 1);
+    vec4 texel = texture(sampler, oUvBarycentric.xy);
+    FragColor = texel * oColor * vec4(vec3(grid(oUvBarycentric.zw, 1.0)), 1);
 }
 )";
 
