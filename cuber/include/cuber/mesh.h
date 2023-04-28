@@ -1,6 +1,4 @@
 #pragma once
-#include <GL/glew.h>
-
 #include <DirectXMath.h>
 #include <grapho/vertexlayout.h>
 #include <string>
@@ -8,6 +6,22 @@
 
 namespace cuber {
 const int CUBE_INDEX_COUNT = 36;
+
+struct Vertex
+{
+  DirectX::XMFLOAT4 Position;
+  DirectX::XMFLOAT4 UvBarycentric;
+};
+
+struct Mesh
+{
+  std::vector<Vertex> Vertices;
+  std::vector<uint32_t> Indices;
+  std::vector<grapho::VertexLayout> Layouts;
+};
+
+Mesh
+Cube(bool isCCW, bool isStereo);
 
 struct Instance
 {
@@ -25,31 +39,15 @@ struct Instance
   DirectX::XMFLOAT4 Color;
 };
 
-struct Vertex
-{
-  DirectX::XMFLOAT4 Position;
-  DirectX::XMFLOAT4 UvBarycentric;
-};
-
 struct LineVertex
 {
   DirectX::XMFLOAT3 Position;
   DirectX::XMFLOAT4 Color;
 };
 
-struct Mesh
-{
-  std::vector<Vertex> Vertices;
-  std::vector<uint32_t> Indices;
-  std::vector<grapho::VertexLayout> Layouts;
-};
-
-Mesh
-Cube(bool isCCW, bool isStereo);
-
 void
 PushGrid(std::vector<LineVertex>& lines,
          float interval = 1.0f,
          int half_count = 5);
 
-} // namespace cuber
+}

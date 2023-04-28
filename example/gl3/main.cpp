@@ -1,3 +1,5 @@
+#include <GL/glew.h>
+
 #include "BvhPanel.h"
 #include "GlfwPlatform.h"
 #include "GuiApp.h"
