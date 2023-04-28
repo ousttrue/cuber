@@ -12,14 +12,14 @@ namespace cuber::gl3 {
 
 static const char* vertex_m_shadertext = R"(
 uniform mat4 VP;
-in vec3 vPos;
-in vec2 vBarycentric;
+in vec4 vPos;
+in vec4 vUvBarycentric;
 in vec4 iRow0;
 in vec4 iRow1;
 in vec4 iRow2;
 in vec4 iRow3;
 in vec4 iColor;
-out vec2 oBarycentric;
+out vec4 oUvBarycentric;
 out vec4 oColor;
 
 mat4 transform(vec4 r0, vec4 r1, vec4 r2, vec4 r3)
@@ -34,14 +34,14 @@ mat4 transform(vec4 r0, vec4 r1, vec4 r2, vec4 r3)
 
 void main()
 {
-    gl_Position = VP * transform(iRow0, iRow1, iRow2, iRow3) * vec4(vPos, 1.0);
-    oBarycentric = vBarycentric;
+    gl_Position = VP * transform(iRow0, iRow1, iRow2, iRow3) * vPos;
+    oUvBarycentric = vUvBarycentric;
     oColor = iColor;
 }
 )";
 
 static const char* fragment_m_shadertext = R"(
-in vec2 oBarycentric;
+in vec4 oUvBarycentric;
 in vec4 oColor;
 out vec4 FragColor;
 
@@ -55,7 +55,7 @@ float grid (vec2 vBC, float width) {
 
 void main()
 {
-    FragColor = oColor * vec4(vec3(grid(oBarycentric, 1.0)), 1);
+    FragColor = oColor * vec4(vec3(grid(oUvBarycentric.zw, 1.0)), 1);
 }
 )";
 

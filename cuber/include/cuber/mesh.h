@@ -27,8 +27,8 @@ struct Instance
 
 struct Vertex
 {
-  DirectX::XMFLOAT3 Position;
-  DirectX::XMFLOAT2 Barycentric;
+  DirectX::XMFLOAT4 Position;
+  DirectX::XMFLOAT4 UvBarycentric;
 };
 
 struct LineVertex

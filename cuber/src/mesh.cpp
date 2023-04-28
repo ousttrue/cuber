@@ -12,19 +12,19 @@ static VertexLayout layouts[] = {
                 .semantic_index = 0,
             },
         .type = ValueType::Float,
-        .count = 3,
+        .count = 4,
         .offset = offsetof(Vertex, Position),
         .stride = sizeof(Vertex),
     },
     {
         .id =
             {
-                .semantic_name = "BARYCENTRIC",
+                .semantic_name = "TEXCOORD",
                 .semantic_index = 0,
             },
         .type = ValueType::Float,
-        .count = 2,
-        .offset = offsetof(Vertex, Barycentric),
+        .count = 4,
+        .offset = offsetof(Vertex, UvBarycentric),
         .stride = sizeof(Vertex),
     },
     //
@@ -92,15 +92,15 @@ static VertexLayout layouts[] = {
 };
 
 const float s = 0.5f;
-DirectX::XMFLOAT3 positions[8] = {
-  { -s, -s, +s }, //
-  { -s, +s, +s }, //
-  { +s, +s, +s }, //
-  { +s, -s, +s }, //
-  { -s, -s, -s }, //
-  { -s, +s, -s }, //
-  { +s, +s, -s }, //
-  { +s, -s, -s }, //
+DirectX::XMFLOAT4 positions[8] = {
+  { -s, -s, +s, 1 }, //
+  { -s, +s, +s, 1 }, //
+  { +s, +s, +s, 1 }, //
+  { +s, -s, +s, 1 }, //
+  { -s, -s, -s, 1 }, //
+  { -s, +s, -s, 1 }, //
+  { +s, +s, -s, 1 }, //
+  { +s, -s, -s, 1 }, //
 };
 
 //   5+-+6
@@ -159,10 +159,10 @@ struct Builder
   {
   }
 
-  void Quad(const DirectX::XMFLOAT3& p0,
-            const DirectX::XMFLOAT3& p1,
-            const DirectX::XMFLOAT3& p2,
-            const DirectX::XMFLOAT3& p3,
+  void Quad(const DirectX::XMFLOAT4& p0,
+            const DirectX::XMFLOAT4& p1,
+            const DirectX::XMFLOAT4& p2,
+            const DirectX::XMFLOAT4& p3,
             const DirectX::XMFLOAT4& color)
   {
     // 01   00
@@ -172,19 +172,19 @@ struct Builder
     // 00   10
     Vertex v0{
       .Position = p0,
-      .Barycentric = { 1, 0 },
+      .UvBarycentric = { 0, 1, 1, 0 },
     };
     Vertex v1{
       .Position = p1,
-      .Barycentric = { 0, 0 },
+      .UvBarycentric = { 1, 1, 0, 0 },
     };
     Vertex v2{
       .Position = p2,
-      .Barycentric = { 0, 1 },
+      .UvBarycentric = { 1, 0, 0, 1 },
     };
     Vertex v3{
       .Position = p3,
-      .Barycentric = { 0, 0 },
+      .UvBarycentric = { 0, 0, 0, 0 },
     };
     auto index = Mesh.Vertices.size();
     Mesh.Vertices.push_back(v0);

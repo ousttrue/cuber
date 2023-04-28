@@ -11,8 +11,8 @@ cbuffer ViewProjectionConstantBuffer : register(b0) {
     float4x4 ViewProjection[2]; // VPAndRTArrayIndexFromAnyShaderFeedingRasterizer
 };
 struct VSInput {
-    float3 Pos : POSITION;
-    float2 barycentric: BARYCENTRIC;
+    float4 Pos : POSITION;
+    float4 uv_barycentric: TEXCOORD;
     float4 Row0: ROW0;
     float4 Row1: ROW1;
     float4 Row2: ROW2;
@@ -23,7 +23,7 @@ struct VSInput {
 struct VSOutput {
     float4 Pos : SV_POSITION;
     float4 color: COLOR0;
-    float2 barycentric: TEXCOORD;
+    float4 uv_barycentric: TEXCOORD;
     uint viewId : SV_RenderTargetArrayIndex;
 };
 
@@ -39,9 +39,9 @@ float4x4 transform(float4 r0, float4 r1, float4 r2, float4 r3)
 
 VSOutput vs_main(VSInput IN) {
     VSOutput OUT;
-    OUT.Pos = mul(mul(float4(IN.Pos, 1), transform(IN.Row0, IN.Row1, IN.Row2, IN.Row3)), ViewProjection[IN.instId % 2]);
+    OUT.Pos = mul(mul(IN.Pos, transform(IN.Row0, IN.Row1, IN.Row2, IN.Row3)), ViewProjection[IN.instId % 2]);
     OUT.color = IN.Color;
-    OUT.barycentric = IN.barycentric;
+    OUT.uv_barycentric = IN.uv_barycentric;
     OUT.viewId = IN.instId % 2;
     return OUT;
 }
@@ -54,7 +54,7 @@ float grid (float2 vBC, float width) {
 }
 
 float4 ps_main(VSOutput IN) : SV_TARGET {
-  float value = grid(IN.barycentric, 1.0);
+  float value = grid(IN.uv_barycentric.zw, 1.0);
   return IN.color * float4(value, value, value, 1.0);
 }
 )";

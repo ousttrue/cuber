@@ -8,8 +8,8 @@ static auto SHADER = R"(
 #pragma pack_matrix(row_major)
 float4x4 VP;
 struct vs_in {
-    float3 pos: POSITION;
-    float2 barycentric: BARYCENTRIC;
+    float4 pos: POSITION;
+    float4 uv_barycentric: TEXCOORD;
     float4 row0: ROW0;
     float4 row1: ROW1;
     float4 row2: ROW2;
@@ -19,7 +19,7 @@ struct vs_in {
  };
 struct vs_out {
     float4 position_clip: SV_POSITION;
-    float2 barycentric: TEXCOORD;
+    float4 uv_barycentric: TEXCOORD;
     float4 color: COLOR;
 };
 
@@ -35,8 +35,8 @@ float4x4 transform(float4 r0, float4 r1, float4 r2, float4 r3)
 
 vs_out vs_main(vs_in IN) {
   vs_out OUT = (vs_out)0; // zero the memory first
-  OUT.position_clip = mul(float4(IN.pos, 1.0), mul(transform(IN.row0, IN.row1, IN.row2, IN.row3), VP));
-  OUT.barycentric = IN.barycentric;
+  OUT.position_clip = mul(IN.pos, mul(transform(IN.row0, IN.row1, IN.row2, IN.row3), VP));
+  OUT.uv_barycentric = IN.uv_barycentric;
   OUT.color = IN.color;
   return OUT;
 }
@@ -49,7 +49,7 @@ float grid (float2 vBC, float width) {
 }
 
 float4 ps_main(vs_out IN) : SV_TARGET {
-  float value = grid(IN.barycentric, 1.0);
+  float value = grid(IN.uv_barycentric.zw, 1.0);
   return IN.color * float4(value, value, value, 1.0);
 }
 )";
