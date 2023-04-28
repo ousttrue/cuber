@@ -1,8 +1,8 @@
 #include <cuber/dx/DxLineRenderer.h>
-#include <grapho/dx11/shader.h>
 #include <cuber/mesh.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
+#include <grapho/dx11/shader.h>
 
 static auto SHADER = R"(
 #pragma pack_matrix(row_major)
@@ -43,14 +43,24 @@ struct DxLineRendererImpl
   DxLineRendererImpl(const winrt::com_ptr<ID3D11Device>& device)
     : device_(device)
   {
-    auto vs = CompileShader(SHADER, "vs_main", "vs_5_0");
-    auto hr = device_->CreateVertexShader(
-      vs->GetBufferPointer(), vs->GetBufferSize(), NULL, vertex_shader_.put());
+    auto vs = grapho::dx11::CompileShader(SHADER, "vs_main", "vs_5_0");
+    if (!vs) {
+      OutputDebugStringA(vs.error().c_str());
+    }
+    auto hr = device_->CreateVertexShader((*vs)->GetBufferPointer(),
+                                          (*vs)->GetBufferSize(),
+                                          NULL,
+                                          vertex_shader_.put());
     assert(SUCCEEDED(hr));
 
-    auto ps = CompileShader(SHADER, "ps_main", "ps_5_0");
-    hr = device_->CreatePixelShader(
-      ps->GetBufferPointer(), ps->GetBufferSize(), NULL, pixel_shader_.put());
+    auto ps = grapho::dx11::CompileShader(SHADER, "ps_main", "ps_5_0");
+    if (!ps) {
+      OutputDebugStringA(ps.error().c_str());
+    }
+    hr = device_->CreatePixelShader((*ps)->GetBufferPointer(),
+                                    (*ps)->GetBufferSize(),
+                                    NULL,
+                                    pixel_shader_.put());
     assert(SUCCEEDED(hr));
 
     D3D11_INPUT_ELEMENT_DESC inputElementDesc[]{
@@ -75,8 +85,8 @@ struct DxLineRendererImpl
     };
     hr = device_->CreateInputLayout(inputElementDesc,
                                     std::size(inputElementDesc),
-                                    vs->GetBufferPointer(),
-                                    vs->GetBufferSize(),
+                                    (*vs)->GetBufferPointer(),
+                                    (*vs)->GetBufferSize(),
                                     input_layout_.put());
     assert(SUCCEEDED(hr));
 

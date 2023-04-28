@@ -1,8 +1,9 @@
 #include <cuber/dx/DxCubeStereoRenderer.h>
-#include <grapho/dx11/shader.h>
 #include <cuber/mesh.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
+#include <grapho/dx11/drawable.h>
+#include <grapho/dx11/shader.h>
 
 static auto SHADER = R"(
 #pragma pack_matrix(row_major)
@@ -75,20 +76,30 @@ struct DxCubeStereoRendererImpl
   DxCubeStereoRendererImpl(const winrt::com_ptr<ID3D11Device>& device)
     : device_(device)
   {
-    auto vs = CompileShader(SHADER, "vs_main", "vs_5_0");
-    auto hr = device_->CreateVertexShader(
-      vs->GetBufferPointer(), vs->GetBufferSize(), NULL, vertex_shader_.put());
+    auto vs = grapho::dx11::CompileShader(SHADER, "vs_main", "vs_5_0");
+    if (!vs) {
+      OutputDebugStringA(vs.error().c_str());
+    }
+    auto hr = device_->CreateVertexShader((*vs)->GetBufferPointer(),
+                                          (*vs)->GetBufferSize(),
+                                          NULL,
+                                          vertex_shader_.put());
     assert(SUCCEEDED(hr));
 
-    auto ps = CompileShader(SHADER, "ps_main", "ps_5_0");
-    hr = device_->CreatePixelShader(
-      ps->GetBufferPointer(), ps->GetBufferSize(), NULL, pixel_shader_.put());
+    auto ps = grapho::dx11::CompileShader(SHADER, "ps_main", "ps_5_0");
+    if (!ps) {
+      OutputDebugStringA(ps.error().c_str());
+    }
+    hr = device_->CreatePixelShader((*ps)->GetBufferPointer(),
+                                    (*ps)->GetBufferSize(),
+                                    NULL,
+                                    pixel_shader_.put());
     assert(SUCCEEDED(hr));
 
     auto [vertices, indices, layouts] = Cube(false, true);
 
     uint32_t slots[] = {
-      0, 0, 1, 1, 1, 1,1,
+      0, 0, 1, 1, 1, 1, 1,
     };
     std::vector<D3D11_INPUT_ELEMENT_DESC> inputElementDesc;
     for (uint32_t i = 0; i < layouts.size(); ++i) {
@@ -96,7 +107,7 @@ struct DxCubeStereoRendererImpl
       inputElementDesc.push_back(D3D11_INPUT_ELEMENT_DESC{
         .SemanticName = layout.id.semantic_name.c_str(),
         .SemanticIndex = layout.id.semantic_index,
-        .Format = DxgiFormat(layout),
+        .Format = grapho::dx11::DxgiFormat(layout),
         .InputSlot = slots[i],
         .AlignedByteOffset = layout.offset,
         .InputSlotClass = layout.divisor ? D3D11_INPUT_PER_INSTANCE_DATA
@@ -107,8 +118,8 @@ struct DxCubeStereoRendererImpl
 
     hr = device_->CreateInputLayout(inputElementDesc.data(),
                                     inputElementDesc.size(),
-                                    vs->GetBufferPointer(),
-                                    vs->GetBufferSize(),
+                                    (*vs)->GetBufferPointer(),
+                                    (*vs)->GetBufferSize(),
                                     input_layout_.put());
     assert(SUCCEEDED(hr));
 
