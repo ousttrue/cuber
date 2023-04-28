@@ -191,7 +191,7 @@ struct DxCubeRendererImpl
       instance_buffer_.get(),
     };
     uint32_t strides[] = {
-      sizeof(grapho::Vertex),
+      sizeof(Vertex),
       sizeof(Instance),
     };
     uint32_t offsets[] = {

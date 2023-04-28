@@ -2,7 +2,7 @@
 #include <GL/glew.h>
 
 #include <DirectXMath.h>
-#include <grapho/mesh.h>
+#include <grapho/vertexlayout.h>
 #include <string>
 #include <vector>
 
@@ -25,11 +25,30 @@ struct Instance
   DirectX::XMFLOAT4 Color;
 };
 
-grapho::Mesh
+struct Vertex
+{
+  DirectX::XMFLOAT3 Position;
+  DirectX::XMFLOAT2 Barycentric;
+};
+
+struct LineVertex
+{
+  DirectX::XMFLOAT3 Position;
+  DirectX::XMFLOAT4 Color;
+};
+
+struct Mesh
+{
+  std::vector<Vertex> Vertices;
+  std::vector<uint32_t> Indices;
+  std::vector<grapho::VertexLayout> Layouts;
+};
+
+Mesh
 Cube(bool isCCW, bool isStereo);
 
 void
-PushGrid(std::vector<grapho::LineVertex>& lines,
+PushGrid(std::vector<LineVertex>& lines,
          float interval = 1.0f,
          int half_count = 5);
 

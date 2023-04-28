@@ -10,7 +10,7 @@ using namespace grapho::gl3;
 
 namespace cuber::gl3 {
 
-static const char *vertex_shader_text = R"(
+static const char* vertex_shader_text = R"(
 uniform mat4 VP;
 in vec3 vPos;
 in vec4 vColor;
@@ -23,7 +23,7 @@ void main()
 }
 )";
 
-static const char *fragment_shader_text = R"(
+static const char* fragment_shader_text = R"(
 in vec4 color;
 out vec4 FragColor;
 
@@ -33,8 +33,9 @@ void main()
 }
 )";
 
-static uint32_t get_location(const std::shared_ptr<ShaderProgram> &shader,
-                             const char *name) {
+static uint32_t
+get_location(const std::shared_ptr<ShaderProgram>& shader, const char* name)
+{
   auto location = shader->AttributeLocation(name);
   if (!location) {
     throw std::runtime_error("glGetUniformLocation");
@@ -42,20 +43,21 @@ static uint32_t get_location(const std::shared_ptr<ShaderProgram> &shader,
   return *location;
 }
 
-GlLineRenderer::GlLineRenderer() {
+GlLineRenderer::GlLineRenderer()
+{
 
   // auto glsl_version = "#version 150";
   auto glsl_version = "#version 310 es\nprecision highp float;";
 
   std::string_view vs[] = {
-      glsl_version,
-      "\n",
-      vertex_shader_text,
+    glsl_version,
+    "\n",
+    vertex_shader_text,
   };
   std::string_view fs[] = {
-      glsl_version,
-      "\n",
-      fragment_shader_text,
+    glsl_version,
+    "\n",
+    fragment_shader_text,
   };
   if (auto shader = ShaderProgram::Create(vs, fs)) {
     shader_ = *shader;
@@ -68,7 +70,7 @@ GlLineRenderer::GlLineRenderer() {
   // auto ipos_location = get_location(shader_, "iPos");
   // auto irot_location = get_location(shader_, "iRot");
 
-  vbo_ = Vbo::Create(sizeof(grapho::LineVertex) * 65535, nullptr);
+  vbo_ = Vbo::Create(sizeof(LineVertex) * 65535, nullptr);
   if (!vbo_) {
     throw std::runtime_error("grapho::gl3::Vbo::Create");
   }
@@ -82,7 +84,7 @@ GlLineRenderer::GlLineRenderer() {
           .type = grapho::ValueType::Float,
           .count = 3,
           .offset = 0,
-          .stride = sizeof(grapho::LineVertex),
+          .stride = sizeof(LineVertex),
       },
       {
           .id =
@@ -91,13 +93,13 @@ GlLineRenderer::GlLineRenderer() {
               },
           .type = grapho::ValueType::Float,
           .count = 4,
-          .offset = offsetof(grapho::LineVertex, color),
-          .stride = sizeof(grapho::LineVertex),
+          .offset = offsetof(LineVertex, Color),
+          .stride = sizeof(LineVertex),
       },
   };
   VertexSlot slots[] = {
-      {0, vbo_}, //
-      {1, vbo_}, //
+    { 0, vbo_ }, //
+    { 1, vbo_ }, //
   };
 
   vao_ = Vao::Create(layouts, slots);
@@ -106,23 +108,26 @@ GlLineRenderer::GlLineRenderer() {
   }
 }
 GlLineRenderer::~GlLineRenderer() {}
-void GlLineRenderer::Render(const float projection[16], const float view[16],
-                            std::span<const grapho::LineVertex> lines) {
+void
+GlLineRenderer::Render(const float projection[16],
+                       const float view[16],
+                       std::span<const LineVertex> lines)
+{
   if (lines.empty()) {
     return;
   }
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
 
-  auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)view);
-  auto p = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)projection);
+  auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)view);
+  auto p = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)projection);
   DirectX::XMFLOAT4X4 vp;
   DirectX::XMStoreFloat4x4(&vp, v * p);
 
   shader_->Bind();
   shader_->SetUniformMatrix("VP", vp);
 
-  vbo_->Upload(sizeof(grapho::LineVertex) * lines.size(), lines.data());
+  vbo_->Upload(sizeof(LineVertex) * lines.size(), lines.data());
   vao_->Draw(GL_LINES, lines.size(), 0);
 }
 

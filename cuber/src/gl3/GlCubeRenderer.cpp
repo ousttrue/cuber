@@ -93,7 +93,7 @@ GlCubeRenderer::GlCubeRenderer()
   auto [vertices, indices, layouts] = Cube(true, false);
 
   auto vbo =
-    Vbo::Create(sizeof(grapho::Vertex) * vertices.size(), vertices.data());
+    Vbo::Create(sizeof(Vertex) * vertices.size(), vertices.data());
   if (!vbo) {
     throw std::runtime_error("cuber::Vbo::Create");
   }

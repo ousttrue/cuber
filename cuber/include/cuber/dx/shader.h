@@ -1,7 +1,7 @@
 #pragma once
 #include <d3dcompiler.h>
 #include <dxgi.h>
-#include <grapho/mesh.h>
+#include <grapho/vertexlayout.h>
 #include <string_view>
 #include <winrt/base.h>
 

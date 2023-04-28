@@ -24,7 +24,7 @@ public:
   ~GlLineRenderer();
   void Render(const float projection[16],
               const float view[16],
-              std::span<const grapho::LineVertex> data);
+              std::span<const LineVertex> data);
 };
 
 } // namespace cuber::gl3

@@ -13,7 +13,7 @@ static VertexLayout layouts[] = {
             },
         .type = ValueType::Float,
         .count = 3,
-        .offset = offsetof(Vertex, position),
+        .offset = offsetof(Vertex, Position),
         .stride = sizeof(Vertex),
     },
     {
@@ -24,7 +24,7 @@ static VertexLayout layouts[] = {
             },
         .type = ValueType::Float,
         .count = 2,
-        .offset = offsetof(Vertex, barycentric),
+        .offset = offsetof(Vertex, Barycentric),
         .stride = sizeof(Vertex),
     },
     //
@@ -92,7 +92,7 @@ static VertexLayout layouts[] = {
 };
 
 const float s = 0.5f;
-XYZ positions[8] = {
+DirectX::XMFLOAT3 positions[8] = {
   { -s, -s, +s }, //
   { -s, +s, +s }, //
   { +s, +s, +s }, //
@@ -118,52 +118,52 @@ XYZ positions[8] = {
 //
 struct Face
 {
-  int indices[4];
-  RGBA color;
+  int Indices[4];
+  DirectX::XMFLOAT4 Color;
 };
 
 // CCW
 Face cube_faces[6] = {
   {
-    .indices = { 0, 3, 2, 1 },
-    .color = { 1, 0, 0, 1 },
+    .Indices = { 0, 3, 2, 1 },
+    .Color = { 1, 0, 0, 1 },
   },
   {
-    .indices = { 3, 7, 6, 2 },
-    .color = { 0, 1, 0, 1 },
+    .Indices = { 3, 7, 6, 2 },
+    .Color = { 0, 1, 0, 1 },
   },
   {
-    .indices = { 7, 4, 5, 6 },
-    .color = { 0, 0, 1, 1 },
+    .Indices = { 7, 4, 5, 6 },
+    .Color = { 0, 0, 1, 1 },
   },
   {
-    .indices = { 4, 0, 1, 5 },
-    .color = { 0, 1, 1, 1 },
+    .Indices = { 4, 0, 1, 5 },
+    .Color = { 0, 1, 1, 1 },
   },
   {
-    .indices = { 1, 2, 6, 5 },
-    .color = { 1, 0, 1, 1 },
+    .Indices = { 1, 2, 6, 5 },
+    .Color = { 1, 0, 1, 1 },
   },
   {
-    .indices = { 3, 0, 4, 7 },
-    .color = { 1, 1, 0, 1 },
+    .Indices = { 3, 0, 4, 7 },
+    .Color = { 1, 1, 0, 1 },
   },
 };
 
 struct Builder
 {
-  Mesh mesh_;
-  bool ccw_;
+  Mesh Mesh;
+  bool CCW;
   Builder(bool isCCW)
-    : ccw_(isCCW)
+    : CCW(isCCW)
   {
   }
 
-  void Quad(const XYZ& p0,
-            const XYZ& p1,
-            const XYZ& p2,
-            const XYZ& p3,
-            const RGBA& color)
+  void Quad(const DirectX::XMFLOAT3& p0,
+            const DirectX::XMFLOAT3& p1,
+            const DirectX::XMFLOAT3& p2,
+            const DirectX::XMFLOAT3& p3,
+            const DirectX::XMFLOAT4& color)
   {
     // 01   00
     //  3+-+2
@@ -171,44 +171,44 @@ struct Builder
     //  0+-+1
     // 00   10
     Vertex v0{
-      .position = p0,
-      .barycentric = { 1, 0 },
+      .Position = p0,
+      .Barycentric = { 1, 0 },
     };
     Vertex v1{
-      .position = p1,
-      .barycentric = { 0, 0 },
+      .Position = p1,
+      .Barycentric = { 0, 0 },
     };
     Vertex v2{
-      .position = p2,
-      .barycentric = { 0, 1 },
+      .Position = p2,
+      .Barycentric = { 0, 1 },
     };
     Vertex v3{
-      .position = p3,
-      .barycentric = { 0, 0 },
+      .Position = p3,
+      .Barycentric = { 0, 0 },
     };
-    auto index = mesh_.vertices.size();
-    mesh_.vertices.push_back(v0);
-    mesh_.vertices.push_back(v1);
-    mesh_.vertices.push_back(v2);
-    mesh_.vertices.push_back(v3);
-    if (ccw_) {
+    auto index = Mesh.Vertices.size();
+    Mesh.Vertices.push_back(v0);
+    Mesh.Vertices.push_back(v1);
+    Mesh.Vertices.push_back(v2);
+    Mesh.Vertices.push_back(v3);
+    if (CCW) {
       // 0, 1, 2
-      mesh_.indices.push_back(index);
-      mesh_.indices.push_back(index + 1);
-      mesh_.indices.push_back(index + 2);
+      Mesh.Indices.push_back(index);
+      Mesh.Indices.push_back(index + 1);
+      Mesh.Indices.push_back(index + 2);
       // 2, 3, 0
-      mesh_.indices.push_back(index + 2);
-      mesh_.indices.push_back(index + 3);
-      mesh_.indices.push_back(index);
+      Mesh.Indices.push_back(index + 2);
+      Mesh.Indices.push_back(index + 3);
+      Mesh.Indices.push_back(index);
     } else {
       // 0, 3, 2
-      mesh_.indices.push_back(index);
-      mesh_.indices.push_back(index + 3);
-      mesh_.indices.push_back(index + 2);
+      Mesh.Indices.push_back(index);
+      Mesh.Indices.push_back(index + 3);
+      Mesh.Indices.push_back(index + 2);
       // 2, 1, 0
-      mesh_.indices.push_back(index + 2);
-      mesh_.indices.push_back(index + 1);
-      mesh_.indices.push_back(index);
+      Mesh.Indices.push_back(index + 2);
+      Mesh.Indices.push_back(index + 1);
+      Mesh.Indices.push_back(index);
     }
   }
 };
@@ -219,23 +219,23 @@ Cube(bool isCCW, bool isStereo)
   Builder builder(isCCW);
   for (auto layout : layouts) {
     layout.divisor *= (isStereo ? 2 : 1);
-    builder.mesh_.layouts.push_back(layout);
+    builder.Mesh.Layouts.push_back(layout);
   }
   for (auto face : cube_faces) {
-    builder.Quad(positions[face.indices[0]],
-                 positions[face.indices[1]],
-                 positions[face.indices[2]],
-                 positions[face.indices[3]],
-                 face.color);
+    builder.Quad(positions[face.Indices[0]],
+                 positions[face.Indices[1]],
+                 positions[face.Indices[2]],
+                 positions[face.Indices[3]],
+                 face.Color);
   }
-  return builder.mesh_;
+  return builder.Mesh;
 }
 
-RGBA RED{ 0.8f, 0.2f, 0, 1 };
-RGBA DARK_RED{ 0.4f, 0, 0, 1 };
-RGBA BLUE{ 0, 0.4f, 0.8f, 1 };
-RGBA DARK_BLUE{ 0, 0, 0.4f, 1 };
-RGBA WHITE{ 0.8f, 0.8f, 0.9f, 1 };
+DirectX::XMFLOAT4 RED{ 0.8f, 0.2f, 0, 1 };
+DirectX::XMFLOAT4 DARK_RED{ 0.4f, 0, 0, 1 };
+DirectX::XMFLOAT4 BLUE{ 0, 0.4f, 0.8f, 1 };
+DirectX::XMFLOAT4 DARK_BLUE{ 0, 0, 0.4f, 1 };
+DirectX::XMFLOAT4 WHITE{ 0.8f, 0.8f, 0.9f, 1 };
 
 void
 PushGrid(std::vector<LineVertex>& lines, float interval, int half_count)
@@ -244,56 +244,56 @@ PushGrid(std::vector<LineVertex>& lines, float interval, int half_count)
   for (int i = -half_count; i <= half_count; ++i) {
     if (i) {
       lines.push_back({
-        .position = { -half, 0, static_cast<float>(i) },
-        .color = WHITE,
+        .Position = { -half, 0, static_cast<float>(i) },
+        .Color = WHITE,
       });
       lines.push_back({
-        .position = { half, 0, static_cast<float>(i) },
-        .color = WHITE,
+        .Position = { half, 0, static_cast<float>(i) },
+        .Color = WHITE,
       });
       lines.push_back({
-        .position = { static_cast<float>(i), 0, -half },
-        .color = WHITE,
+        .Position = { static_cast<float>(i), 0, -half },
+        .Color = WHITE,
       });
       lines.push_back({
-        .position = { static_cast<float>(i), 0, half },
-        .color = WHITE,
+        .Position = { static_cast<float>(i), 0, half },
+        .Color = WHITE,
       });
     }
   }
 
   lines.push_back({
-    .position = { half, 0, 0 },
-    .color = RED,
+    .Position = { half, 0, 0 },
+    .Color = RED,
   });
   lines.push_back({
-    .position = { 0, 0, 0 },
-    .color = RED,
+    .Position = { 0, 0, 0 },
+    .Color = RED,
   });
   lines.push_back({
-    .position = { -half, 0, 0 },
-    .color = DARK_RED,
+    .Position = { -half, 0, 0 },
+    .Color = DARK_RED,
   });
   lines.push_back({
-    .position = { 0, 0, 0 },
-    .color = DARK_RED,
+    .Position = { 0, 0, 0 },
+    .Color = DARK_RED,
   });
 
   lines.push_back({
-    .position = { 0, 0, half },
-    .color = BLUE,
+    .Position = { 0, 0, half },
+    .Color = BLUE,
   });
   lines.push_back({
-    .position = { 0, 0, 0 },
-    .color = BLUE,
+    .Position = { 0, 0, 0 },
+    .Color = BLUE,
   });
   lines.push_back({
-    .position = { 0, 0, -half },
-    .color = DARK_BLUE,
+    .Position = { 0, 0, -half },
+    .Color = DARK_BLUE,
   });
   lines.push_back({
-    .position = { 0, 0, 0 },
-    .color = DARK_BLUE,
+    .Position = { 0, 0, 0 },
+    .Color = DARK_BLUE,
   });
 }
 

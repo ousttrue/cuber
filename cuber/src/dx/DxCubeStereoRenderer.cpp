@@ -199,7 +199,7 @@ struct DxCubeStereoRendererImpl
       instance_buffer_.get(),
     };
     uint32_t strides[] = {
-      sizeof(grapho::Vertex),
+      sizeof(Vertex),
       sizeof(Instance),
     };
     uint32_t offsets[] = { 0, 0 };

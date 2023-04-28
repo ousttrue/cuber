@@ -30,7 +30,8 @@ float4 ps_main(vs_out IN) : SV_TARGET {
 
 namespace cuber::dx11 {
 
-struct DxLineRendererImpl {
+struct DxLineRendererImpl
+{
   winrt::com_ptr<ID3D11Device> device_;
   winrt::com_ptr<ID3D11VertexShader> vertex_shader_;
   winrt::com_ptr<ID3D11PixelShader> pixel_shader_;
@@ -39,69 +40,73 @@ struct DxLineRendererImpl {
   winrt::com_ptr<ID3D11Buffer> vertex_buffer_;
   winrt::com_ptr<ID3D11Buffer> constant_buffer_;
 
-  DxLineRendererImpl(const winrt::com_ptr<ID3D11Device> &device)
-      : device_(device) {
+  DxLineRendererImpl(const winrt::com_ptr<ID3D11Device>& device)
+    : device_(device)
+  {
     auto vs = CompileShader(SHADER, "vs_main", "vs_5_0");
-    auto hr =
-        device_->CreateVertexShader(vs->GetBufferPointer(), vs->GetBufferSize(),
-                                    NULL, vertex_shader_.put());
+    auto hr = device_->CreateVertexShader(
+      vs->GetBufferPointer(), vs->GetBufferSize(), NULL, vertex_shader_.put());
     assert(SUCCEEDED(hr));
 
     auto ps = CompileShader(SHADER, "ps_main", "ps_5_0");
-    hr = device_->CreatePixelShader(ps->GetBufferPointer(), ps->GetBufferSize(),
-                                    NULL, pixel_shader_.put());
+    hr = device_->CreatePixelShader(
+      ps->GetBufferPointer(), ps->GetBufferSize(), NULL, pixel_shader_.put());
     assert(SUCCEEDED(hr));
 
     D3D11_INPUT_ELEMENT_DESC inputElementDesc[]{
-        {
-            .SemanticName = "POSITION",
-            .SemanticIndex = 0,
-            .Format = DXGI_FORMAT_R32G32B32_FLOAT,
-            .InputSlot = 0,
-            .AlignedByteOffset = 0,
-            .InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA,
-            .InstanceDataStepRate = 0,
-        },
-        {
-            .SemanticName = "COLOR",
-            .SemanticIndex = 0,
-            .Format = DXGI_FORMAT_R32G32B32A32_FLOAT,
-            .InputSlot = 0,
-            .AlignedByteOffset = offsetof(grapho::LineVertex, color),
-            .InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA,
-            .InstanceDataStepRate = 0,
-        },
+      {
+        .SemanticName = "POSITION",
+        .SemanticIndex = 0,
+        .Format = DXGI_FORMAT_R32G32B32_FLOAT,
+        .InputSlot = 0,
+        .AlignedByteOffset = 0,
+        .InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA,
+        .InstanceDataStepRate = 0,
+      },
+      {
+        .SemanticName = "COLOR",
+        .SemanticIndex = 0,
+        .Format = DXGI_FORMAT_R32G32B32A32_FLOAT,
+        .InputSlot = 0,
+        .AlignedByteOffset = offsetof(LineVertex, Color),
+        .InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA,
+        .InstanceDataStepRate = 0,
+      },
     };
-    hr = device_->CreateInputLayout(
-        inputElementDesc, std::size(inputElementDesc), vs->GetBufferPointer(),
-        vs->GetBufferSize(), input_layout_.put());
+    hr = device_->CreateInputLayout(inputElementDesc,
+                                    std::size(inputElementDesc),
+                                    vs->GetBufferPointer(),
+                                    vs->GetBufferSize(),
+                                    input_layout_.put());
     assert(SUCCEEDED(hr));
 
     {
       D3D11_BUFFER_DESC vertex_buff_desc = {
-          .ByteWidth = static_cast<uint32_t>(sizeof(grapho::Vertex) * 65535),
-          .Usage = D3D11_USAGE_DEFAULT,
-          .BindFlags = D3D11_BIND_VERTEX_BUFFER,
+        .ByteWidth = static_cast<uint32_t>(sizeof(Vertex) * 65535),
+        .Usage = D3D11_USAGE_DEFAULT,
+        .BindFlags = D3D11_BIND_VERTEX_BUFFER,
       };
-      hr = device_->CreateBuffer(&vertex_buff_desc, nullptr,
-                                 vertex_buffer_.put());
+      hr =
+        device_->CreateBuffer(&vertex_buff_desc, nullptr, vertex_buffer_.put());
       assert(SUCCEEDED(hr));
     }
 
     {
       D3D11_BUFFER_DESC desc = {
-          .ByteWidth = sizeof(DirectX::XMFLOAT4X4),
-          .Usage = D3D11_USAGE_DEFAULT,
-          .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+        .ByteWidth = sizeof(DirectX::XMFLOAT4X4),
+        .Usage = D3D11_USAGE_DEFAULT,
+        .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
       };
       HRESULT hr =
-          device_->CreateBuffer(&desc, nullptr, constant_buffer_.put());
+        device_->CreateBuffer(&desc, nullptr, constant_buffer_.put());
       assert(SUCCEEDED(hr));
     };
   }
 
-  void Render(const float projection[16], const float view[16],
-              std::span<const grapho::LineVertex> lines) {
+  void Render(const float projection[16],
+              const float view[16],
+              std::span<const LineVertex> lines)
+  {
     if (lines.empty()) {
       return;
     }
@@ -113,47 +118,54 @@ struct DxLineRendererImpl {
     context->PSSetShader(pixel_shader_.get(), NULL, 0);
 
     // constant buffer
-    auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)view);
-    auto p = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4 *)projection);
+    auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)view);
+    auto p = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)projection);
     DirectX::XMFLOAT4X4 vp;
     DirectX::XMStoreFloat4x4(&vp, v * p);
     context->UpdateSubresource(constant_buffer_.get(), 0, NULL, &vp, 0, 0);
-    ID3D11Buffer *cb[]{constant_buffer_.get()};
+    ID3D11Buffer* cb[]{ constant_buffer_.get() };
     context->VSSetConstantBuffers(0, 1, cb);
 
     // vertices
     D3D11_BOX box{
-        .left = 0,
-        .top = 0,
-        .front = 0,
-        .right =
-            static_cast<uint32_t>(sizeof(grapho::LineVertex) * lines.size()),
-        .bottom = 1,
-        .back = 1,
+      .left = 0,
+      .top = 0,
+      .front = 0,
+      .right = static_cast<uint32_t>(sizeof(LineVertex) * lines.size()),
+      .bottom = 1,
+      .back = 1,
     };
-    context->UpdateSubresource(vertex_buffer_.get(), 0, &box, lines.data(), 0,
-                               0);
+    context->UpdateSubresource(
+      vertex_buffer_.get(), 0, &box, lines.data(), 0, 0);
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
     context->IASetInputLayout(input_layout_.get());
-    ID3D11Buffer *vb[] = {
-        vertex_buffer_.get(),
+    ID3D11Buffer* vb[] = {
+      vertex_buffer_.get(),
     };
     uint32_t strides[] = {
-        sizeof(grapho::LineVertex),
+      sizeof(LineVertex),
     };
     uint32_t offsets[] = {
-        0,
+      0,
     };
     context->IASetVertexBuffers(0, std::size(vb), vb, strides, offsets);
     context->Draw(lines.size(), 0);
   }
 };
 
-DxLineRenderer::DxLineRenderer(const winrt::com_ptr<ID3D11Device> &device)
-    : impl_(new DxLineRendererImpl(device)) {}
-DxLineRenderer::~DxLineRenderer() { delete impl_; }
-void DxLineRenderer::Render(const float projection[16], const float view[16],
-                            std::span<const grapho::LineVertex> lines) {
+DxLineRenderer::DxLineRenderer(const winrt::com_ptr<ID3D11Device>& device)
+  : impl_(new DxLineRendererImpl(device))
+{
+}
+DxLineRenderer::~DxLineRenderer()
+{
+  delete impl_;
+}
+void
+DxLineRenderer::Render(const float projection[16],
+                       const float view[16],
+                       std::span<const LineVertex> lines)
+{
   impl_->Render(projection, view, lines);
 }
 
