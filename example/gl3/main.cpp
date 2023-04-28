@@ -42,7 +42,7 @@ main(int argc, char** argv)
   std::vector<cuber::LineVertex> lines;
   cuber::PushGrid(lines);
 
-  // main loop
+  // texture
   std::vector<cuber::Instance> instances;
   instances.push_back({
     .Color = { 0.2f, 0.2f, 0.2f, 1.0f },
@@ -59,6 +59,7 @@ main(int argc, char** argv)
   };
   auto texture = grapho::gl3::Texture::Create(2, 2, &pixels[0].r);
 
+  // main loop
   while (auto time = platform.NewFrame(app.clear_color)) {
     // imgui
     {

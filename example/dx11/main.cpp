@@ -3,8 +3,16 @@
 #include "GuiApp.h"
 #include <cuber/dx/DxCubeRenderer.h>
 #include <cuber/dx/DxLineRenderer.h>
+#include <grapho/dx11/texture.h>
 
-// Main code
+struct rgba
+{
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
+  uint8_t a;
+};
+
 int
 main(int argc, char** argv)
 {
@@ -27,13 +35,32 @@ main(int argc, char** argv)
   }
 
   // renderer
-  cuber::dx11::DxCubeRenderer cubeRenderer(platform.GetDevice());
-  cuber::dx11::DxLineRenderer lineRenderer(platform.GetDevice());
-
+  auto device = platform.GetDevice();
+  cuber::dx11::DxCubeRenderer cubeRenderer(device);
+  cuber::dx11::DxLineRenderer lineRenderer(device);
   std::vector<cuber::LineVertex> lines;
   cuber::PushGrid(lines);
 
+  // texture
+  std::vector<cuber::Instance> instances;
+  instances.push_back({
+    .Color = { 0.2f, 0.2f, 0.2f, 1.0f },
+  });
+  auto t = DirectX::XMMatrixTranslation(0, 1, -1);
+  auto s = DirectX::XMMatrixScaling(1.6f, 0.9f, 0.1f);
+  DirectX::XMStoreFloat4x4(&instances.back().Matrix, s * t);
+
+  static rgba pixels[4] = {
+    { 255, 0, 0, 255 },
+    { 0, 255, 0, 255 },
+    { 0, 0, 255, 255 },
+    { 255, 255, 255, 255 },
+  };
+  auto texture = grapho::dx11::Texture::Create(device, 2, 2, &pixels[0].r);
+
   // main loop
+  winrt::com_ptr<ID3D11DeviceContext> context;
+  device->GetImmediateContext(context.put());
   while (auto time = platform.NewFrame(app.clear_color)) {
     // imgui
     {
@@ -45,7 +72,11 @@ main(int argc, char** argv)
     // scene
     {
       auto cubes = bvhPanel.GetCubes();
-      cubeRenderer.Render(app.projection, app.view, cubes.data(), cubes.size());
+      instances.resize(1 + cubes.size());
+      std::copy(cubes.begin(), cubes.end(), instances.data() + 1);
+      texture->Bind(context);
+      cubeRenderer.Render(
+        app.projection, app.view, instances.data(), instances.size());
       lineRenderer.Render(app.projection, app.view, lines);
       platform.EndFrame(data);
     }

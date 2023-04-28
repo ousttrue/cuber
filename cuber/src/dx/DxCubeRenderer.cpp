@@ -17,7 +17,7 @@ struct vs_in {
     float4 row3: ROW3;    
     float4 color: COLOR0;
     uint instanceID : SV_InstanceID;
- };
+};
 struct vs_out {
     float4 position_clip: SV_POSITION;
     float4 uv_barycentric: TEXCOORD;
@@ -42,6 +42,9 @@ vs_out vs_main(vs_in IN) {
   return OUT;
 }
 
+Texture2D colorTexture;
+SamplerState colorSampler;
+
 float grid (float2 vBC, float width) {
   float3 bary = float3(vBC.x, vBC.y, 1.0 - vBC.x - vBC.y);
   float3 d = fwidth(bary);
@@ -50,8 +53,9 @@ float grid (float2 vBC, float width) {
 }
 
 float4 ps_main(vs_out IN) : SV_TARGET {
+  float4 texel = colorTexture.Sample(colorSampler, IN.uv_barycentric.xy);
   float value = grid(IN.uv_barycentric.zw, 1.0);
-  return IN.color * float4(value, value, value, 1.0);
+  return texel * IN.color * float4(value, value, value, 1.0);
 }
 )";
 
