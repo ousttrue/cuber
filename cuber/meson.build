@@ -8,7 +8,6 @@ cuber_srcs = [
 ]
 if host_machine.system() == 'windows'
     cuber_srcs += [
-        'src/dx/shader.cpp',
         'src/dx/DxCubeRenderer.cpp',
         'src/dx/DxCubeStereoRenderer.cpp',
         'src/dx/DxLineRenderer.cpp',

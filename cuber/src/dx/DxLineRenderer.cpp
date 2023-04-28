@@ -1,5 +1,5 @@
 #include <cuber/dx/DxLineRenderer.h>
-#include <cuber/dx/shader.h>
+#include <grapho/dx11/shader.h>
 #include <cuber/mesh.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
