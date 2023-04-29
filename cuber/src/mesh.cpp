@@ -8,10 +8,10 @@ static VertexLayout layouts[] = {
     {
         .Id =
             {
+                .AttributeLocation = 0,
+                .Slot= 0,
                 .SemanticName = "POSITION",
                 .SemanticIndex = 0,
-                .Slot= 0,
-                .AttributeLocation = 0,
             },
         .Type = ValueType::Float,
         .Count = 4,
@@ -21,10 +21,10 @@ static VertexLayout layouts[] = {
     {
         .Id =
             {
+                .AttributeLocation = 1,
+                .Slot = 0,
                 .SemanticName = "TEXCOORD",
                 .SemanticIndex = 0,
-                .Slot = 0,
-                .AttributeLocation = 1,
             },
         .Type = ValueType::Float,
         .Count = 4,
@@ -35,10 +35,10 @@ static VertexLayout layouts[] = {
     {
         .Id =
             {
+                .AttributeLocation = 2,
+                .Slot = 1,
                 .SemanticName = "ROW",
                 .SemanticIndex = 0,
-                .Slot = 1,
-                .AttributeLocation = 2,
             },
         .Type = ValueType::Float,
         .Count = 4,
@@ -49,10 +49,10 @@ static VertexLayout layouts[] = {
     {
         .Id =
             {
+                .AttributeLocation = 3,
+                .Slot = 1,
                 .SemanticName = "ROW",
                 .SemanticIndex = 1,
-                .Slot = 1,
-                .AttributeLocation = 3,
             },
         .Type = ValueType::Float,
         .Count = 4,
@@ -63,10 +63,10 @@ static VertexLayout layouts[] = {
     {
         .Id =
             {
+                .AttributeLocation = 4,
+                .Slot = 1,
                 .SemanticName = "ROW",
                 .SemanticIndex = 2,
-                .Slot = 1,
-                .AttributeLocation = 4,
             },
         .Type = ValueType::Float,
         .Count = 4,
@@ -77,10 +77,10 @@ static VertexLayout layouts[] = {
     {
         .Id =
             {
+                .AttributeLocation = 5,
+                .Slot = 1,
                 .SemanticName = "ROW",
                 .SemanticIndex = 3,
-                .Slot = 1,
-                .AttributeLocation = 5,
             },
         .Type = ValueType::Float,
         .Count = 4,
@@ -92,10 +92,10 @@ static VertexLayout layouts[] = {
     {
         .Id =
             {
+                .AttributeLocation = 6,
+                .Slot = 1,
                 .SemanticName = "COLOR",
                 .SemanticIndex = 0,
-                .Slot = 1,
-                .AttributeLocation = 6,
             },
         .Type = ValueType::Float,
         .Count = 4,

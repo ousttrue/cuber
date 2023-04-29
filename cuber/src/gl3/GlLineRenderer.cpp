@@ -67,9 +67,9 @@ GlLineRenderer::GlLineRenderer()
       {
           .Id =
               {
-                  .SemanticName = "vPos",
-                  .Slot = 0,
                   .AttributeLocation = 0,
+                  .Slot = 0,
+                  // .SemanticName = "vPos",
               },
           .Type = grapho::ValueType::Float,
           .Count = 3,
@@ -79,9 +79,9 @@ GlLineRenderer::GlLineRenderer()
       {
           .Id =
               {
-                  .SemanticName = "vColor",
-                  .Slot = 0,
                   .AttributeLocation = 1,
+                  .Slot = 0,
+                  // .SemanticName = "vColor",
               },
           .Type = grapho::ValueType::Float,
           .Count = 4,
