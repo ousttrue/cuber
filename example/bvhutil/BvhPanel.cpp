@@ -114,11 +114,11 @@ struct BvhPanelImpl
     SelectBone(node);
 
     // color picker
-    ImGui::TableNextColumn();
-    ImGui::ColorEdit4("##color",
-                      &it->Color.x,
-                      ImGuiColorEditFlags_NoInputs |
-                        ImGuiColorEditFlags_NoLabel);
+    // ImGui::TableNextColumn();
+    // ImGui::ColorEdit4("##color",
+    //                   &it->Color.x,
+    //                   ImGuiColorEditFlags_NoInputs |
+    //                     ImGuiColorEditFlags_NoLabel);
 
     if (open) {
       for (auto& child : node->children_) {
@@ -171,6 +171,8 @@ struct BvhPanelImpl
       m_instances.resize(instances.size());
       for (size_t i = 0; i < m_instances.size(); ++i) {
         m_instances[i].Matrix = instances[i];
+        m_instances[i].PositiveFaceFlag = { 0, 1, 2, 0 };
+        m_instances[i].NegativeFaceFlag = { 3, 4, 5, 0 };
       }
     }
   }

@@ -3,6 +3,7 @@
 #include <cuber/gl3/GlCubeRenderer.h>
 #include <cuber/mesh.h>
 #include <grapho/gl3/shader.h>
+#include <grapho/gl3/ubo.h>
 #include <grapho/gl3/vao.h>
 #include <iostream>
 
@@ -12,15 +13,16 @@ namespace cuber::gl3 {
 
 static const char* vertex_m_shadertext = R"(
 uniform mat4 VP;
-in vec4 vPos;
+in vec4 vPosFace;
 in vec4 vUvBarycentric;
 in vec4 iRow0;
 in vec4 iRow1;
 in vec4 iRow2;
 in vec4 iRow3;
-in vec4 iColor;
+in vec4 iPositive_xyz_flag;
+in vec4 iNegative_xyz_flag;
 out vec4 oUvBarycentric;
-out vec4 oColor;
+flat out uvec3 o_Palette_Flag_Flag;
 
 mat4 transform(vec4 r0, vec4 r1, vec4 r2, vec4 r3)
 {
@@ -34,18 +36,60 @@ mat4 transform(vec4 r0, vec4 r1, vec4 r2, vec4 r3)
 
 void main()
 {
-    gl_Position = VP * transform(iRow0, iRow1, iRow2, iRow3) * vPos;
+    gl_Position = VP * transform(iRow0, iRow1, iRow2, iRow3) * vec4(vPosFace.xyz, 1);
     oUvBarycentric = vUvBarycentric;
-    oColor = iColor;
+    if(vPosFace.w==0.0)
+    {
+      o_Palette_Flag_Flag = uvec3(iPositive_xyz_flag.x, 
+        iPositive_xyz_flag.w,
+        iNegative_xyz_flag.w);
+    }
+    else if(vPosFace.w==1.0)
+    {
+      o_Palette_Flag_Flag = uvec3(iPositive_xyz_flag.y, 
+        iPositive_xyz_flag.w,
+        iNegative_xyz_flag.w);
+    }
+    else if(vPosFace.w==2.0)
+    {
+      o_Palette_Flag_Flag = uvec3(iPositive_xyz_flag.z, 
+        iPositive_xyz_flag.w,
+        iNegative_xyz_flag.w);
+    }
+    else if(vPosFace.w==3.0)
+    {
+      o_Palette_Flag_Flag = uvec3(iNegative_xyz_flag.x, 
+        iPositive_xyz_flag.w,
+        iNegative_xyz_flag.w);
+    }
+    else if(vPosFace.w==4.0)
+    {
+      o_Palette_Flag_Flag = uvec3(iNegative_xyz_flag.y, 
+        iPositive_xyz_flag.w,
+        iNegative_xyz_flag.w);
+    }
+    else if(vPosFace.w==5.0)
+    {
+      o_Palette_Flag_Flag = uvec3(iNegative_xyz_flag.z, 
+        iPositive_xyz_flag.w,
+        iNegative_xyz_flag.w);
+    }
 }
 )";
 
 static const char* fragment_m_shadertext = R"(
 in vec4 oUvBarycentric;
-in vec4 oColor;
+flat in uvec3 o_Palette_Flag_Flag;
 out vec4 FragColor;
-uniform sampler2D sampler;
+layout (std140) uniform palette { 
+  vec4 colors[64];
+  vec4 textures[64];
+} Palette;
 
+uniform sampler2D sampler0;
+uniform sampler2D sampler1;
+uniform sampler2D sampler2;
+uniform sampler2D sampler3;
 
 // https://github.com/rreusser/glsl-solid-wireframe
 float grid (vec2 vBC, float width) {
@@ -57,8 +101,29 @@ float grid (vec2 vBC, float width) {
 
 void main()
 {
-    vec4 texel = texture(sampler, oUvBarycentric.xy);
-    FragColor = texel * oColor * vec4(vec3(grid(oUvBarycentric.zw, 1.0)), 1);
+    vec4 border = vec4(vec3(grid(oUvBarycentric.zw, 1.0)), 1);
+    vec4 color = Palette.colors[o_Palette_Flag_Flag.x];
+    vec4 texel;
+    if(Palette.textures[o_Palette_Flag_Flag.x]==0.0)
+    {
+      texel = texture(sampler0, oUvBarycentric.xy);
+    }
+    else if(Palette.textures[o_Palette_Flag_Flag.x]==1.0)
+    {
+      texel = texture(sampler1, oUvBarycentric.xy);
+    }
+    else if(Palette.textures[o_Palette_Flag_Flag.x]==2.0)
+    {
+      texel = texture(sampler2, oUvBarycentric.xy);
+    }
+    else if(Palette.textures[o_Palette_Flag_Flag.x]==3.0)
+    {
+      texel = texture(sampler3, oUvBarycentric.xy);
+    }
+    else{
+      texel=vec4(1, 1, 1, 1);
+    }
+    FragColor = texel * color * border;
 }
 )";
 
@@ -81,6 +146,7 @@ GlCubeRenderer::GlCubeRenderer()
   if (auto shader = ShaderProgram::Create(vs, fs)) {
     m_shader = *shader;
   } else {
+    std::cerr << shader.error() << std::endl;
     throw std::runtime_error(shader.error());
   }
 
@@ -110,6 +176,20 @@ GlCubeRenderer::GlCubeRenderer()
   if (!m_vao) {
     throw std::runtime_error("cuber::Vao::Create");
   }
+
+  m_pallete.Textures[0].x = -1;
+  m_pallete.Textures[1].x = -1;
+  m_pallete.Textures[2].x = -1;
+  m_pallete.Textures[3].x = -1;
+  m_pallete.Textures[4].x = -1;
+  m_pallete.Textures[5].x = -1;
+  m_pallete.Colors[0] = { 1, 0, 0, 1 };
+  m_pallete.Colors[1] = { 0, 1, 0, 1 };
+  m_pallete.Colors[2] = { 0, 0, 1, 1 };
+  m_pallete.Colors[3] = { 0, 1, 1, 1 };
+  m_pallete.Colors[4] = { 1, 0, 1, 1 };
+  m_pallete.Colors[5] = { 1, 1, 0, 1 };
+  m_ubo = Ubo::Create(sizeof(m_pallete), &m_pallete);
 }
 
 GlCubeRenderer::~GlCubeRenderer() {}
@@ -133,6 +213,10 @@ GlCubeRenderer::Render(const float projection[16],
 
   m_shader->Bind();
   m_shader->SetUniformMatrix("VP", vp);
+
+  auto block_index = m_shader->UboBlockIndex("palette");
+  m_shader->UboBind(*block_index, 1);
+  m_ubo->SetBindingPoint(1);
 
   m_instance_vbo->Upload(sizeof(Instance) * instanceCount, data);
   m_vao->DrawInstance(instanceCount, CUBE_INDEX_COUNT, 0);

@@ -15,7 +15,7 @@ static VertexLayout layouts[] = {
             },
         .Type = ValueType::Float,
         .Count = 4,
-        .Offset = offsetof(Vertex, Position),
+        .Offset = offsetof(Vertex, PositionFace),
         .Stride = sizeof(Vertex),
     },
     {
@@ -94,27 +94,41 @@ static VertexLayout layouts[] = {
             {
                 .AttributeLocation = 6,
                 .Slot = 1,
-                .SemanticName = "COLOR",
+                .SemanticName = "FACE",
                 .SemanticIndex = 0,
             },
         .Type = ValueType::Float,
         .Count = 4,
-        .Offset = offsetof(Instance, Color),
+        .Offset = offsetof(Instance, PositiveFaceFlag),
+        .Stride = sizeof(Instance),
+        .Divisor = 1,
+    },
+    {
+        .Id =
+            {
+                .AttributeLocation = 7,
+                .Slot = 1,
+                .SemanticName = "FACE",
+                .SemanticIndex = 1,
+            },
+        .Type = ValueType::Float,
+        .Count = 4,
+        .Offset = offsetof(Instance, NegativeFaceFlag),
         .Stride = sizeof(Instance),
         .Divisor = 1,
     },
 };
 
 const float s = 0.5f;
-DirectX::XMFLOAT4 positions[8] = {
-  { -s, -s, +s, 1 }, //
-  { -s, +s, +s, 1 }, //
-  { +s, +s, +s, 1 }, //
-  { +s, -s, +s, 1 }, //
-  { -s, -s, -s, 1 }, //
-  { -s, +s, -s, 1 }, //
-  { +s, +s, -s, 1 }, //
-  { +s, -s, -s, 1 }, //
+DirectX::XMFLOAT3 positions[8] = {
+  { -s, -s, +s }, //
+  { -s, +s, +s }, //
+  { +s, +s, +s }, //
+  { +s, -s, +s }, //
+  { -s, -s, -s }, //
+  { -s, +s, -s }, //
+  { +s, +s, -s }, //
+  { +s, -s, -s }, //
 };
 
 //   5+-+6
@@ -173,10 +187,11 @@ struct Builder
   {
   }
 
-  void Quad(const DirectX::XMFLOAT4& p0,
-            const DirectX::XMFLOAT4& p1,
-            const DirectX::XMFLOAT4& p2,
-            const DirectX::XMFLOAT4& p3,
+  void Quad(int face,
+            const DirectX::XMFLOAT3& p0,
+            const DirectX::XMFLOAT3& p1,
+            const DirectX::XMFLOAT3& p2,
+            const DirectX::XMFLOAT3& p3,
             const DirectX::XMFLOAT4& color)
   {
     // 01   00
@@ -185,19 +200,19 @@ struct Builder
     //  0+-+1
     // 00   10
     Vertex v0{
-      .Position = p0,
+      .PositionFace = { p0.x, p0.y, p0.z, (float)face },
       .UvBarycentric = { 0, 1, 1, 0 },
     };
     Vertex v1{
-      .Position = p1,
+      .PositionFace = { p1.x, p1.y, p1.z, (float)face },
       .UvBarycentric = { 1, 1, 0, 0 },
     };
     Vertex v2{
-      .Position = p2,
+      .PositionFace = { p2.x, p2.y, p2.z, (float)face },
       .UvBarycentric = { 1, 0, 0, 1 },
     };
     Vertex v3{
-      .Position = p3,
+      .PositionFace = { p3.x, p3.y, p3.z, (float)face },
       .UvBarycentric = { 0, 0, 0, 0 },
     };
     auto index = Mesh.Vertices.size();
@@ -235,8 +250,10 @@ Cube(bool isCCW, bool isStereo)
     layout.Divisor *= (isStereo ? 2 : 1);
     builder.Mesh.Layouts.push_back(layout);
   }
+  int f = 0;
   for (auto face : cube_faces) {
-    builder.Quad(positions[face.Indices[0]],
+    builder.Quad(f++,
+                 positions[face.Indices[0]],
                  positions[face.Indices[1]],
                  positions[face.Indices[2]],
                  positions[face.Indices[3]],

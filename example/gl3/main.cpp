@@ -47,7 +47,8 @@ main(int argc, char** argv)
   // texture
   std::vector<cuber::Instance> instances;
   instances.push_back({
-    .Color = { 0.2f, 0.2f, 0.2f, 1.0f },
+    .PositiveFaceFlag = { 0, 1, 2, 0 },
+    .NegativeFaceFlag = { 3, 4, 2, 0 },
   });
   auto t = DirectX::XMMatrixTranslation(0, 1, -1);
   auto s = DirectX::XMMatrixScaling(1.6f, 0.9f, 0.1f);

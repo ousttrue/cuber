@@ -9,15 +9,25 @@ namespace grapho::gl3 {
 struct Vao;
 class ShaderProgram;
 class Vbo;
+struct Ubo;
 }
 
 namespace cuber::gl3 {
+
+struct Pallete
+{
+  DirectX::XMFLOAT4 Colors[64];
+  DirectX::XMFLOAT4 Textures[64];
+};
 
 class GlCubeRenderer
 {
   std::shared_ptr<grapho::gl3::Vao> m_vao;
   std::shared_ptr<grapho::gl3::ShaderProgram> m_shader;
   std::shared_ptr<grapho::gl3::Vbo> m_instance_vbo;
+
+  Pallete m_pallete;
+  std::shared_ptr<grapho::gl3::Ubo> m_ubo;
 
 public:
   GlCubeRenderer(const GlCubeRenderer&) = delete;
