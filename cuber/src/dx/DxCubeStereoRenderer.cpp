@@ -2,6 +2,7 @@
 #include <cuber/mesh.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
+#include <grapho/dx11/buffer.h>
 #include <grapho/dx11/drawable.h>
 #include <grapho/dx11/shader.h>
 
@@ -66,11 +67,8 @@ struct DxCubeStereoRendererImpl
   winrt::com_ptr<ID3D11Device> device_;
   winrt::com_ptr<ID3D11VertexShader> vertex_shader_;
   winrt::com_ptr<ID3D11PixelShader> pixel_shader_;
-  winrt::com_ptr<ID3D11InputLayout> input_layout_;
-
-  winrt::com_ptr<ID3D11Buffer> vertex_buffer_;
-  winrt::com_ptr<ID3D11Buffer> index_buffer_;
   winrt::com_ptr<ID3D11Buffer> instance_buffer_;
+  std::shared_ptr<grapho::dx11::Drawable> drawable_;
   winrt::com_ptr<ID3D11Buffer> constant_buffer_;
 
   DxCubeStereoRendererImpl(const winrt::com_ptr<ID3D11Device>& device)
@@ -98,82 +96,21 @@ struct DxCubeStereoRendererImpl
 
     auto [vertices, indices, layouts] = Cube(false, true);
 
-    uint32_t slots[] = {
-      0, 0, 1, 1, 1, 1, 1,
+    auto vertex_buffer = grapho::dx11::CreateVertexBuffer(device_, vertices);
+    instance_buffer_ = grapho::dx11::CreateVertexBuffer(
+      device_, sizeof(Instance) * 65535, nullptr);
+    auto index_buffer = grapho::dx11::CreateIndexBuffer(device_, indices);
+
+    grapho::dx11::VertexSlot slots[]{
+      { .VertexBuffer = vertex_buffer, .Stride = sizeof(Vertex) },
+      { .VertexBuffer = instance_buffer_, .Stride = sizeof(Instance) },
     };
-    std::vector<D3D11_INPUT_ELEMENT_DESC> inputElementDesc;
-    for (uint32_t i = 0; i < layouts.size(); ++i) {
-      auto& layout = layouts[i];
-      inputElementDesc.push_back(D3D11_INPUT_ELEMENT_DESC{
-        .SemanticName = layout.id.semantic_name.c_str(),
-        .SemanticIndex = layout.id.semantic_index,
-        .Format = grapho::dx11::DxgiFormat(layout),
-        .InputSlot = slots[i],
-        .AlignedByteOffset = layout.offset,
-        .InputSlotClass = layout.divisor ? D3D11_INPUT_PER_INSTANCE_DATA
-                                         : D3D11_INPUT_PER_VERTEX_DATA,
-        .InstanceDataStepRate = layout.divisor,
-      });
-    }
+    drawable_ = grapho::dx11::Drawable::Create(
+      device_, *vs, layouts, slots, index_buffer);
+    assert(drawable_);
 
-    hr = device_->CreateInputLayout(inputElementDesc.data(),
-                                    inputElementDesc.size(),
-                                    (*vs)->GetBufferPointer(),
-                                    (*vs)->GetBufferSize(),
-                                    input_layout_.put());
-    assert(SUCCEEDED(hr));
-
-    {
-      D3D11_BUFFER_DESC vertex_buff_desc = {
-        .ByteWidth =
-          static_cast<uint32_t>(sizeof(vertices[0]) * vertices.size()),
-        .Usage = D3D11_USAGE_DEFAULT,
-        .BindFlags = D3D11_BIND_VERTEX_BUFFER,
-      };
-      D3D11_SUBRESOURCE_DATA sr_data = {
-        .pSysMem = vertices.data(),
-      };
-      hr = device_->CreateBuffer(
-        &vertex_buff_desc, &sr_data, vertex_buffer_.put());
-      assert(SUCCEEDED(hr));
-    }
-
-    {
-      D3D11_BUFFER_DESC index_buff_desc = {
-        .ByteWidth = static_cast<uint32_t>(sizeof(uint32_t) * indices.size()),
-        .Usage = D3D11_USAGE_DEFAULT,
-        .BindFlags = D3D11_BIND_INDEX_BUFFER,
-      };
-      D3D11_SUBRESOURCE_DATA sr_data = {
-        .pSysMem = indices.data(),
-      };
-      hr =
-        device_->CreateBuffer(&index_buff_desc, &sr_data, index_buffer_.put());
-      assert(SUCCEEDED(hr));
-    }
-
-    {
-      D3D11_BUFFER_DESC instance_buff_desc = {
-        .ByteWidth = static_cast<uint32_t>(sizeof(Instance) * 65535),
-        .Usage = D3D11_USAGE_DEFAULT,
-        .BindFlags = D3D11_BIND_VERTEX_BUFFER,
-      };
-      hr = device_->CreateBuffer(
-        &instance_buff_desc, nullptr, instance_buffer_.put());
-      assert(SUCCEEDED(hr));
-    }
-
-    {
-      D3D11_BUFFER_DESC desc = {
-        // 2
-        .ByteWidth = sizeof(DirectX::XMFLOAT4X4) * 2,
-        .Usage = D3D11_USAGE_DEFAULT,
-        .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
-      };
-      HRESULT hr =
-        device_->CreateBuffer(&desc, nullptr, constant_buffer_.put());
-      assert(SUCCEEDED(hr));
-    };
+    constant_buffer_ = grapho::dx11::CreateConstantBuffer(
+      device_, sizeof(DirectX::XMFLOAT4X4) * 2, nullptr);
   }
 
   void Render(const float projection[16],
@@ -203,20 +140,6 @@ struct DxCubeStereoRendererImpl
     context->UpdateSubresource(
       instance_buffer_.get(), 0, &box, data, sizeof(Instance), 0);
 
-    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    context->IASetInputLayout(input_layout_.get());
-    ID3D11Buffer* vb[] = {
-      vertex_buffer_.get(),
-      instance_buffer_.get(),
-    };
-    uint32_t strides[] = {
-      sizeof(Vertex),
-      sizeof(Instance),
-    };
-    uint32_t offsets[] = { 0, 0 };
-    context->IASetVertexBuffers(0, std::size(vb), vb, strides, offsets);
-    context->IASetIndexBuffer(index_buffer_.get(), DXGI_FORMAT_R32_UINT, 0);
-
     // 2
     DirectX::XMFLOAT4X4 vp[2];
     {
@@ -236,8 +159,9 @@ struct DxCubeStereoRendererImpl
 
     ID3D11Buffer* cb[]{ constant_buffer_.get() };
     context->VSSetConstantBuffers(0, 1, cb);
+
     // 2
-    context->DrawIndexedInstanced(CUBE_INDEX_COUNT, instanceCount * 2, 0, 0, 0);
+    drawable_->DrawInstance(context, CUBE_INDEX_COUNT, instanceCount);
   }
 };
 

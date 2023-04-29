@@ -33,16 +33,6 @@ void main()
 }
 )";
 
-static uint32_t
-get_location(const std::shared_ptr<ShaderProgram>& shader, const char* name)
-{
-  auto location = shader->AttributeLocation(name);
-  if (!location) {
-    throw std::runtime_error("glGetUniformLocation");
-  }
-  return *location;
-}
-
 GlLineRenderer::GlLineRenderer()
 {
 
@@ -65,41 +55,39 @@ GlLineRenderer::GlLineRenderer()
     throw std::runtime_error(shader.error());
   }
 
-  // auto vpos_location = get_location(shader_, "vPos");
-  // auto vbarycentric_location = get_location(shader_, "vBarycentric");
-  // auto ipos_location = get_location(shader_, "iPos");
-  // auto irot_location = get_location(shader_, "iRot");
-
   vbo_ = Vbo::Create(sizeof(LineVertex) * 65535, nullptr);
   if (!vbo_) {
     throw std::runtime_error("grapho::gl3::Vbo::Create");
   }
 
+  VertexSlot slots[] = {
+    { vbo_ }, //
+  };
   grapho::VertexLayout layouts[] = {
       {
-          .id =
+          .Id =
               {
-                  .semantic_name = "vPos",
+                  .SemanticName = "vPos",
+                  .Slot = 0,
+                  .AttributeLocation = 0,
               },
-          .type = grapho::ValueType::Float,
-          .count = 3,
-          .offset = 0,
-          .stride = sizeof(LineVertex),
+          .Type = grapho::ValueType::Float,
+          .Count = 3,
+          .Offset = 0,
+          .Stride = sizeof(LineVertex),
       },
       {
-          .id =
+          .Id =
               {
-                  .semantic_name = "vColor",
+                  .SemanticName = "vColor",
+                  .Slot = 0,
+                  .AttributeLocation = 1,
               },
-          .type = grapho::ValueType::Float,
-          .count = 4,
-          .offset = offsetof(LineVertex, Color),
-          .stride = sizeof(LineVertex),
+          .Type = grapho::ValueType::Float,
+          .Count = 4,
+          .Offset = offsetof(LineVertex, Color),
+          .Stride = sizeof(LineVertex),
       },
-  };
-  VertexSlot slots[] = {
-    { 0, vbo_ }, //
-    { 1, vbo_ }, //
   };
 
   vao_ = Vao::Create(layouts, slots);

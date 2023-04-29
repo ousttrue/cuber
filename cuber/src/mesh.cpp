@@ -6,88 +6,102 @@ namespace cuber {
 
 static VertexLayout layouts[] = {
     {
-        .id =
+        .Id =
             {
-                .semantic_name = "POSITION",
-                .semantic_index = 0,
+                .SemanticName = "POSITION",
+                .SemanticIndex = 0,
+                .Slot= 0,
+                .AttributeLocation = 0,
             },
-        .type = ValueType::Float,
-        .count = 4,
-        .offset = offsetof(Vertex, Position),
-        .stride = sizeof(Vertex),
+        .Type = ValueType::Float,
+        .Count = 4,
+        .Offset = offsetof(Vertex, Position),
+        .Stride = sizeof(Vertex),
     },
     {
-        .id =
+        .Id =
             {
-                .semantic_name = "TEXCOORD",
-                .semantic_index = 0,
+                .SemanticName = "TEXCOORD",
+                .SemanticIndex = 0,
+                .Slot = 0,
+                .AttributeLocation = 1,
             },
-        .type = ValueType::Float,
-        .count = 4,
-        .offset = offsetof(Vertex, UvBarycentric),
-        .stride = sizeof(Vertex),
-    },
-    //
-    {
-        .id =
-            {
-                .semantic_name = "ROW",
-                .semantic_index = 0,
-            },
-        .type = ValueType::Float,
-        .count = 4,
-        .offset = offsetof(Instance, Row0),
-        .stride = sizeof(Instance),
-        .divisor = 1,
-    },
-    {
-        .id =
-            {
-                .semantic_name = "ROW",
-                .semantic_index = 1,
-            },
-        .type = ValueType::Float,
-        .count = 4,
-        .offset = offsetof(Instance, Row1),
-        .stride = sizeof(Instance),
-        .divisor = 1,
-    },
-    {
-        .id =
-            {
-                .semantic_name = "ROW",
-                .semantic_index = 2,
-            },
-        .type = ValueType::Float,
-        .count = 4,
-        .offset = offsetof(Instance, Row2),
-        .stride = sizeof(Instance),
-        .divisor = 1,
-    },
-    {
-        .id =
-            {
-                .semantic_name = "ROW",
-                .semantic_index = 3,
-            },
-        .type = ValueType::Float,
-        .count = 4,
-        .offset = offsetof(Instance, Row3),
-        .stride = sizeof(Instance),
-        .divisor = 1,
+        .Type = ValueType::Float,
+        .Count = 4,
+        .Offset = offsetof(Vertex, UvBarycentric),
+        .Stride = sizeof(Vertex),
     },
     //
     {
-        .id =
+        .Id =
             {
-                .semantic_name = "COLOR",
-                .semantic_index = 0,
+                .SemanticName = "ROW",
+                .SemanticIndex = 0,
+                .Slot = 1,
+                .AttributeLocation = 2,
             },
-        .type = ValueType::Float,
-        .count = 4,
-        .offset = offsetof(Instance, Color),
-        .stride = sizeof(Instance),
-        .divisor = 1,
+        .Type = ValueType::Float,
+        .Count = 4,
+        .Offset = offsetof(Instance, Row0),
+        .Stride = sizeof(Instance),
+        .Divisor = 1,
+    },
+    {
+        .Id =
+            {
+                .SemanticName = "ROW",
+                .SemanticIndex = 1,
+                .Slot = 1,
+                .AttributeLocation = 3,
+            },
+        .Type = ValueType::Float,
+        .Count = 4,
+        .Offset = offsetof(Instance, Row1),
+        .Stride = sizeof(Instance),
+        .Divisor = 1,
+    },
+    {
+        .Id =
+            {
+                .SemanticName = "ROW",
+                .SemanticIndex = 2,
+                .Slot = 1,
+                .AttributeLocation = 4,
+            },
+        .Type = ValueType::Float,
+        .Count = 4,
+        .Offset = offsetof(Instance, Row2),
+        .Stride = sizeof(Instance),
+        .Divisor = 1,
+    },
+    {
+        .Id =
+            {
+                .SemanticName = "ROW",
+                .SemanticIndex = 3,
+                .Slot = 1,
+                .AttributeLocation = 5,
+            },
+        .Type = ValueType::Float,
+        .Count = 4,
+        .Offset = offsetof(Instance, Row3),
+        .Stride = sizeof(Instance),
+        .Divisor = 1,
+    },
+    //
+    {
+        .Id =
+            {
+                .SemanticName = "COLOR",
+                .SemanticIndex = 0,
+                .Slot = 1,
+                .AttributeLocation = 6,
+            },
+        .Type = ValueType::Float,
+        .Count = 4,
+        .Offset = offsetof(Instance, Color),
+        .Stride = sizeof(Instance),
+        .Divisor = 1,
     },
 };
 
@@ -218,7 +232,7 @@ Cube(bool isCCW, bool isStereo)
 {
   Builder builder(isCCW);
   for (auto layout : layouts) {
-    layout.divisor *= (isStereo ? 2 : 1);
+    layout.Divisor *= (isStereo ? 2 : 1);
     builder.Mesh.Layouts.push_back(layout);
   }
   for (auto face : cube_faces) {

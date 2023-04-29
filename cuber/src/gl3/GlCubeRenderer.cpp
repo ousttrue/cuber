@@ -62,15 +62,6 @@ void main()
 }
 )";
 
-// static uint32_t get_location(const std::shared_ptr<ShaderProgram> &shader,
-//                              const char *name) {
-//   auto location = shader->AttributeLocation(name);
-//   if (!location) {
-//     throw std::runtime_error("glGetUniformLocation");
-//   }
-//   return *location;
-// }
-
 GlCubeRenderer::GlCubeRenderer()
 {
 
@@ -95,8 +86,7 @@ GlCubeRenderer::GlCubeRenderer()
 
   auto [vertices, indices, layouts] = Cube(true, false);
 
-  auto vbo =
-    Vbo::Create(sizeof(Vertex) * vertices.size(), vertices.data());
+  auto vbo = Vbo::Create(sizeof(Vertex) * vertices.size(), vertices.data());
   if (!vbo) {
     throw std::runtime_error("cuber::Vbo::Create");
   }
@@ -107,13 +97,8 @@ GlCubeRenderer::GlCubeRenderer()
   }
 
   VertexSlot slots[] = {
-    { 0, vbo },            //
-    { 1, vbo },            //
-    { 2, m_instance_vbo }, //
-    { 3, m_instance_vbo }, //
-    { 4, m_instance_vbo }, //
-    { 5, m_instance_vbo }, //
-    { 6, m_instance_vbo }, //
+    { vbo },            //
+    { m_instance_vbo }, //
   };
 
   auto ibo = Ibo::Create(
