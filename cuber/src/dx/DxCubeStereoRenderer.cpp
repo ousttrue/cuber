@@ -45,37 +45,37 @@ VSOutput vs_main(VSInput IN) {
   OUT.Pos = mul(mul(float4(IN.Pos.xyz, 1), transform(IN.Row0, IN.Row1, IN.Row2, IN.Row3)), ViewProjection[IN.instId % 2]);
   OUT.uv_barycentric = IN.uv_barycentric;
   OUT.viewId = IN.instId % 2;
-  if(IN.pos.w==0.0)
+  if(IN.Pos.w==0.0)
   {
     OUT.paletteFlagFlag = uint3(IN.positiveXyzFlag.x, 
       IN.positiveXyzFlag.w,
       IN.negativeXyzFlag.w);
   }
-  else if(IN.pos.w==1.0)
+  else if(IN.Pos.w==1.0)
   {
     OUT.paletteFlagFlag = uint3(IN.positiveXyzFlag.y, 
       IN.positiveXyzFlag.w,
       IN.negativeXyzFlag.w);
   }
-  else if(IN.pos.w==2.0)
+  else if(IN.Pos.w==2.0)
   {
     OUT.paletteFlagFlag = uint3(IN.positiveXyzFlag.z, 
       IN.positiveXyzFlag.w,
       IN.negativeXyzFlag.w);
   }
-  else if(IN.pos.w==3.0)
+  else if(IN.Pos.w==3.0)
   {
     OUT.paletteFlagFlag = uint3(IN.negativeXyzFlag.x, 
       IN.positiveXyzFlag.w,
       IN.negativeXyzFlag.w);
   }
-  else if(IN.pos.w==4.0)
+  else if(IN.Pos.w==4.0)
   {
     OUT.paletteFlagFlag = uint3(IN.negativeXyzFlag.y, 
       IN.positiveXyzFlag.w,
       IN.negativeXyzFlag.w);
   }
-  else if(IN.pos.w==5.0)
+  else if(IN.Pos.w==5.0)
   {
     OUT.paletteFlagFlag = uint3(IN.negativeXyzFlag.z, 
       IN.positiveXyzFlag.w,
@@ -85,7 +85,7 @@ VSOutput vs_main(VSInput IN) {
   return OUT;
 }
 
-cbuffer c0
+cbuffer Pallet: register(b1)
 {
   float4 colors[64];
   float4 textures[64];
@@ -145,7 +145,7 @@ struct DxCubeStereoRendererImpl
   std::shared_ptr<grapho::dx11::Drawable> drawable_;
   winrt::com_ptr<ID3D11Buffer> constant_buffer_;
 
-  Pallete pallete_;
+  Pallete pallete_ = {};
   winrt::com_ptr<ID3D11Buffer> pallete_buffer_;
 
   DxCubeStereoRendererImpl(const winrt::com_ptr<ID3D11Device>& device)
@@ -208,9 +208,6 @@ struct DxCubeStereoRendererImpl
     winrt::com_ptr<ID3D11DeviceContext> context;
     device_->GetImmediateContext(context.put());
 
-    context->VSSetShader(vertex_shader_.get(), NULL, 0);
-    context->PSSetShader(pixel_shader_.get(), NULL, 0);
-
     D3D11_BOX box{
       .left = 0,
       .top = 0,
@@ -239,13 +236,15 @@ struct DxCubeStereoRendererImpl
     }
     context->UpdateSubresource(constant_buffer_.get(), 0, NULL, vp, 0, 0);
 
+    context->VSSetShader(vertex_shader_.get(), NULL, 0);
+    context->PSSetShader(pixel_shader_.get(), NULL, 0);
     ID3D11Buffer* vscb[]{ constant_buffer_.get() };
     context->VSSetConstantBuffers(0, 1, vscb);
     ID3D11Buffer* pscb[]{ pallete_buffer_.get() };
-    context->PSSetConstantBuffers(0, 1, pscb);
+    context->PSSetConstantBuffers(1, 1, pscb);
 
     // 2
-    drawable_->DrawInstance(context, CUBE_INDEX_COUNT, instanceCount);
+    drawable_->DrawInstance(context, CUBE_INDEX_COUNT, instanceCount * 2);
   }
 };
 
