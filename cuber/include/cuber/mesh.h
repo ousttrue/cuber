@@ -23,12 +23,16 @@ struct Mesh
 Mesh
 Cube(bool isCCW, bool isStereo);
 
-struct byte4
+struct Pallete
 {
-  uint8_t x;
-  uint8_t y;
-  uint8_t z;
-  uint8_t w;
+  DirectX::XMFLOAT4 Colors[64]{
+    { 1, 0, 0, 1 }, { 0, 1, 0, 1 }, { 0, 0, 1, 1 },
+    { 0, 1, 1, 1 }, { 1, 0, 1, 1 }, { 1, 1, 0, 1 },
+  };
+  DirectX::XMFLOAT4 Textures[64]{
+    { -1, 0, 0, 0 }, { -1, 0, 0, 0 }, { -1, 0, 0, 0 },
+    { -1, 0, 0, 0 }, { -1, 0, 0, 0 }, { -1, 0, 0, 0 },
+  };
 };
 
 struct Instance

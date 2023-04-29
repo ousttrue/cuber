@@ -14,12 +14,6 @@ struct Ubo;
 
 namespace cuber::gl3 {
 
-struct Pallete
-{
-  DirectX::XMFLOAT4 Colors[64];
-  DirectX::XMFLOAT4 Textures[64];
-};
-
 class GlCubeRenderer
 {
   std::shared_ptr<grapho::gl3::Vao> m_vao;

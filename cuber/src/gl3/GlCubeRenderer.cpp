@@ -177,18 +177,6 @@ GlCubeRenderer::GlCubeRenderer()
     throw std::runtime_error("cuber::Vao::Create");
   }
 
-  m_pallete.Textures[0].x = -1;
-  m_pallete.Textures[1].x = -1;
-  m_pallete.Textures[2].x = -1;
-  m_pallete.Textures[3].x = -1;
-  m_pallete.Textures[4].x = -1;
-  m_pallete.Textures[5].x = -1;
-  m_pallete.Colors[0] = { 1, 0, 0, 1 };
-  m_pallete.Colors[1] = { 0, 1, 0, 1 };
-  m_pallete.Colors[2] = { 0, 0, 1, 1 };
-  m_pallete.Colors[3] = { 0, 1, 1, 1 };
-  m_pallete.Colors[4] = { 1, 0, 1, 1 };
-  m_pallete.Colors[5] = { 1, 1, 0, 1 };
   m_ubo = Ubo::Create(sizeof(m_pallete), &m_pallete);
 }
 
