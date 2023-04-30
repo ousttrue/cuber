@@ -15,6 +15,12 @@ DxCubeRenderer::~DxCubeRenderer()
 }
 
 void
+DxCubeRenderer::UploadPallete()
+{
+  m_impl->UploadPallete(Pallete);
+}
+
+void
 DxCubeRenderer::Render(const float projection[16],
                        const float view[16],
                        const Instance* data,

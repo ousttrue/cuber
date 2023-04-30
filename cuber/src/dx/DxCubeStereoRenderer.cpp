@@ -14,6 +14,13 @@ DxCubeStereoRenderer::~DxCubeStereoRenderer()
 {
   delete impl_;
 }
+
+void
+DxCubeStereoRenderer::UploadPallete()
+{
+  impl_->UploadPallete(Pallete);
+}
+
 void
 DxCubeStereoRenderer::Render(const float projection[16],
                              const float view[16],

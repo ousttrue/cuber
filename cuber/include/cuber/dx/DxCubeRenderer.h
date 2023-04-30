@@ -20,6 +20,7 @@ public:
 
   DxCubeRenderer(const winrt::com_ptr<ID3D11Device>& device);
   ~DxCubeRenderer();
+  void UploadPallete();
   void Render(const float projection[16],
               const float view[16],
               const Instance* data,

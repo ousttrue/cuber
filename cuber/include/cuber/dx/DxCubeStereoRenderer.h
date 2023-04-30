@@ -19,6 +19,7 @@ public:
   DxCubeStereoRenderer& operator=(const DxCubeStereoRenderer&) = delete;
   DxCubeStereoRenderer(const winrt::com_ptr<ID3D11Device>& device);
   ~DxCubeStereoRenderer();
+  void UploadPallete();
   void Render(const float projection[16],
               const float view[16],
               const float rightProjection[16],
