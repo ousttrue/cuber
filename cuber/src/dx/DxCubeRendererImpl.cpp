@@ -14,6 +14,8 @@ DxCubeRendererImpl::DxCubeRendererImpl(
   : device_(device)
   , stereo_(stereo)
 {
+  device_->GetImmediateContext(context_.put());
+
   std::string_view shader = stereo_ ? STEREO_SHADER : SHADER;
   auto vs = grapho::dx11::CompileShader(shader, "vs_main", "vs_5_0");
   if (!vs) {
@@ -56,62 +58,46 @@ DxCubeRendererImpl::DxCubeRendererImpl(
   assert(constant_buffer_);
 
   pallete_buffer_ =
-    grapho::dx11::CreateConstantBuffer(device_, sizeof(pallete_), &pallete_);
+    grapho::dx11::CreateConstantBuffer(device_, sizeof(Pallete), nullptr);
   assert(pallete_buffer_);
 }
 
 void
-DxCubeRendererImpl::Render(const float projection[16],
-                           const float view[16],
-                           const void* data,
-                           uint32_t instanceCount)
+DxCubeRendererImpl::UploadPallete(const Pallete& pallete)
 {
-  if (instanceCount == 0) {
-    return;
-  }
-  winrt::com_ptr<ID3D11DeviceContext> context;
-  device_->GetImmediateContext(context.put());
-
-  D3D11_BOX box{
-    .left = 0,
-    .top = 0,
-    .front = 0,
-    .right = static_cast<uint32_t>(sizeof(cuber::Instance) * instanceCount),
-    .bottom = 1,
-    .back = 1,
-  };
-  context->UpdateSubresource(
-    instance_buffer_.get(), 0, &box, data, sizeof(Instance), 0);
-
-  auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)view);
-  auto p = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)projection);
-  DirectX::XMFLOAT4X4 vp;
-  DirectX::XMStoreFloat4x4(&vp, v * p);
-  context->UpdateSubresource(constant_buffer_.get(), 0, NULL, &vp, 0, 0);
-
-  context->VSSetShader(vertex_shader_.get(), NULL, 0);
-  context->PSSetShader(pixel_shader_.get(), NULL, 0);
-  ID3D11Buffer* vscb[]{ constant_buffer_.get() };
-  context->VSSetConstantBuffers(0, 1, vscb);
-  ID3D11Buffer* pscb[]{ pallete_buffer_.get() };
-  context->PSSetConstantBuffers(0, 1, pscb);
-
-  drawable_->DrawInstance(context, CUBE_INDEX_COUNT, instanceCount);
+  context_->UpdateSubresource(pallete_buffer_.get(), 0, NULL, &pallete, 0, 0);
 }
 
 void
-DxCubeRendererImpl::Render(const float projection[16],
-                           const float view[16],
-                           const float rightProjection[16],
-                           const float rightView[16],
-                           const Instance* data,
-                           uint32_t instanceCount)
+DxCubeRendererImpl::UploadView(const float projection[16],
+                               const float view[16],
+                               const float rightProjection[16],
+                               const float rightView[16])
+{
+  // 2
+  DirectX::XMFLOAT4X4 vp[2];
+  {
+    // left
+    auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)view);
+    auto p = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)projection);
+    DirectX::XMStoreFloat4x4(&vp[0], v * p);
+  }
+  if (stereo_ && rightProjection && rightView) {
+    // right
+    auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)rightView);
+    auto p =
+      DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)rightProjection);
+    DirectX::XMStoreFloat4x4(&vp[1], v * p);
+  }
+  context_->UpdateSubresource(constant_buffer_.get(), 0, NULL, vp, 0, 0);
+}
+
+void
+DxCubeRendererImpl::UploadInstance(const void* data, uint32_t instanceCount)
 {
   if (instanceCount == 0) {
     return;
   }
-  winrt::com_ptr<ID3D11DeviceContext> context;
-  device_->GetImmediateContext(context.put());
 
   D3D11_BOX box{
     .left = 0,
@@ -121,35 +107,23 @@ DxCubeRendererImpl::Render(const float projection[16],
     .bottom = 1,
     .back = 1,
   };
-  context->UpdateSubresource(
+  context_->UpdateSubresource(
     instance_buffer_.get(), 0, &box, data, sizeof(Instance), 0);
+}
 
-  // 2
-  DirectX::XMFLOAT4X4 vp[2];
-  {
-    // left
-    auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)view);
-    auto p = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)projection);
-    DirectX::XMStoreFloat4x4(&vp[0], v * p);
-  }
-  {
-    // right
-    auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)rightView);
-    auto p =
-      DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)rightProjection);
-    DirectX::XMStoreFloat4x4(&vp[1], v * p);
-  }
-  context->UpdateSubresource(constant_buffer_.get(), 0, NULL, vp, 0, 0);
-
-  context->VSSetShader(vertex_shader_.get(), NULL, 0);
-  context->PSSetShader(pixel_shader_.get(), NULL, 0);
+void
+DxCubeRendererImpl::Render(uint32_t instanceCount)
+{
+  context_->VSSetShader(vertex_shader_.get(), NULL, 0);
+  context_->PSSetShader(pixel_shader_.get(), NULL, 0);
   ID3D11Buffer* vscb[]{ constant_buffer_.get() };
-  context->VSSetConstantBuffers(0, 1, vscb);
+  context_->VSSetConstantBuffers(0, 1, vscb);
   ID3D11Buffer* pscb[]{ pallete_buffer_.get() };
-  context->PSSetConstantBuffers(1, 1, pscb);
+  context_->PSSetConstantBuffers(1, 1, pscb);
 
   // 2
-  drawable_->DrawInstance(context, CUBE_INDEX_COUNT, instanceCount * 2);
+  drawable_->DrawInstance(
+    context_, CUBE_INDEX_COUNT, instanceCount * (stereo_ ? 2 : 1));
 }
 
 }

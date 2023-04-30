@@ -14,6 +14,7 @@ class DxCubeStereoRenderer
   struct DxCubeRendererImpl* impl_ = nullptr;
 
 public:
+  Pallete Pallete = {};
   DxCubeStereoRenderer(const DxCubeStereoRenderer&) = delete;
   DxCubeStereoRenderer& operator=(const DxCubeStereoRenderer&) = delete;
   DxCubeStereoRenderer(const winrt::com_ptr<ID3D11Device>& device);
