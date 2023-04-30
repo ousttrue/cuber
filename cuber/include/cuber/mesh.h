@@ -43,7 +43,7 @@ struct Pallete
   static constexpr DirectX::XMFLOAT4 DarkGreen = { 0, 0.5f, 0, 0 };
   static constexpr DirectX::XMFLOAT4 DarkBlue = { 0, 0, 0.5f, 0 };
   static constexpr DirectX::XMFLOAT4 Magenta = { 1, 0, 1, 0 };
-  static constexpr DirectX::XMFLOAT4 WHITE{ 0.8f, 0.8f, 0.9f, 1 };
+  static constexpr DirectX::XMFLOAT4 White{ 0.8f, 0.8f, 0.9f, 1 };
 
   DirectX::XMFLOAT4 Colors[64]{
     // error
@@ -58,14 +58,14 @@ struct Pallete
   };
   DirectX::XMFLOAT4 Textures[64]{
     // error
-    { 0, 0, 0, 0 },
+    { -1, -1, -1, -1 },
     // no texture
-    { -1, 0, 0, 0 },
-    { -1, 0, 0, 0 },
-    { -1, 0, 0, 0 },
-    { -1, 0, 0, 0 },
-    { -1, 0, 0, 0 },
-    { -1, 0, 0, 0 },
+    { -1, -1, -1, -1 },
+    { -1, -1, -1, -1 },
+    { -1, -1, -1, -1 },
+    { -1, -1, -1, -1 },
+    { -1, -1, -1, -1 },
+    { -1, -1, -1, -1 },
   };
 };
 

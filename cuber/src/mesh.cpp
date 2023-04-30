@@ -147,6 +147,7 @@ DirectX::XMFLOAT3 positions[8] = {
 struct Face
 {
   int Indices[4];
+  DirectX::XMFLOAT2 Uv[4];
 };
 
 // CCW
@@ -154,26 +155,32 @@ Face cube_faces[6] = {
   // x+
   {
     .Indices = { 2, 1, 0, 3 },
+    .Uv = { { 1, 0 }, { 1, 1 }, { 2, 1 }, { 2, 0 } },
   },
   // y+
   {
     .Indices = { 2, 3, 7, 6 },
+    .Uv = { { 1, 0 }, { 1, -1 }, { 0, -1 }, { 0, 0 } },
   },
   // z+
   {
     .Indices = { 2, 6, 5, 1 },
+    .Uv = { { 1, 0 }, { 0, 0 }, { 0, 1 }, { 1, 1 } },
   },
   // x-
   {
     .Indices = { 4, 5, 6, 7 },
+    .Uv = { { -1, 1 }, { 0, 1 }, { 0, 0 }, { -1, 0 } },
   },
   // y-
   {
     .Indices = { 4, 0, 1, 5 },
+    .Uv = { { 0, 2 }, { 1, 2 }, { 1, 1 }, { 0, 1 } },
   },
   // z-
   {
     .Indices = { 4, 7, 3, 0 },
+    .Uv = { { 0, 1 }, { 0, 0 }, { 1, 0 }, { 1, 1 } },
   },
 };
 
@@ -188,9 +195,13 @@ struct Builder
 
   void Quad(int face,
             const DirectX::XMFLOAT3& p0,
+            const DirectX::XMFLOAT2& uv0,
             const DirectX::XMFLOAT3& p1,
+            const DirectX::XMFLOAT2& uv1,
             const DirectX::XMFLOAT3& p2,
-            const DirectX::XMFLOAT3& p3)
+            const DirectX::XMFLOAT2& uv2,
+            const DirectX::XMFLOAT3& p3,
+            const DirectX::XMFLOAT2& uv3)
   {
     // 01   00
     //  3+-+2
@@ -199,19 +210,19 @@ struct Builder
     // 00   10
     Vertex v0{
       .PositionFace = { p0.x, p0.y, p0.z, (float)face },
-      .UvBarycentric = { 0, 1, 1, 0 },
+      .UvBarycentric = { uv0.x, uv0.y, 1, 0 },
     };
     Vertex v1{
       .PositionFace = { p1.x, p1.y, p1.z, (float)face },
-      .UvBarycentric = { 1, 1, 0, 0 },
+      .UvBarycentric = { uv1.x, uv1.y, 0, 0 },
     };
     Vertex v2{
       .PositionFace = { p2.x, p2.y, p2.z, (float)face },
-      .UvBarycentric = { 1, 0, 0, 1 },
+      .UvBarycentric = { uv2.x, uv2.y, 0, 1 },
     };
     Vertex v3{
       .PositionFace = { p3.x, p3.y, p3.z, (float)face },
-      .UvBarycentric = { 0, 0, 0, 0 },
+      .UvBarycentric = { uv3.x, uv3.y, 0, 0 },
     };
     auto index = Mesh.Vertices.size();
     Mesh.Vertices.push_back(v0);
@@ -252,9 +263,13 @@ Cube(bool isCCW, bool isStereo)
   for (auto face : cube_faces) {
     builder.Quad(f++,
                  positions[face.Indices[0]],
+                 face.Uv[0],
                  positions[face.Indices[1]],
+                 face.Uv[1],
                  positions[face.Indices[2]],
-                 positions[face.Indices[3]]);
+                 face.Uv[2],
+                 positions[face.Indices[3]],
+                 face.Uv[3]);
   }
   return builder.Mesh;
 }
@@ -267,19 +282,19 @@ PushGrid(std::vector<LineVertex>& lines, float interval, int half_count)
     if (i) {
       lines.push_back({
         .Position = { -half, 0, static_cast<float>(i) },
-        .Color = Pallete::WHITE,
+        .Color = Pallete::White,
       });
       lines.push_back({
         .Position = { half, 0, static_cast<float>(i) },
-        .Color = Pallete::WHITE,
+        .Color = Pallete::White,
       });
       lines.push_back({
         .Position = { static_cast<float>(i), 0, -half },
-        .Color = Pallete::WHITE,
+        .Color = Pallete::White,
       });
       lines.push_back({
         .Position = { static_cast<float>(i), 0, half },
-        .Color = Pallete::WHITE,
+        .Color = Pallete::White,
       });
     }
   }

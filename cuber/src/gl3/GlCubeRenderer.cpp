@@ -91,9 +91,9 @@ layout (std140) uniform palette {
   vec4 textures[64];
 } Palette;
 
+uniform sampler2D sampler0;
 uniform sampler2D sampler1;
 uniform sampler2D sampler2;
-uniform sampler2D sampler3;
 
 // https://github.com/rreusser/glsl-solid-wireframe
 float grid (vec2 vBC, float width) {
@@ -108,17 +108,17 @@ void main()
     vec4 border = vec4(vec3(grid(oUvBarycentric.zw, 1.0)), 1);
     vec4 color = Palette.colors[o_Palette_Flag_Flag.x];
     vec4 texel;
-    if(Palette.textures[o_Palette_Flag_Flag.x]==1.0)
+    if(Palette.textures[o_Palette_Flag_Flag.x]==0.0)
+    {
+      texel = texture(sampler0, oUvBarycentric.xy);
+    }
+    else if(Palette.textures[o_Palette_Flag_Flag.x]==1.0)
     {
       texel = texture(sampler1, oUvBarycentric.xy);
     }
     else if(Palette.textures[o_Palette_Flag_Flag.x]==2.0)
     {
       texel = texture(sampler2, oUvBarycentric.xy);
-    }
-    else if(Palette.textures[o_Palette_Flag_Flag.x]==3.0)
-    {
-      texel = texture(sampler3, oUvBarycentric.xy);
     }
     else{
       texel=vec4(1, 1, 1, 1);
@@ -177,10 +177,16 @@ GlCubeRenderer::GlCubeRenderer()
     throw std::runtime_error("cuber::Vao::Create");
   }
 
-  m_ubo = Ubo::Create(sizeof(m_pallete), &m_pallete);
+  m_ubo = Ubo::Create(sizeof(Pallete), &Pallete);
 }
 
 GlCubeRenderer::~GlCubeRenderer() {}
+
+void
+GlCubeRenderer::UploadPallete()
+{
+  m_ubo->Upload(Pallete);
+}
 
 void
 GlCubeRenderer::Render(const float projection[16],
