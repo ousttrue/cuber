@@ -9,12 +9,9 @@ struct ID3D11Device;
 
 namespace cuber::dx11 {
 
-template<typename T>
-concept Float16 = sizeof(T) == sizeof(float) * 16;
-
 class DxCubeStereoRenderer
 {
-  struct DxCubeStereoRendererImpl* impl_ = nullptr;
+  struct DxCubeRendererImpl* impl_ = nullptr;
 
 public:
   DxCubeStereoRenderer(const DxCubeStereoRenderer&) = delete;

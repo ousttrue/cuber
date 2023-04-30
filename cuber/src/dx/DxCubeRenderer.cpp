@@ -3,8 +3,9 @@
 
 namespace cuber::dx11 {
 
-DxCubeRenderer::DxCubeRenderer(const winrt::com_ptr<ID3D11Device>& device)
-  : m_impl(new DxCubeRendererImpl(device))
+DxCubeRenderer::DxCubeRenderer(const winrt::com_ptr<ID3D11Device>& device,
+                               bool stereo)
+  : m_impl(new DxCubeRendererImpl(device, stereo))
 {
 }
 DxCubeRenderer::~DxCubeRenderer()

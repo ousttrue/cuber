@@ -1,4 +1,4 @@
-static auto SHADER = R"(
+static auto STEREO_SHADER = R"(
 #pragma pack_matrix(row_major)
 
 cbuffer ViewProjectionConstantBuffer : register(b0) {
