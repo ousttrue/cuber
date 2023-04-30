@@ -81,6 +81,12 @@ VSOutput vs_main(VSInput IN) {
       IN.positiveXyzFlag.w,
       IN.negativeXyzFlag.w);
   }
+  else
+  {
+    OUT.paletteFlagFlag = uint3(0, 
+      IN.positiveXyzFlag.w,
+      IN.negativeXyzFlag.w);
+  }
 
   return OUT;
 }
@@ -90,8 +96,6 @@ cbuffer Pallet: register(b1)
   float4 colors[64];
   float4 textures[64];
 };
-Texture2D texture0;
-SamplerState sampler0;
 Texture2D texture1;
 SamplerState sampler1;
 Texture2D texture2;
@@ -111,11 +115,7 @@ float4 ps_main(VSOutput IN) : SV_TARGET {
   float4 border = float4(value, value, value, 1.0);
   float4 color = colors[IN.paletteFlagFlag.x];
   float4 texel;
-  if(textures[IN.paletteFlagFlag.x].x==0.0)
-  {
-    texel = texture0.Sample(sampler0, IN.uv_barycentric.xy);
-  }
-  else if(textures[IN.paletteFlagFlag.x].x==1.0)
+  if(textures[IN.paletteFlagFlag.x].x==1.0)
   {
     texel = texture1.Sample(sampler1, IN.uv_barycentric.xy);
   }
