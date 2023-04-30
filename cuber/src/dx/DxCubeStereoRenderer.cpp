@@ -5,7 +5,7 @@
 #include <grapho/dx11/buffer.h>
 #include <grapho/dx11/drawable.h>
 #include <grapho/dx11/shader.h>
-#include "stereo_shader.h"
+#include "cuber_stereo_shader.h"
 
 namespace cuber::dx11 {
 struct DxCubeStereoRendererImpl
