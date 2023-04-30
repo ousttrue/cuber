@@ -170,9 +170,7 @@ struct BvhPanelImpl
       std::lock_guard<std::mutex> lock(m_mutex);
       m_instances.resize(instances.size());
       for (size_t i = 0; i < m_instances.size(); ++i) {
-        m_instances[i].Matrix = instances[i];
-        m_instances[i].PositiveFaceFlag = { 0, 1, 2, 0 };
-        m_instances[i].NegativeFaceFlag = { 3, 4, 5, 0 };
+        m_instances[i] = { .Matrix = instances[i] };
       }
     }
   }

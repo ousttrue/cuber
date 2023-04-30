@@ -121,22 +121,22 @@ static VertexLayout layouts[] = {
 
 const float s = 0.5f;
 DirectX::XMFLOAT3 positions[8] = {
+  { +s, -s, -s }, //
+  { +s, -s, +s }, //
+  { +s, +s, +s }, //
+  { +s, +s, -s }, //
+  { -s, -s, -s }, //
   { -s, -s, +s }, //
   { -s, +s, +s }, //
-  { +s, +s, +s }, //
-  { +s, -s, +s }, //
-  { -s, -s, -s }, //
   { -s, +s, -s }, //
-  { +s, +s, -s }, //
-  { +s, -s, -s }, //
 };
 
-//   5+-+6
+//   7+-+3
 //   / /|
-// 1+-+2|
-//  |4+-+7
+// 6+-+2|
+//  |4+-+0
 //  |/ /
-// 0+-+3
+// 5+-+1
 //
 //   Y
 //   A
@@ -147,34 +147,33 @@ DirectX::XMFLOAT3 positions[8] = {
 struct Face
 {
   int Indices[4];
-  DirectX::XMFLOAT4 Color;
 };
 
 // CCW
 Face cube_faces[6] = {
+  // x+
   {
-    .Indices = { 0, 3, 2, 1 },
-    .Color = { 1, 0, 0, 1 },
+    .Indices = { 2, 1, 0, 3 },
   },
+  // y+
   {
-    .Indices = { 3, 7, 6, 2 },
-    .Color = { 0, 1, 0, 1 },
+    .Indices = { 2, 3, 7, 6 },
   },
+  // z+
   {
-    .Indices = { 7, 4, 5, 6 },
-    .Color = { 0, 0, 1, 1 },
+    .Indices = { 2, 6, 5, 1 },
   },
+  // x-
+  {
+    .Indices = { 4, 5, 6, 7 },
+  },
+  // y-
   {
     .Indices = { 4, 0, 1, 5 },
-    .Color = { 0, 1, 1, 1 },
   },
+  // z-
   {
-    .Indices = { 1, 2, 6, 5 },
-    .Color = { 1, 0, 1, 1 },
-  },
-  {
-    .Indices = { 3, 0, 4, 7 },
-    .Color = { 1, 1, 0, 1 },
+    .Indices = { 4, 7, 3, 0 },
   },
 };
 
@@ -191,8 +190,7 @@ struct Builder
             const DirectX::XMFLOAT3& p0,
             const DirectX::XMFLOAT3& p1,
             const DirectX::XMFLOAT3& p2,
-            const DirectX::XMFLOAT3& p3,
-            const DirectX::XMFLOAT4& color)
+            const DirectX::XMFLOAT3& p3)
   {
     // 01   00
     //  3+-+2
@@ -256,17 +254,10 @@ Cube(bool isCCW, bool isStereo)
                  positions[face.Indices[0]],
                  positions[face.Indices[1]],
                  positions[face.Indices[2]],
-                 positions[face.Indices[3]],
-                 face.Color);
+                 positions[face.Indices[3]]);
   }
   return builder.Mesh;
 }
-
-DirectX::XMFLOAT4 RED{ 0.8f, 0.2f, 0, 1 };
-DirectX::XMFLOAT4 DARK_RED{ 0.4f, 0, 0, 1 };
-DirectX::XMFLOAT4 BLUE{ 0, 0.4f, 0.8f, 1 };
-DirectX::XMFLOAT4 DARK_BLUE{ 0, 0, 0.4f, 1 };
-DirectX::XMFLOAT4 WHITE{ 0.8f, 0.8f, 0.9f, 1 };
 
 void
 PushGrid(std::vector<LineVertex>& lines, float interval, int half_count)
@@ -276,55 +267,55 @@ PushGrid(std::vector<LineVertex>& lines, float interval, int half_count)
     if (i) {
       lines.push_back({
         .Position = { -half, 0, static_cast<float>(i) },
-        .Color = WHITE,
+        .Color = Pallete::WHITE,
       });
       lines.push_back({
         .Position = { half, 0, static_cast<float>(i) },
-        .Color = WHITE,
+        .Color = Pallete::WHITE,
       });
       lines.push_back({
         .Position = { static_cast<float>(i), 0, -half },
-        .Color = WHITE,
+        .Color = Pallete::WHITE,
       });
       lines.push_back({
         .Position = { static_cast<float>(i), 0, half },
-        .Color = WHITE,
+        .Color = Pallete::WHITE,
       });
     }
   }
 
   lines.push_back({
     .Position = { half, 0, 0 },
-    .Color = RED,
+    .Color = Pallete::Red,
   });
   lines.push_back({
     .Position = { 0, 0, 0 },
-    .Color = RED,
+    .Color = Pallete::Red,
   });
   lines.push_back({
     .Position = { -half, 0, 0 },
-    .Color = DARK_RED,
+    .Color = Pallete::DarkRed,
   });
   lines.push_back({
     .Position = { 0, 0, 0 },
-    .Color = DARK_RED,
+    .Color = Pallete::DarkRed,
   });
 
   lines.push_back({
     .Position = { 0, 0, half },
-    .Color = BLUE,
+    .Color = Pallete::Blue,
   });
   lines.push_back({
     .Position = { 0, 0, 0 },
-    .Color = BLUE,
+    .Color = Pallete::Blue,
   });
   lines.push_back({
     .Position = { 0, 0, -half },
-    .Color = DARK_BLUE,
+    .Color = Pallete::DarkBlue,
   });
   lines.push_back({
     .Position = { 0, 0, 0 },
-    .Color = DARK_BLUE,
+    .Color = Pallete::DarkBlue,
   });
 }
 

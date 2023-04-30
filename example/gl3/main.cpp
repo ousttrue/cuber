@@ -46,10 +46,7 @@ main(int argc, char** argv)
 
   // texture
   std::vector<cuber::Instance> instances;
-  instances.push_back({
-    .PositiveFaceFlag = { 0, 1, 2, 0 },
-    .NegativeFaceFlag = { 3, 4, 2, 0 },
-  });
+  instances.push_back({});
   auto t = DirectX::XMMatrixTranslation(0, 1, -1);
   auto s = DirectX::XMMatrixScaling(1.6f, 0.9f, 0.1f);
   DirectX::XMStoreFloat4x4(&instances.back().Matrix, s * t);

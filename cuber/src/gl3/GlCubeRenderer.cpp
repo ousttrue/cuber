@@ -74,6 +74,11 @@ void main()
         iPositive_xyz_flag.w,
         iNegative_xyz_flag.w);
     }
+    else{
+      o_Palette_Flag_Flag = uvec3(0, 
+        iPositive_xyz_flag.w,
+        iNegative_xyz_flag.w);
+    }
 }
 )";
 
@@ -86,7 +91,6 @@ layout (std140) uniform palette {
   vec4 textures[64];
 } Palette;
 
-uniform sampler2D sampler0;
 uniform sampler2D sampler1;
 uniform sampler2D sampler2;
 uniform sampler2D sampler3;
@@ -104,11 +108,7 @@ void main()
     vec4 border = vec4(vec3(grid(oUvBarycentric.zw, 1.0)), 1);
     vec4 color = Palette.colors[o_Palette_Flag_Flag.x];
     vec4 texel;
-    if(Palette.textures[o_Palette_Flag_Flag.x]==0.0)
-    {
-      texel = texture(sampler0, oUvBarycentric.xy);
-    }
-    else if(Palette.textures[o_Palette_Flag_Flag.x]==1.0)
+    if(Palette.textures[o_Palette_Flag_Flag.x]==1.0)
     {
       texel = texture(sampler1, oUvBarycentric.xy);
     }

@@ -23,15 +23,49 @@ struct Mesh
 Mesh
 Cube(bool isCCW, bool isStereo);
 
+enum class ColorName : uint8_t
+{
+  Error, // magenta
+  Red,
+  Green,
+  Blue,
+  DarkRed,
+  DarkGreen,
+  DarkBlue,
+};
+
 struct Pallete
 {
+  static constexpr DirectX::XMFLOAT4 Red = { 1, 0, 0, 1 };
+  static constexpr DirectX::XMFLOAT4 Green = { 0, 1, 0, 1 };
+  static constexpr DirectX::XMFLOAT4 Blue = { 0, 0, 1, 1 };
+  static constexpr DirectX::XMFLOAT4 DarkRed = { 0.5f, 0, 0, 0 };
+  static constexpr DirectX::XMFLOAT4 DarkGreen = { 0, 0.5f, 0, 0 };
+  static constexpr DirectX::XMFLOAT4 DarkBlue = { 0, 0, 0.5f, 0 };
+  static constexpr DirectX::XMFLOAT4 Magenta = { 1, 0, 1, 0 };
+  static constexpr DirectX::XMFLOAT4 WHITE{ 0.8f, 0.8f, 0.9f, 1 };
+
   DirectX::XMFLOAT4 Colors[64]{
-    { 1, 0, 0, 1 }, { 0, 1, 0, 1 }, { 0, 0, 1, 1 },
-    { 0, 1, 1, 1 }, { 1, 0, 1, 1 }, { 1, 1, 0, 1 },
+    // error
+    Magenta,
+    //
+    Red,
+    Green,
+    Blue,
+    DarkRed,
+    DarkGreen,
+    DarkBlue,
   };
   DirectX::XMFLOAT4 Textures[64]{
-    { -1, 0, 0, 0 }, { -1, 0, 0, 0 }, { -1, 0, 0, 0 },
-    { -1, 0, 0, 0 }, { -1, 0, 0, 0 }, { -1, 0, 0, 0 },
+    // error
+    { 0, 0, 0, 0 },
+    // no texture
+    { -1, 0, 0, 0 },
+    { -1, 0, 0, 0 },
+    { -1, 0, 0, 0 },
+    { -1, 0, 0, 0 },
+    { -1, 0, 0, 0 },
+    { -1, 0, 0, 0 },
   };
 };
 
@@ -48,8 +82,8 @@ struct Instance
     };
     DirectX::XMFLOAT4X4 Matrix;
   };
-  DirectX::XMFLOAT4 PositiveFaceFlag;
-  DirectX::XMFLOAT4 NegativeFaceFlag;
+  DirectX::XMFLOAT4 PositiveFaceFlag = { 1, 2, 3, 0 };
+  DirectX::XMFLOAT4 NegativeFaceFlag = { 4, 5, 6, 0 };
 };
 
 struct LineVertex
