@@ -207,9 +207,6 @@ struct DxCubeRendererImpl
     winrt::com_ptr<ID3D11DeviceContext> context;
     device_->GetImmediateContext(context.put());
 
-    context->VSSetShader(vertex_shader_.get(), NULL, 0);
-    context->PSSetShader(pixel_shader_.get(), NULL, 0);
-
     D3D11_BOX box{
       .left = 0,
       .top = 0,
@@ -227,6 +224,8 @@ struct DxCubeRendererImpl
     DirectX::XMStoreFloat4x4(&vp, v * p);
     context->UpdateSubresource(constant_buffer_.get(), 0, NULL, &vp, 0, 0);
 
+    context->VSSetShader(vertex_shader_.get(), NULL, 0);
+    context->PSSetShader(pixel_shader_.get(), NULL, 0);
     ID3D11Buffer* vscb[]{ constant_buffer_.get() };
     context->VSSetConstantBuffers(0, 1, vscb);
     ID3D11Buffer* pscb[]{ pallete_buffer_.get() };
