@@ -87,8 +87,8 @@ in vec4 oUvBarycentric;
 flat in uvec3 o_Palette_Flag_Flag;
 out vec4 FragColor;
 layout (std140) uniform palette { 
-  vec4 colors[64];
-  vec4 textures[64];
+  vec4 colors[32];
+  vec4 textures[32];
 } Palette;
 
 uniform sampler2D sampler0;
@@ -106,22 +106,23 @@ float grid (vec2 vBC, float width) {
 void main()
 {
     vec4 border = vec4(vec3(grid(oUvBarycentric.zw, 1.0)), 1);
-    vec4 color = Palette.colors[o_Palette_Flag_Flag.x];
+    uint index = o_Palette_Flag_Flag.x;
+    vec4 color = Palette.colors[index];
     vec4 texel;
-    if(Palette.textures[o_Palette_Flag_Flag.x]==0.0)
+    if(Palette.textures[index].x==0.0)
     {
       texel = texture(sampler0, oUvBarycentric.xy);
     }
-    else if(Palette.textures[o_Palette_Flag_Flag.x]==1.0)
+    else if(Palette.textures[index].x==1.0)
     {
       texel = texture(sampler1, oUvBarycentric.xy);
     }
-    else if(Palette.textures[o_Palette_Flag_Flag.x]==2.0)
+    else if(Palette.textures[index].x==2.0)
     {
       texel = texture(sampler2, oUvBarycentric.xy);
     }
     else{
-      texel=vec4(1, 1, 1, 1);
+      texel = vec4(1, 1, 1, 1);
     }
     FragColor = texel * color * border;
 }

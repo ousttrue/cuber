@@ -85,8 +85,8 @@ VSOutput vs_main(VSInput IN) {
 
 cbuffer Pallet: register(b1)
 {
-  float4 colors[64];
-  float4 textures[64];
+  float4 colors[32];
+  float4 textures[32];
 };
 Texture2D texture0;
 SamplerState sampler0;

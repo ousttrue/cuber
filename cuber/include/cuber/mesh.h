@@ -45,7 +45,7 @@ struct Pallete
   static constexpr DirectX::XMFLOAT4 Magenta = { 1, 0, 1, 1 };
   static constexpr DirectX::XMFLOAT4 White{ 0.8f, 0.8f, 0.9f, 1 };
 
-  DirectX::XMFLOAT4 Colors[16]{
+  DirectX::XMFLOAT4 Colors[32]{
     // error
     Magenta,
     //
@@ -56,7 +56,7 @@ struct Pallete
     DarkGreen,
     DarkBlue,
   };
-  DirectX::XMFLOAT4 Textures[16]{
+  DirectX::XMFLOAT4 Textures[32]{
     // error
     { -1, -1, -1, -1 },
     // no texture
@@ -68,7 +68,7 @@ struct Pallete
     { -1, -1, -1, -1 },
   };
 };
-static_assert(sizeof(Pallete)==512, "Pallete");
+static_assert(sizeof(Pallete)==1024, "Pallete");
 
 struct Instance
 {
