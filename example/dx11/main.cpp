@@ -37,6 +37,15 @@ main(int argc, char** argv)
   // renderer
   auto device = platform.GetDevice();
   cuber::dx11::DxCubeRenderer cubeRenderer(device);
+  // pallete
+  const auto PalleteIndex = 7;
+  const auto TextureBind = 0;
+  cubeRenderer.Pallete.Colors[PalleteIndex] = { 1, 1, 1, 1 };
+  cubeRenderer.Pallete.Textures[PalleteIndex] = {
+    TextureBind, TextureBind, TextureBind, 0
+  };
+  cubeRenderer.UploadPallete();
+
   cuber::dx11::DxLineRenderer lineRenderer(device);
   std::vector<cuber::LineVertex> lines;
   cuber::PushGrid(lines);

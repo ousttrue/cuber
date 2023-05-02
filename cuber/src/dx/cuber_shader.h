@@ -1,6 +1,9 @@
 static auto SHADER = R"(
 #pragma pack_matrix(row_major)
+cbuffer c0 : register(b0)
+{
 float4x4 VP;
+};
 struct vs_in {
     float4 pos: POSITION;
     float4 uv_barycentric: TEXCOORD;
@@ -77,17 +80,17 @@ vs_out vs_main(vs_in IN) {
   return OUT;
 }
 
-cbuffer c0
+cbuffer c1 : register(b1)
 {
   float4 colors[64];
   float4 textures[64];
 };
+Texture2D texture0;
+SamplerState sampler0;
 Texture2D texture1;
 SamplerState sampler1;
 Texture2D texture2;
 SamplerState sampler2;
-Texture2D texture3;
-SamplerState sampler3;
 
 float grid (float2 vBC, float width) {
   float3 bary = float3(vBC.x, vBC.y, 1.0 - vBC.x - vBC.y);
@@ -101,17 +104,17 @@ float4 ps_main(vs_out IN) : SV_TARGET {
   float4 border = float4(value, value, value, 1.0);
   float4 color = colors[IN.paletteFlagFlag.x];
   float4 texel;
-  if(textures[IN.paletteFlagFlag.x].x==1.0)
+  if(textures[IN.paletteFlagFlag.x].x==0.0)
+  {
+    texel = texture0.Sample(sampler0, IN.uv_barycentric.xy);
+  }
+  else if(textures[IN.paletteFlagFlag.x].x==1.0)
   {
     texel = texture1.Sample(sampler1, IN.uv_barycentric.xy);
   }
   else if(textures[IN.paletteFlagFlag.x].x==2.0)
   {
     texel = texture2.Sample(sampler2, IN.uv_barycentric.xy);
-  }
-  else if(textures[IN.paletteFlagFlag.x].x==3.0)
-  {
-    texel = texture3.Sample(sampler3, IN.uv_barycentric.xy);
   }
   else{
     texel = float4(1, 1, 1, 1);
