@@ -26,7 +26,7 @@ class GlCubeRenderer
   std::shared_ptr<grapho::gl3::Ubo> m_ubo;
 
 public:
-  Pallete Pallete;
+  Pallete Pallete = {};
   GlCubeRenderer(const GlCubeRenderer&) = delete;
   GlCubeRenderer& operator=(const GlCubeRenderer&) = delete;
   GlCubeRenderer();
