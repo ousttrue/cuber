@@ -39,13 +39,13 @@ struct Pallete
   static constexpr DirectX::XMFLOAT4 Red = { 1, 0, 0, 1 };
   static constexpr DirectX::XMFLOAT4 Green = { 0, 1, 0, 1 };
   static constexpr DirectX::XMFLOAT4 Blue = { 0, 0, 1, 1 };
-  static constexpr DirectX::XMFLOAT4 DarkRed = { 0.5f, 0, 0, 0 };
-  static constexpr DirectX::XMFLOAT4 DarkGreen = { 0, 0.5f, 0, 0 };
-  static constexpr DirectX::XMFLOAT4 DarkBlue = { 0, 0, 0.5f, 0 };
-  static constexpr DirectX::XMFLOAT4 Magenta = { 1, 0, 1, 0 };
+  static constexpr DirectX::XMFLOAT4 DarkRed = { 0.5f, 0, 0, 1 };
+  static constexpr DirectX::XMFLOAT4 DarkGreen = { 0, 0.5f, 0, 1 };
+  static constexpr DirectX::XMFLOAT4 DarkBlue = { 0, 0, 0.5f, 1 };
+  static constexpr DirectX::XMFLOAT4 Magenta = { 1, 0, 1, 1 };
   static constexpr DirectX::XMFLOAT4 White{ 0.8f, 0.8f, 0.9f, 1 };
 
-  DirectX::XMFLOAT4 Colors[64]{
+  DirectX::XMFLOAT4 Colors[16]{
     // error
     Magenta,
     //
@@ -56,7 +56,7 @@ struct Pallete
     DarkGreen,
     DarkBlue,
   };
-  DirectX::XMFLOAT4 Textures[64]{
+  DirectX::XMFLOAT4 Textures[16]{
     // error
     { -1, -1, -1, -1 },
     // no texture
@@ -68,6 +68,7 @@ struct Pallete
     { -1, -1, -1, -1 },
   };
 };
+static_assert(sizeof(Pallete)==512, "Pallete");
 
 struct Instance
 {
@@ -85,6 +86,7 @@ struct Instance
   DirectX::XMFLOAT4 PositiveFaceFlag = { 1, 2, 3, 0 };
   DirectX::XMFLOAT4 NegativeFaceFlag = { 4, 5, 6, 0 };
 };
+static_assert(sizeof(Instance)==96, "sizeof Instance");
 
 struct LineVertex
 {
