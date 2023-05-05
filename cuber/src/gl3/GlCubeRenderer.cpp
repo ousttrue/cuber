@@ -11,7 +11,7 @@ using namespace grapho::gl3;
 
 namespace cuber::gl3 {
 
-static const char* vertex_m_shadertext = R"(
+static auto vertex_m_shadertext = u8R"(
 uniform mat4 VP;
 in vec4 vPosFace;
 in vec4 vUvBarycentric;
@@ -82,7 +82,7 @@ void main()
 }
 )";
 
-static const char* fragment_m_shadertext = R"(
+static auto fragment_m_shadertext = u8R"(
 in vec4 oUvBarycentric;
 flat in uvec3 o_Palette_Flag_Flag;
 out vec4 FragColor;
@@ -132,16 +132,16 @@ GlCubeRenderer::GlCubeRenderer()
 {
 
   // auto glsl_version = "#version 150";
-  auto glsl_version = "#version 310 es\nprecision highp float;";
+  auto glsl_version = u8"#version 310 es\nprecision highp float;";
 
-  std::string_view vs[] = {
+  std::u8string_view vs[] = {
     glsl_version,
-    "\n",
+    u8"\n",
     vertex_m_shadertext,
   };
-  std::string_view fs[] = {
+  std::u8string_view fs[] = {
     glsl_version,
-    "\n",
+    u8"\n",
     fragment_m_shadertext,
   };
   if (auto shader = ShaderProgram::Create(vs, fs)) {
@@ -163,9 +163,9 @@ GlCubeRenderer::GlCubeRenderer()
     throw std::runtime_error("cuber::Vbo::Create: m_instance_vbo");
   }
 
-  VertexSlot slots[] = {
-    { vbo },            //
-    { m_instance_vbo }, //
+  std::shared_ptr<grapho::gl3::Vbo> slots[] = {
+    vbo,            //
+    m_instance_vbo, //
   };
 
   auto ibo = Ibo::Create(
@@ -206,8 +206,8 @@ GlCubeRenderer::Render(const float projection[16],
   DirectX::XMFLOAT4X4 vp;
   DirectX::XMStoreFloat4x4(&vp, v * p);
 
-  m_shader->Bind();
-  m_shader->SetUniformMatrix("VP", vp);
+  m_shader->Use();
+  m_shader->Uniform("VP")->SetMat4(vp);
 
   auto block_index = m_shader->UboBlockIndex("palette");
   m_shader->UboBind(*block_index, 1);

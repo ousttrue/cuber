@@ -10,7 +10,7 @@ using namespace grapho::gl3;
 
 namespace cuber::gl3 {
 
-static const char* vertex_shader_text = R"(
+static auto vertex_shader_text = u8R"(
 uniform mat4 VP;
 in vec3 vPos;
 in vec4 vColor;
@@ -23,7 +23,7 @@ void main()
 }
 )";
 
-static const char* fragment_shader_text = R"(
+static auto fragment_shader_text = u8R"(
 in vec4 color;
 out vec4 FragColor;
 
@@ -37,16 +37,16 @@ GlLineRenderer::GlLineRenderer()
 {
 
   // auto glsl_version = "#version 150";
-  auto glsl_version = "#version 310 es\nprecision highp float;";
+  auto glsl_version = u8"#version 310 es\nprecision highp float;";
 
-  std::string_view vs[] = {
+  std::u8string_view vs[] = {
     glsl_version,
-    "\n",
+    u8"\n",
     vertex_shader_text,
   };
-  std::string_view fs[] = {
+  std::u8string_view fs[] = {
     glsl_version,
-    "\n",
+    u8"\n",
     fragment_shader_text,
   };
   if (auto shader = ShaderProgram::Create(vs, fs)) {
@@ -60,8 +60,8 @@ GlLineRenderer::GlLineRenderer()
     throw std::runtime_error("grapho::gl3::Vbo::Create");
   }
 
-  VertexSlot slots[] = {
-    { vbo_ }, //
+  std::shared_ptr<grapho::gl3::Vbo> slots[] = {
+    vbo_, //
   };
   grapho::VertexLayout layouts[] = {
       {
@@ -112,8 +112,8 @@ GlLineRenderer::Render(const float projection[16],
   DirectX::XMFLOAT4X4 vp;
   DirectX::XMStoreFloat4x4(&vp, v * p);
 
-  shader_->Bind();
-  shader_->SetUniformMatrix("VP", vp);
+  shader_->Use();
+  shader_->Uniform("VP")->SetMat4(vp);
 
   vbo_->Upload(sizeof(LineVertex) * lines.size(), lines.data());
   vao_->Draw(GL_LINES, lines.size(), 0);
