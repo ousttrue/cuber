@@ -54,7 +54,9 @@ main(int argc, char** argv)
     { 0, 0, 255, 255 },
     { 255, 255, 255, 255 },
   };
-  auto texture = grapho::gl3::Texture::Create(2, 2, &pixels[0].r);
+  auto texture = grapho::gl3::Texture::Create(
+    2, 2, grapho::PixelFormat::u8_RGBA, &pixels[0].r);
+  texture->SamplingPoint();
 
   std::vector<cuber::Instance> instances;
   instances.push_back({});
@@ -87,7 +89,7 @@ main(int argc, char** argv)
       auto cubes = bvhPanel.GetCubes();
       instances.resize(1 + cubes.size());
       std::copy(cubes.begin(), cubes.end(), instances.data() + 1);
-      texture->Bind(TextureBind);
+      texture->Activate(TextureBind);
       cubeRenderer.Render(
         app.projection, app.view, instances.data(), instances.size());
       lineRenderer.Render(app.projection, app.view, lines);
