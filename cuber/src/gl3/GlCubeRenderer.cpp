@@ -207,7 +207,7 @@ GlCubeRenderer::Render(const float projection[16],
   DirectX::XMStoreFloat4x4(&vp, v * p);
 
   m_shader->Use();
-  m_shader->Uniform("VP")->SetMat4(vp);
+  m_shader->SetUniform("VP", vp);
 
   auto block_index = m_shader->UboBlockIndex("palette");
   m_shader->UboBind(*block_index, 1);

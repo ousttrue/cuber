@@ -113,7 +113,7 @@ GlLineRenderer::Render(const float projection[16],
   DirectX::XMStoreFloat4x4(&vp, v * p);
 
   shader_->Use();
-  shader_->Uniform("VP")->SetMat4(vp);
+  shader_->SetUniform("VP", vp);
 
   vbo_->Upload(sizeof(LineVertex) * lines.size(), lines.data());
   vao_->Draw(GL_LINES, lines.size(), 0);
