@@ -54,8 +54,12 @@ main(int argc, char** argv)
     { 0, 0, 255, 255 },
     { 255, 255, 255, 255 },
   };
-  auto texture = grapho::gl3::Texture::Create(
-    2, 2, grapho::PixelFormat::u8_RGBA, &pixels[0].r);
+  auto texture = grapho::gl3::Texture::Create({
+    .Width = 2,
+    .Height = 2,
+    .Format = grapho::PixelFormat::u8_RGBA,
+    .Pixels = &pixels[0].r,
+  });
   texture->SamplingPoint();
 
   std::vector<cuber::Instance> instances;
