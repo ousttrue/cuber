@@ -23,6 +23,7 @@ main(int argc, char** argv)
 {
   // imgui
   GuiApp app;
+  app.Camera.Transform.Translation = {0, 1, 4};
 
   // window
   GlfwPlatform platform;
@@ -94,9 +95,12 @@ main(int argc, char** argv)
       instances.resize(1 + cubes.size());
       std::copy(cubes.begin(), cubes.end(), instances.data() + 1);
       texture->Activate(TextureBind);
-      cubeRenderer.Render(
-        app.projection, app.view, instances.data(), instances.size());
-      lineRenderer.Render(app.projection, app.view, lines);
+      cubeRenderer.Render(&app.Camera.ProjectionMatrix._11,
+                          &app.Camera.ViewMatrix._11,
+                          instances.data(),
+                          instances.size());
+      lineRenderer.Render(
+        &app.Camera.ProjectionMatrix._11, &app.Camera.ViewMatrix._11, lines);
       platform.EndFrame(data);
     }
   }

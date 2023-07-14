@@ -18,6 +18,7 @@ main(int argc, char** argv)
 {
   // imgui
   GuiApp app;
+  app.Camera.Transform.Translation = {0, 1, 4};
 
   DxPlatform platform;
   if (!platform.Create()) {
@@ -85,9 +86,12 @@ main(int argc, char** argv)
       texture->Bind(context, 1);
       texture->Bind(context, 2);
       texture->Bind(context, 3);
-      cubeRenderer.Render(
-        app.projection, app.view, instances.data(), instances.size());
-      lineRenderer.Render(app.projection, app.view, lines);
+      cubeRenderer.Render(&app.Camera.ProjectionMatrix._11,
+                          &app.Camera.ViewMatrix._11,
+                          instances.data(),
+                          instances.size());
+      lineRenderer.Render(
+        &app.Camera.ProjectionMatrix._11, &app.Camera.ViewMatrix._11, lines);
       platform.EndFrame(data);
     }
   }
