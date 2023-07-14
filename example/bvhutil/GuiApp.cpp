@@ -87,16 +87,15 @@ GuiApp::UpdateGui()
   ImGui::NewFrame();
 
   // camera
-  Camera.Projection.SetSize(static_cast<int>(io.DisplaySize.x),
-                             static_cast<int>(io.DisplaySize.y));
+  Camera.Projection.SetSize(io.DisplaySize.x, io.DisplaySize.y);
   if (!io.WantCaptureMouse) {
     if (io.MouseDown[ImGuiMouseButton_Right]) {
       Camera.YawPitch(static_cast<int>(io.MouseDelta.x),
-                       static_cast<int>(io.MouseDelta.y));
+                      static_cast<int>(io.MouseDelta.y));
     }
     if (io.MouseDown[ImGuiMouseButton_Middle]) {
       Camera.Shift(static_cast<int>(io.MouseDelta.x),
-                    static_cast<int>(io.MouseDelta.y));
+                   static_cast<int>(io.MouseDelta.y));
     }
     Camera.Dolly(static_cast<int>(io.MouseWheel));
   }

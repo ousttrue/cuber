@@ -3,7 +3,11 @@ gtest_main_dep = dependency('gtest_main')
 meshutils_dep = dependency('meshutils')
 executable(
     'tests',
-    ['quat32_test.cpp'],
+    [
+        'quat32_test.cpp',
+        'ray_test.cpp',
+    ],
+    install: true,
     dependencies: [
         gtest_dep,
         gtest_main_dep,

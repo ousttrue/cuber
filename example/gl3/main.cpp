@@ -7,6 +7,8 @@
 #include <cuber/gl3/GlCubeRenderer.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <grapho/gl3/texture.h>
+#include <grapho/imgui/printfbuffer.h>
+#include <imgui.h>
 
 struct rgba
 {
@@ -17,7 +19,61 @@ struct rgba
 };
 
 const auto TextureBind = 0;
-const auto PalleteIndex = 7;
+const auto PalleteIndex = 9;
+
+//   7+-+6
+//   / /|
+// 3+-+2 +5
+// | |
+// 0+-+1
+DirectX::XMFLOAT3 p[8] = {
+  { -1, -1, -1 }, //
+  { +1, -1, -1 }, //
+  { +1, +1, -1 }, //
+  { -1, +1, -1 }, //
+  { -1, -1, +1 }, //
+  { +1, -1, +1 }, //
+  { +1, +1, +1 }, //
+  { -1, +1, +1 }, //
+};
+
+std::array<int, 4> triangles[] = {
+  { 1, 5, 6, 2 }, // x+
+  { 3, 2, 6, 7 }, // y+
+  { 0, 1, 2, 3 }, // z+
+  { 4, 7, 3, 0 }, // x-
+  { 1, 0, 4, 5 }, // y-
+  { 5, 6, 7, 4 }, // z-
+};
+
+static std::optional<float>
+Intersect(DirectX::XMVECTOR origin,
+          DirectX::XMVECTOR dir,
+          DirectX::XMMATRIX m,
+          int t)
+{
+  auto [i0, i1, i2, i3] = triangles[t];
+  float dist;
+  if (DirectX::TriangleTests::Intersects(
+        origin,
+        dir,
+        DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&p[i0]), m),
+        DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&p[i1]), m),
+        DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&p[i2]), m),
+        dist)) {
+    return dist;
+  } else if (DirectX::TriangleTests::Intersects(
+               origin,
+               dir,
+               DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&p[i2]), m),
+               DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&p[i3]), m),
+               DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&p[i0]), m),
+               dist)) {
+    return dist;
+  } else {
+    return std::nullopt;
+  }
+}
 
 int
 main(int argc, char** argv)
@@ -69,6 +125,8 @@ main(int argc, char** argv)
   auto t = DirectX::XMMatrixTranslation(0, 1, -1);
   auto s = DirectX::XMMatrixScaling(1.6f, 0.9f, 0.1f);
   DirectX::XMStoreFloat4x4(&instances.back().Matrix, s * t);
+
+  // Pallete
   instances.back().PositiveFaceFlag = {
     PalleteIndex, PalleteIndex, PalleteIndex, 0
   };
@@ -81,29 +139,7 @@ main(int argc, char** argv)
   };
   cubeRenderer.UploadPallete();
 
-  //   7+-+6
-  //   / /|
-  // 3+-+2 +5
-  // | |
-  // 0+-+1
-  DirectX::XMFLOAT3 p[8] = {
-    { -1, -1, -1 }, //
-    { +1, -1, -1 }, //
-    { +1, +1, -1 }, //
-    { -1, +1, -1 }, //
-    { -1, -1, +1 }, //
-    { +1, -1, +1 }, //
-    { +1, +1, +1 }, //
-    { -1, +1, +1 }, //
-  };
-  std::array<int, 3> triangles[12] = {
-    { 0, 1, 2 }, { 2, 3, 0 }, //
-    { 1, 5, 6 }, { 6, 2, 1 }, //
-    { 5, 6, 7 }, { 7, 4, 5 }, //
-    { 4, 7, 3 }, { 3, 0, 4 }, //
-    { 3, 2, 6 }, { 6, 7, 3 }, //
-    { 1, 0, 4 }, { 4, 5, 1 }, //
-  };
+  grapho::imgui::PrintfBuffer buf;
 
   // main loop
   while (auto time = platform.NewFrame(app.clear_color)) {
@@ -112,38 +148,93 @@ main(int argc, char** argv)
       app.UpdateGui();
       bvhPanel.UpdateGui();
     }
-    auto data = app.RenderGui();
 
     // scene
     {
-      auto cubes = bvhPanel.GetCubes();
+      // auto cubes = bvhPanel.GetCubes();
       // instances.resize(1 + cubes.size());
       // std::copy(cubes.begin(), cubes.end(), instances.data() + 1);
 
       auto ray = app.Camera.GetRay(app.Camera.Projection.Viewport.Width / 2,
                                    app.Camera.Projection.Viewport.Height / 2);
+
+      if (ImGui::Begin("ray")) {
+        ImGui::InputFloat3("origin", &ray.Origin.x);
+        ImGui::InputFloat3("dir", &ray.Direction.x);
+      }
+      ImGui::End();
+
+      int i = 0;
       for (auto& cube : instances) {
         auto inv = DirectX::XMMatrixInverse(
           nullptr, DirectX::XMLoadFloat4x4(&cube.Matrix));
         auto local_ray = ray.Transform(inv);
 
-        auto origin = DirectX::XMLoadFloat3(&local_ray.Origin);
-        auto dir = DirectX::XMLoadFloat3(&local_ray.Direction);
-        for (auto [i0, i1, i2] : triangles) {
-          float dist;
-          if (DirectX::TriangleTests::Intersects(origin,
-                                                 dir,
-                                                 DirectX::XMLoadFloat3(&p[i0]),
-                                                 DirectX::XMLoadFloat3(&p[i1]),
-                                                 DirectX::XMLoadFloat3(&p[i2]),
-                                                 dist)) {
-            cube.PositiveFaceFlag = { 0, 0, 0, 0 };
-            cube.NegativeFaceFlag = { 0, 0, 0, 0 };
-          } else {
-            cube.PositiveFaceFlag = { 1, 1, 1, 0 };
-            cube.NegativeFaceFlag = { 1, 1, 1, 0 };
+        if (ImGui::Begin("ray")) {
+          ImGui::InputFloat3(buf.Printf("local.origin[%d]", i),
+                             &local_ray.Origin.x);
+          ImGui::InputFloat3(buf.Printf("local.dir[%d]", i),
+                             &local_ray.Direction.x);
+
+          auto origin = DirectX::XMLoadFloat3(&ray.Origin);
+          auto dir = DirectX::XMLoadFloat3(&ray.Direction);
+
+          auto m = DirectX::XMLoadFloat4x4(&cube.Matrix);
+
+          {
+            float hit[3] = { 0, 0, 0 };
+
+            if (auto d = Intersect(origin, dir, m, 0)) {
+              cube.PositiveFaceFlag.x = 7;
+              hit[0] = *d;
+            } else {
+              cube.PositiveFaceFlag.x = 8;
+            }
+
+            if (auto d = Intersect(origin, dir, m, 1)) {
+              cube.PositiveFaceFlag.y = 7;
+              hit[1] = *d;
+            } else {
+              cube.PositiveFaceFlag.y = 8;
+            }
+
+            if (auto d = Intersect(origin, dir, m, 2)) {
+              cube.PositiveFaceFlag.z = 7;
+              hit[2] = *d;
+            } else {
+              cube.PositiveFaceFlag.z = 8;
+            }
+            ImGui::InputFloat3(buf.Printf("%d.hit.positive", i), hit);
+          }
+
+          {
+            float hit[3] = { 0, 0, 0 };
+            if (auto d = Intersect(origin, dir, m, 3)) {
+              cube.NegativeFaceFlag.x = 7;
+              hit[0] = *d;
+            } else {
+              cube.NegativeFaceFlag.x = 8;
+            }
+
+            if (auto d = Intersect(origin, dir, m, 4)) {
+              cube.NegativeFaceFlag.y = 7;
+              hit[1] = *d;
+            } else {
+              cube.NegativeFaceFlag.y = 8;
+            }
+
+            if (auto d = Intersect(origin, dir, m, 5)) {
+              cube.NegativeFaceFlag.z = 7;
+              hit[2] = *d;
+            } else {
+              cube.NegativeFaceFlag.z = 8;
+            }
+            ImGui::InputFloat3(buf.Printf("%d.hit.negative", i), hit);
           }
         }
+        ImGui::End();
+
+        ++i;
       }
 
       texture->Activate(TextureBind);
@@ -153,6 +244,8 @@ main(int argc, char** argv)
                           instances.size());
       lineRenderer.Render(
         &app.Camera.ProjectionMatrix._11, &app.Camera.ViewMatrix._11, lines);
+
+      auto data = app.RenderGui();
       platform.EndFrame(data);
     }
   }
