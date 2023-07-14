@@ -180,6 +180,11 @@ struct BvhPanelImpl
     std::lock_guard<std::mutex> lock(m_mutex);
     return m_instances;
   }
+
+  void GetCubes(std::vector<cuber::Instance>& cubes)
+  {
+    cubes.assign(m_instances.begin(), m_instances.end());
+  }
 };
 
 BvhPanel::BvhPanel()
@@ -204,4 +209,10 @@ std::span<const cuber::Instance>
 BvhPanel::GetCubes()
 {
   return m_impl->GetCubes();
+}
+
+void
+BvhPanel::GetCubes(std::vector<cuber::Instance>& cubes)
+{
+  m_impl->GetCubes(cubes);
 }

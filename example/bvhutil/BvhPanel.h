@@ -19,4 +19,5 @@ public:
   void SetBvh(const std::shared_ptr<Bvh>& bvh);
   void UpdateGui();
   std::span<const cuber::Instance> GetCubes();
+  void GetCubes(std::vector<cuber::Instance> &cubes);
 };

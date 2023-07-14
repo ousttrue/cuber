@@ -82,6 +82,7 @@ main(int argc, char** argv)
       auto cubes = bvhPanel.GetCubes();
       instances.resize(1 + cubes.size());
       std::copy(cubes.begin(), cubes.end(), instances.data() + 1);
+
       texture->Bind(context, 0);
       texture->Bind(context, 1);
       texture->Bind(context, 2);

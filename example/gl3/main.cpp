@@ -3,6 +3,7 @@
 #include "BvhPanel.h"
 #include "GlfwPlatform.h"
 #include "GuiApp.h"
+#include <DirectXCollision.h>
 #include <cuber/gl3/GlCubeRenderer.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <grapho/gl3/texture.h>
@@ -23,7 +24,7 @@ main(int argc, char** argv)
 {
   // imgui
   GuiApp app;
-  app.Camera.Transform.Translation = {0, 1, 4};
+  app.Camera.Transform.Translation = { 0, 1, 4 };
 
   // window
   GlfwPlatform platform;
@@ -80,6 +81,30 @@ main(int argc, char** argv)
   };
   cubeRenderer.UploadPallete();
 
+  //   7+-+6
+  //   / /|
+  // 3+-+2 +5
+  // | |
+  // 0+-+1
+  DirectX::XMFLOAT3 p[8] = {
+    { -1, -1, -1 }, //
+    { +1, -1, -1 }, //
+    { +1, +1, -1 }, //
+    { -1, +1, -1 }, //
+    { -1, -1, +1 }, //
+    { +1, -1, +1 }, //
+    { +1, +1, +1 }, //
+    { -1, +1, +1 }, //
+  };
+  std::array<int, 3> triangles[12] = {
+    { 0, 1, 2 }, { 2, 3, 0 }, //
+    { 1, 5, 6 }, { 6, 2, 1 }, //
+    { 5, 6, 7 }, { 7, 4, 5 }, //
+    { 4, 7, 3 }, { 3, 0, 4 }, //
+    { 3, 2, 6 }, { 6, 7, 3 }, //
+    { 1, 0, 4 }, { 4, 5, 1 }, //
+  };
+
   // main loop
   while (auto time = platform.NewFrame(app.clear_color)) {
     // imgui
@@ -92,8 +117,35 @@ main(int argc, char** argv)
     // scene
     {
       auto cubes = bvhPanel.GetCubes();
-      instances.resize(1 + cubes.size());
-      std::copy(cubes.begin(), cubes.end(), instances.data() + 1);
+      // instances.resize(1 + cubes.size());
+      // std::copy(cubes.begin(), cubes.end(), instances.data() + 1);
+
+      auto ray = app.Camera.GetRay(app.Camera.Projection.Viewport.Width / 2,
+                                   app.Camera.Projection.Viewport.Height / 2);
+      for (auto& cube : instances) {
+        auto inv = DirectX::XMMatrixInverse(
+          nullptr, DirectX::XMLoadFloat4x4(&cube.Matrix));
+        auto local_ray = ray.Transform(inv);
+
+        auto origin = DirectX::XMLoadFloat3(&local_ray.Origin);
+        auto dir = DirectX::XMLoadFloat3(&local_ray.Direction);
+        for (auto [i0, i1, i2] : triangles) {
+          float dist;
+          if (DirectX::TriangleTests::Intersects(origin,
+                                                 dir,
+                                                 DirectX::XMLoadFloat3(&p[i0]),
+                                                 DirectX::XMLoadFloat3(&p[i1]),
+                                                 DirectX::XMLoadFloat3(&p[i2]),
+                                                 dist)) {
+            cube.PositiveFaceFlag = { 0, 0, 0, 0 };
+            cube.NegativeFaceFlag = { 0, 0, 0, 0 };
+          } else {
+            cube.PositiveFaceFlag = { 1, 1, 1, 0 };
+            cube.NegativeFaceFlag = { 1, 1, 1, 0 };
+          }
+        }
+      }
+
       texture->Activate(TextureBind);
       cubeRenderer.Render(&app.Camera.ProjectionMatrix._11,
                           &app.Camera.ViewMatrix._11,
