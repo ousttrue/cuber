@@ -27,14 +27,14 @@ const auto PalleteIndex = 9;
 // | |
 // 0+-+1
 DirectX::XMFLOAT3 p[8] = {
-  { -1, -1, -1 }, //
-  { +1, -1, -1 }, //
-  { +1, +1, -1 }, //
-  { -1, +1, -1 }, //
-  { -1, -1, +1 }, //
-  { +1, -1, +1 }, //
-  { +1, +1, +1 }, //
-  { -1, +1, +1 }, //
+  { -0.5f, -0.5f, -0.5f }, //
+  { +0.5f, -0.5f, -0.5f }, //
+  { +0.5f, +0.5f, -0.5f }, //
+  { -0.5f, +0.5f, -0.5f }, //
+  { -0.5f, -0.5f, +0.5f }, //
+  { +0.5f, -0.5f, +0.5f }, //
+  { +0.5f, +0.5f, +0.5f }, //
+  { -0.5f, +0.5f, +0.5f }, //
 };
 
 std::array<int, 4> triangles[] = {
@@ -151,90 +151,91 @@ main(int argc, char** argv)
 
     // scene
     {
-      // auto cubes = bvhPanel.GetCubes();
-      // instances.resize(1 + cubes.size());
-      // std::copy(cubes.begin(), cubes.end(), instances.data() + 1);
+      auto cubes = bvhPanel.GetCubes();
+      instances.resize(1 + cubes.size());
+      std::copy(cubes.begin(), cubes.end(), instances.data() + 1);
 
-      auto ray = app.Camera.GetRay(app.Camera.Projection.Viewport.Width / 2,
-                                   app.Camera.Projection.Viewport.Height / 2);
+      auto& io = ImGui::GetIO();
 
-      if (ImGui::Begin("ray")) {
-        ImGui::InputFloat3("origin", &ray.Origin.x);
-        ImGui::InputFloat3("dir", &ray.Direction.x);
-      }
-      ImGui::End();
-
-      int i = 0;
-      for (auto& cube : instances) {
-        auto inv = DirectX::XMMatrixInverse(
-          nullptr, DirectX::XMLoadFloat4x4(&cube.Matrix));
-        auto local_ray = ray.Transform(inv);
+      if (auto ray = app.Camera.GetRay(io.MousePos.x, io.MousePos.y)) {
 
         if (ImGui::Begin("ray")) {
-          ImGui::InputFloat3(buf.Printf("local.origin[%d]", i),
-                             &local_ray.Origin.x);
-          ImGui::InputFloat3(buf.Printf("local.dir[%d]", i),
-                             &local_ray.Direction.x);
-
-          auto origin = DirectX::XMLoadFloat3(&ray.Origin);
-          auto dir = DirectX::XMLoadFloat3(&ray.Direction);
-
-          auto m = DirectX::XMLoadFloat4x4(&cube.Matrix);
-
-          {
-            float hit[3] = { 0, 0, 0 };
-
-            if (auto d = Intersect(origin, dir, m, 0)) {
-              cube.PositiveFaceFlag.x = 7;
-              hit[0] = *d;
-            } else {
-              cube.PositiveFaceFlag.x = 8;
-            }
-
-            if (auto d = Intersect(origin, dir, m, 1)) {
-              cube.PositiveFaceFlag.y = 7;
-              hit[1] = *d;
-            } else {
-              cube.PositiveFaceFlag.y = 8;
-            }
-
-            if (auto d = Intersect(origin, dir, m, 2)) {
-              cube.PositiveFaceFlag.z = 7;
-              hit[2] = *d;
-            } else {
-              cube.PositiveFaceFlag.z = 8;
-            }
-            ImGui::InputFloat3(buf.Printf("%d.hit.positive", i), hit);
-          }
-
-          {
-            float hit[3] = { 0, 0, 0 };
-            if (auto d = Intersect(origin, dir, m, 3)) {
-              cube.NegativeFaceFlag.x = 7;
-              hit[0] = *d;
-            } else {
-              cube.NegativeFaceFlag.x = 8;
-            }
-
-            if (auto d = Intersect(origin, dir, m, 4)) {
-              cube.NegativeFaceFlag.y = 7;
-              hit[1] = *d;
-            } else {
-              cube.NegativeFaceFlag.y = 8;
-            }
-
-            if (auto d = Intersect(origin, dir, m, 5)) {
-              cube.NegativeFaceFlag.z = 7;
-              hit[2] = *d;
-            } else {
-              cube.NegativeFaceFlag.z = 8;
-            }
-            ImGui::InputFloat3(buf.Printf("%d.hit.negative", i), hit);
-          }
+          ImGui::InputFloat2("mouse pos", &io.MousePos.x);
+          ImGui::InputFloat3("origin", &ray->Origin.x);
+          ImGui::InputFloat3("dir", &ray->Direction.x);
         }
         ImGui::End();
 
-        ++i;
+        for (int i = 1; i < instances.size(); ++i) {
+          auto& cube = instances[i];
+          auto inv = DirectX::XMMatrixInverse(
+            nullptr, DirectX::XMLoadFloat4x4(&cube.Matrix));
+          auto local_ray = ray->Transform(inv);
+
+          if (ImGui::Begin("ray")) {
+            ImGui::InputFloat3(buf.Printf("local.origin[%d]", i),
+                               &local_ray.Origin.x);
+            ImGui::InputFloat3(buf.Printf("local.dir[%d]", i),
+                               &local_ray.Direction.x);
+
+            auto origin = DirectX::XMLoadFloat3(&ray->Origin);
+            auto dir = DirectX::XMLoadFloat3(&ray->Direction);
+
+            auto m = DirectX::XMLoadFloat4x4(&cube.Matrix);
+
+            {
+              float hit[3] = { 0, 0, 0 };
+
+              if (auto d = Intersect(origin, dir, m, 0)) {
+                cube.PositiveFaceFlag.x = 7;
+                hit[0] = *d;
+              } else {
+                cube.PositiveFaceFlag.x = 8;
+              }
+
+              if (auto d = Intersect(origin, dir, m, 1)) {
+                cube.PositiveFaceFlag.y = 7;
+                hit[1] = *d;
+              } else {
+                cube.PositiveFaceFlag.y = 8;
+              }
+
+              if (auto d = Intersect(origin, dir, m, 2)) {
+                cube.PositiveFaceFlag.z = 7;
+                hit[2] = *d;
+              } else {
+                cube.PositiveFaceFlag.z = 8;
+              }
+              ImGui::InputFloat3(buf.Printf("%d.hit.positive", i), hit);
+            }
+
+            {
+              float hit[3] = { 0, 0, 0 };
+              if (auto d = Intersect(origin, dir, m, 3)) {
+                cube.NegativeFaceFlag.x = 7;
+                hit[0] = *d;
+              } else {
+                cube.NegativeFaceFlag.x = 8;
+              }
+
+              if (auto d = Intersect(origin, dir, m, 4)) {
+                cube.NegativeFaceFlag.y = 7;
+                hit[1] = *d;
+              } else {
+                cube.NegativeFaceFlag.y = 8;
+              }
+
+              if (auto d = Intersect(origin, dir, m, 5)) {
+                cube.NegativeFaceFlag.z = 7;
+                hit[2] = *d;
+              } else {
+                cube.NegativeFaceFlag.z = 8;
+              }
+              ImGui::InputFloat3(buf.Printf("%d.hit.negative", i), hit);
+            }
+          }
+          ImGui::End();
+        }
       }
 
       texture->Activate(TextureBind);
