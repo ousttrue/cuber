@@ -89,15 +89,15 @@ GuiApp::UpdateGui()
   // camera
   Camera.Projection.SetSize(io.DisplaySize.x, io.DisplaySize.y);
   if (!io.WantCaptureMouse) {
-    if (io.MouseDown[ImGuiMouseButton_Right]) {
-      Camera.YawPitch(static_cast<int>(io.MouseDelta.x),
-                      static_cast<int>(io.MouseDelta.y));
-    }
-    if (io.MouseDown[ImGuiMouseButton_Middle]) {
-      Camera.Shift(static_cast<int>(io.MouseDelta.x),
-                   static_cast<int>(io.MouseDelta.y));
-    }
-    Camera.Dolly(static_cast<int>(io.MouseWheel));
+    Camera.MouseInputTurntable({
+      .X = io.MousePos.x,
+      .Y = io.MousePos.y,
+      .DeltaX = io.MouseDelta.x,
+      .DeltaY = io.MouseDelta.y,
+      .MiddleDown = io.MouseDown[ImGuiMouseButton_Middle],
+      .RightDown = io.MouseDown[ImGuiMouseButton_Right],
+      .Wheel = io.MouseWheel,
+    });
   }
   Camera.Update();
 
