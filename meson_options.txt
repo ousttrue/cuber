@@ -1,2 +1,3 @@
 option('example', type : 'boolean', value : false, description : 'build example')
 option('tests', type : 'boolean', value : false, description : 'build tests')
+option('d3d', type : 'boolean', value : false, description : 'd3d renderer')
