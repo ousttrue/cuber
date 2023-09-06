@@ -1,3 +1,5 @@
+#include <DirectXMath.h>
+
 #include "BvhFrame.h"
 #include <numbers>
 

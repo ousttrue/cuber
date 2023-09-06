@@ -1,6 +1,6 @@
 #pragma once
 #include "Bvh.h"
-#include <DirectXMath.h>
+#include <grapho/dxmath_stub.h>
 #include <chrono>
 #include <cuber/mesh.h>
 #include <functional>

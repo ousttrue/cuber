@@ -1,3 +1,5 @@
+#include <DirectXMath.h>
+
 #include "DxCubeRendererImpl.h"
 #include "cuber_shader.h"
 #include "cuber_stereo_shader.h"

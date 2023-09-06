@@ -1,6 +1,6 @@
 #pragma once
 #include "Bvh.h"
-#include <DirectXMath.h>
+#include <grapho/dxmath_stub.h>
 #include <list>
 #include <memory>
 #include <stack>

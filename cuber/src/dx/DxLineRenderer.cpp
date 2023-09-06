@@ -1,3 +1,5 @@
+#include <DirectXMath.h>
+
 #include <cuber/dx/DxLineRenderer.h>
 #include <cuber/mesh.h>
 #include <d3d11.h>

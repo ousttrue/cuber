@@ -1,9 +1,10 @@
+#include <DirectXCollision.h>
+
 #include <GL/glew.h>
 
 #include "BvhPanel.h"
 #include "GlfwPlatform.h"
 #include "GuiApp.h"
-#include <DirectXCollision.h>
 #include <cuber/gl3/GlCubeRenderer.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <grapho/gl3/texture.h>

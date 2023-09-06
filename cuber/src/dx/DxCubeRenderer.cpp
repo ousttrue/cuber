@@ -1,3 +1,5 @@
+#include <DirectXMath.h>
+
 #include "DxCubeRendererImpl.h"
 #include <cuber/dx/DxCubeRenderer.h>
 

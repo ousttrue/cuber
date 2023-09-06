@@ -1,5 +1,5 @@
 #pragma once
-#include <DirectXMath.h>
+#include <grapho/dxmath_stub.h>
 #include <array>
 #include <cuber/mesh.h>
 #include <memory>

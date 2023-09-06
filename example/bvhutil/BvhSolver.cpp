@@ -1,3 +1,5 @@
+#include <DirectXMath.h>
+
 #include "BvhSolver.h"
 #include "BvhNode.h"
 #include <assert.h>

@@ -1,3 +1,5 @@
+#include <DirectXMath.h>
+
 #include "BvhPanel.h"
 #include "DxPlatform.h"
 #include "GuiApp.h"

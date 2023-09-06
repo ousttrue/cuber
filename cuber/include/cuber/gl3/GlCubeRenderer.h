@@ -1,6 +1,6 @@
 #pragma once
 #include "cuber/mesh.h"
-#include <DirectXMath.h>
+#include <grapho/dxmath_stub.h>
 #include <array>
 #include <memory>
 #include <span>

@@ -1,5 +1,5 @@
 #pragma once
-#include <DirectXMath.h>
+#include <grapho/dxmath_stub.h>
 #include <grapho/vertexlayout.h>
 #include <string>
 #include <vector>
