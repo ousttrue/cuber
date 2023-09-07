@@ -11,6 +11,8 @@
 #include <grapho/imgui/printfbuffer.h>
 #include <imgui.h>
 
+#include <Windows.h>
+
 struct rgba
 {
   uint8_t r;
