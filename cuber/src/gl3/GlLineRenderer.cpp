@@ -2,9 +2,9 @@
 #include <GL/glew.h>
 #include <cuber/gl3/GlLineRenderer.h>
 #include <cuber/mesh.h>
+#include <grapho/gl3/error_check.h>
 #include <grapho/gl3/shader.h>
 #include <grapho/gl3/vao.h>
-#include <iostream>
 
 using namespace grapho::gl3;
 
@@ -50,9 +50,9 @@ GlLineRenderer::GlLineRenderer()
     fragment_shader_text,
   };
   if (auto shader = ShaderProgram::Create(vs, fs)) {
-    shader_ = *shader;
+    shader_ = shader;
   } else {
-    throw std::runtime_error(shader.error());
+    throw std::runtime_error(grapho::GetErrorString());
   }
 
   vbo_ = Vbo::Create(sizeof(LineVertex) * 65535, nullptr);

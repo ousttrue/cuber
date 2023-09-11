@@ -2,10 +2,10 @@
 #include <GL/glew.h>
 #include <cuber/gl3/GlCubeRenderer.h>
 #include <cuber/mesh.h>
+#include <grapho/gl3/error_check.h>
 #include <grapho/gl3/shader.h>
 #include <grapho/gl3/ubo.h>
 #include <grapho/gl3/vao.h>
-#include <iostream>
 
 using namespace grapho::gl3;
 
@@ -145,10 +145,9 @@ GlCubeRenderer::GlCubeRenderer()
     fragment_m_shadertext,
   };
   if (auto shader = ShaderProgram::Create(vs, fs)) {
-    m_shader = *shader;
+    m_shader = shader;
   } else {
-    std::cerr << shader.error() << std::endl;
-    throw std::runtime_error(shader.error());
+    throw std::runtime_error(::grapho::GetErrorString());
   }
 
   auto [vertices, indices, layouts] = Cube(true, false);
