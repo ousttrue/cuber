@@ -21,6 +21,14 @@
         .grapho = .{
             .path = "../grapho",
         },
+        .asio = .{
+            .url = "git+https://github.com/chriskohlhoff/asio.git#efdc25ab99786101351a5afb39f01dfaf0781401",
+            .hash = "1220f0f235ad06ed8350f7a83984a41027c83e702f1ea13b99329aa4a591d9f0f3d1",
+        },
+        .meshutils = .{
+            .url = "git+https://github.com/i-saint/Glimmer.git#082f6ad4981e2c8ce73939efd03cdd400ce666cc",
+            .hash = "12205df6e9769702e63c22876a103775e76a9981f697fc524d2a6046ea6cd11e758c",
+        },
     },
     .paths = .{
         "build.zig",

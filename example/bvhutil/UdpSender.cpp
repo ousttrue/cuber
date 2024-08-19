@@ -1,6 +1,6 @@
 #include <DirectXMath.h>
 
-#include "../../subprojects/meshutils/Source/MeshUtils/muQuat32.h"
+#include <MeshUtils/muQuat32.h>
 #include "Bvh.h"
 #include "Payload.h"
 #include "UdpSender.h"
