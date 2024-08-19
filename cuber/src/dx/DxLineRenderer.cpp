@@ -45,9 +45,11 @@ struct DxLineRendererImpl
   DxLineRendererImpl(const winrt::com_ptr<ID3D11Device>& device)
     : device_(device)
   {
-    auto vs = grapho::dx11::CompileShader(SHADER, "vs_main", "vs_5_0");
+    std::string error;
+    auto vs = grapho::dx11::CompileShader(
+      SHADER, "vs_main", "vs_5_0", [&error](const char* msg) { error = msg; });
     if (!vs) {
-      OutputDebugStringA(vs.error().c_str());
+      OutputDebugStringA(error.c_str());
     }
     auto hr = device_->CreateVertexShader((*vs)->GetBufferPointer(),
                                           (*vs)->GetBufferSize(),
@@ -55,9 +57,10 @@ struct DxLineRendererImpl
                                           vertex_shader_.put());
     assert(SUCCEEDED(hr));
 
-    auto ps = grapho::dx11::CompileShader(SHADER, "ps_main", "ps_5_0");
+    auto ps = grapho::dx11::CompileShader(
+      SHADER, "ps_main", "ps_5_0", [&error](const char* msg) { error = msg; });
     if (!ps) {
-      OutputDebugStringA(ps.error().c_str());
+      OutputDebugStringA(error.c_str());
     }
     hr = device_->CreatePixelShader((*ps)->GetBufferPointer(),
                                     (*ps)->GetBufferSize(),

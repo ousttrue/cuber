@@ -1,8 +1,5 @@
 #pragma once
-#include <grapho/dxmath_stub.h>
-#include <array>
 #include <cuber/mesh.h>
-#include <memory>
 #include <span>
 #include <winrt/base.h>
 

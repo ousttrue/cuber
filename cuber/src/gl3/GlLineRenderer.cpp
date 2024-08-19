@@ -90,7 +90,7 @@ GlLineRenderer::GlLineRenderer()
       },
   };
 
-  vao_ = Vao::Create(layouts, slots);
+  vao_ = Vao::Create(grapho::make_span(layouts), grapho::make_span(slots));
   if (!vao_) {
     throw std::runtime_error("grapho::gl3::Vao::Create");
   }
@@ -109,8 +109,8 @@ GlLineRenderer::Render(const float projection[16],
 
   auto v = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)view);
   auto p = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)projection);
-  DirectX::XMFLOAT4X4 vp;
-  DirectX::XMStoreFloat4x4(&vp, v * p);
+  grapho::XMFLOAT4X4 vp;
+  DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&vp, v * p);
 
   shader_->Use();
   shader_->SetUniform("VP", vp);

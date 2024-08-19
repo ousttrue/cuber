@@ -120,7 +120,7 @@ static VertexLayout layouts[] = {
 };
 
 const float s = 0.5f;
-DirectX::XMFLOAT3 positions[8] = {
+grapho::XMFLOAT3 positions[8] = {
   { +s, -s, -s }, //
   { +s, -s, +s }, //
   { +s, +s, +s }, //
@@ -147,7 +147,7 @@ DirectX::XMFLOAT3 positions[8] = {
 struct Face
 {
   int Indices[4];
-  DirectX::XMFLOAT2 Uv[4];
+  grapho::XMFLOAT2 Uv[4];
 };
 
 // CCW
@@ -194,14 +194,14 @@ struct Builder
   }
 
   void Quad(int face,
-            const DirectX::XMFLOAT3& p0,
-            const DirectX::XMFLOAT2& uv0,
-            const DirectX::XMFLOAT3& p1,
-            const DirectX::XMFLOAT2& uv1,
-            const DirectX::XMFLOAT3& p2,
-            const DirectX::XMFLOAT2& uv2,
-            const DirectX::XMFLOAT3& p3,
-            const DirectX::XMFLOAT2& uv3)
+            const grapho::XMFLOAT3& p0,
+            const grapho::XMFLOAT2& uv0,
+            const grapho::XMFLOAT3& p1,
+            const grapho::XMFLOAT2& uv1,
+            const grapho::XMFLOAT3& p2,
+            const grapho::XMFLOAT2& uv2,
+            const grapho::XMFLOAT3& p3,
+            const grapho::XMFLOAT2& uv3)
   {
     // 01   00
     //  3+-+2

@@ -1,10 +1,10 @@
 #pragma once
-#include <grapho/dxmath_stub.h>
+#include <grapho/vertexlayout.h>
 #include <chrono>
 #include <ostream>
 #include <span>
 
-using BvhOffset = DirectX::XMFLOAT3;
+using BvhOffset = grapho::XMFLOAT3;
 
 ///
 /// Mat3 for bvh rotation
@@ -16,7 +16,7 @@ using BvhOffset = DirectX::XMFLOAT3;
 /// [x,y,z][3, 4, 5] => [0x + 3y + 6z][1x + 4y + 7z][2x + 5y + 8z]
 ///        [6, 7, 8]
 ///
-using BvhMat3 = DirectX::XMFLOAT3X3;
+using BvhMat3 = grapho::XMFLOAT3X3;
 
 enum class BvhChannelTypes {
   None,
@@ -86,5 +86,5 @@ struct BvhFrame {
   BvhTime time;
   std::span<const float> values;
 
-  std::tuple<BvhOffset, DirectX::XMMATRIX> Resolve(const BvhChannels &channels) const;
+  std::tuple<BvhOffset, grapho::XMFLOAT4X4> Resolve(const BvhChannels &channels) const;
 };

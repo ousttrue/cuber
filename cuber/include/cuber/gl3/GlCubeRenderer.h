@@ -1,9 +1,6 @@
 #pragma once
 #include "cuber/mesh.h"
-#include <grapho/dxmath_stub.h>
-#include <array>
 #include <memory>
-#include <span>
 
 namespace grapho {
 namespace gl3 {

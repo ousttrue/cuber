@@ -51,40 +51,44 @@
 //   };
 // }
 
-std::tuple<BvhOffset, DirectX::XMMATRIX>
-BvhFrame::Resolve(const BvhChannels &channels) const {
+std::tuple<BvhOffset, grapho::XMFLOAT4X4>
+BvhFrame::Resolve(const BvhChannels& channels) const
+{
   BvhOffset pos = channels.init;
   auto rot = DirectX::XMMatrixIdentity();
   auto index = channels.startIndex;
   for (int ch = 0; ch < channels.size(); ++ch, ++index) {
     switch (channels.types[ch]) {
-    case BvhChannelTypes::Xposition:
-      pos.x = values[index];
-      break;
-    case BvhChannelTypes::Yposition:
-      pos.y = values[index];
-      break;
-    case BvhChannelTypes::Zposition:
-      pos.z = values[index];
-      break;
-    case BvhChannelTypes::Xrotation:
-      rot = DirectX::XMMatrixRotationX(
+      case BvhChannelTypes::Xposition:
+        pos.x = values[index];
+        break;
+      case BvhChannelTypes::Yposition:
+        pos.y = values[index];
+        break;
+      case BvhChannelTypes::Zposition:
+        pos.z = values[index];
+        break;
+      case BvhChannelTypes::Xrotation:
+        rot = DirectX::XMMatrixRotationX(
                 DirectX::XMConvertToRadians(values[index])) *
-            rot;
-      break;
-    case BvhChannelTypes::Yrotation:
-      rot = DirectX::XMMatrixRotationY(
+              rot;
+        break;
+      case BvhChannelTypes::Yrotation:
+        rot = DirectX::XMMatrixRotationY(
                 DirectX::XMConvertToRadians(values[index])) *
-            rot;
-      break;
-    case BvhChannelTypes::Zrotation:
-      rot = DirectX::XMMatrixRotationZ(
+              rot;
+        break;
+      case BvhChannelTypes::Zrotation:
+        rot = DirectX::XMMatrixRotationZ(
                 DirectX::XMConvertToRadians(values[index])) *
-            rot;
-      break;
-    case BvhChannelTypes::None:
-      break;
+              rot;
+        break;
+      case BvhChannelTypes::None:
+        break;
     }
   }
-  return {pos, rot};
+
+  grapho::XMFLOAT4X4 r;
+  DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&r, rot);
+  return { pos, r };
 }

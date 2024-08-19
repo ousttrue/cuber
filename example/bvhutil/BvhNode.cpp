@@ -8,7 +8,7 @@ BvhNode::BvhNode(BvhJoint& joint)
   : joint_(joint)
 {
   DirectX::XMStoreFloat4x4(
-    &shape_,
+    (DirectX::XMFLOAT4X4*)&shape_,
     DirectX::XMMatrixScaling(DEFAULT_SIZE, DEFAULT_SIZE, DEFAULT_SIZE));
 }
 
@@ -74,7 +74,7 @@ BvhNode::CalcShape(float scaling)
     auto r = DirectX::XMMATRIX(X, Y, Z, Float4(0, 0, 0, 1));
 
     auto shape = center * scale * r;
-    DirectX::XMStoreFloat4x4(&shape_, shape);
+    DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&shape_, shape);
   }
 
   for (auto& child : children_) {
@@ -85,20 +85,25 @@ BvhNode::CalcShape(float scaling)
 // [x, y, z][c6][c5][c4][c3][c2][c1][parent][root]
 void
 BvhNode::ResolveFrame(const BvhFrame& frame,
-                      DirectX::XMMATRIX m,
+                      const grapho::XMFLOAT4X4& __m,
                       float scaling,
-                      std::span<DirectX::XMFLOAT4X4>::iterator& out)
+                      std::span<grapho::XMFLOAT4X4>::iterator& out)
 {
-  auto [pos, rot] = frame.Resolve(joint_.channels);
+  auto [pos, r] = frame.Resolve(joint_.channels);
+  auto rot = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)&r);
 
   auto t = DirectX::XMMatrixTranslation(
     pos.x * scaling, pos.y * scaling, pos.z * scaling);
   auto local = rot * t;
 
-  m = local * m;
-  auto shape = DirectX::XMLoadFloat4x4(&shape_);
-  DirectX::XMStoreFloat4x4(&*out, shape * m);
+  auto _m = local * DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)&__m);
+  auto shape = DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)&shape_);
+  DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&*out, shape * _m);
   ++out;
+
+  grapho::XMFLOAT4X4 m;
+  DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&m, _m);
+
   for (auto& child : children_) {
     child->ResolveFrame(frame, m, scaling, out);
   }

@@ -19,9 +19,11 @@ DxCubeRendererImpl::DxCubeRendererImpl(
   device_->GetImmediateContext(context_.put());
 
   std::string_view shader = stereo_ ? STEREO_SHADER : SHADER;
-  auto vs = grapho::dx11::CompileShader(shader, "vs_main", "vs_5_0");
+  std::string error;
+  auto vs = grapho::dx11::CompileShader(
+    shader, "vs_main", "vs_5_0", [&error](const char* msg) { error = msg; });
   if (!vs) {
-    OutputDebugStringA(vs.error().c_str());
+    OutputDebugStringA(error.c_str());
   }
   auto hr = device_->CreateVertexShader((*vs)->GetBufferPointer(),
                                         (*vs)->GetBufferSize(),
@@ -29,9 +31,10 @@ DxCubeRendererImpl::DxCubeRendererImpl(
                                         vertex_shader_.put());
   assert(SUCCEEDED(hr));
 
-  auto ps = grapho::dx11::CompileShader(shader, "ps_main", "ps_5_0");
+  auto ps = grapho::dx11::CompileShader(
+    shader, "ps_main", "ps_5_0", [&error](const char* msg) { error = msg; });
   if (!ps) {
-    OutputDebugStringA(ps.error().c_str());
+    OutputDebugStringA(error.c_str());
   }
   hr = device_->CreatePixelShader((*ps)->GetBufferPointer(),
                                   (*ps)->GetBufferSize(),

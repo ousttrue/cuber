@@ -6,7 +6,7 @@ cuber_srcs = [
     'src/gl3/GlCubeRenderer.cpp',
     'src/gl3/GlLineRenderer.cpp',
 ]
-if host_machine.system() == 'windows' and get_option('d3d')
+if host_machine.system() == 'windows'
     cuber_srcs += [
         'src/dx/DxCubeRenderer.cpp',
         'src/dx/DxCubeRendererImpl.cpp',

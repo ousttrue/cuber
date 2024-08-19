@@ -172,7 +172,7 @@ GlCubeRenderer::GlCubeRenderer()
   if (!ibo) {
     throw std::runtime_error("cuber::Vbo::Create");
   }
-  m_vao = Vao::Create(layouts, slots, ibo);
+  m_vao = Vao::Create(grapho::make_span(layouts), grapho::make_span(slots), ibo);
   if (!m_vao) {
     throw std::runtime_error("cuber::Vao::Create");
   }

@@ -78,12 +78,27 @@ Intersect(DirectX::XMVECTOR origin,
   }
 }
 
+static grapho::camera::Ray
+Transform(const grapho::camera::Ray& self, const DirectX::XMMATRIX& m)
+{
+  grapho::camera::Ray ray;
+  DirectX::XMStoreFloat3(
+    (DirectX::XMFLOAT3*)&ray.Origin,
+    DirectX::XMVector3Transform(
+      DirectX::XMLoadFloat3((const DirectX::XMFLOAT3*)&self.Origin), m));
+  DirectX::XMStoreFloat3(
+    (DirectX::XMFLOAT3*)&ray.Direction,
+    DirectX::XMVector3Normalize(DirectX::XMVector3TransformNormal(
+      DirectX::XMLoadFloat3((const DirectX::XMFLOAT3*)&self.Direction), m)));
+  return ray;
+}
+
 int
 main(int argc, char** argv)
 {
   // imgui
   GuiApp app;
-  app.Camera.Transform.Translation = { 0, 1, 4 };
+  app.Camera.Translation = { 0, 1, 4 };
 
   // window
   GlfwPlatform platform;
@@ -127,7 +142,8 @@ main(int argc, char** argv)
   instances.push_back({});
   auto t = DirectX::XMMatrixTranslation(0, 1, -1);
   auto s = DirectX::XMMatrixScaling(1.6f, 0.9f, 0.1f);
-  DirectX::XMStoreFloat4x4(&instances.back().Matrix, s * t);
+  DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&instances.back().Matrix,
+                           s * t);
 
   // Pallete
   instances.back().PositiveFaceFlag = {
@@ -172,8 +188,9 @@ main(int argc, char** argv)
         for (int i = 1; i < instances.size(); ++i) {
           auto& cube = instances[i];
           auto inv = DirectX::XMMatrixInverse(
-            nullptr, DirectX::XMLoadFloat4x4(&cube.Matrix));
-          auto local_ray = ray->Transform(inv);
+            nullptr,
+            DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)&cube.Matrix));
+          auto local_ray = Transform(*ray, inv);
 
           if (ImGui::Begin("ray")) {
             ImGui::InputFloat3(buf.Printf("local.origin[%d]", i),
@@ -181,10 +198,13 @@ main(int argc, char** argv)
             ImGui::InputFloat3(buf.Printf("local.dir[%d]", i),
                                &local_ray.Direction.x);
 
-            auto origin = DirectX::XMLoadFloat3(&ray->Origin);
-            auto dir = DirectX::XMLoadFloat3(&ray->Direction);
+            auto origin =
+              DirectX::XMLoadFloat3((const DirectX::XMFLOAT3*)&ray->Origin);
+            auto dir =
+              DirectX::XMLoadFloat3((const DirectX::XMFLOAT3*)&ray->Direction);
 
-            auto m = DirectX::XMLoadFloat4x4(&cube.Matrix);
+            auto m =
+              DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)&cube.Matrix);
 
             {
               float hit[3] = { 0, 0, 0 };
@@ -242,12 +262,12 @@ main(int argc, char** argv)
       }
 
       texture->Activate(TextureBind);
-      cubeRenderer.Render(&app.Camera.ProjectionMatrix._11,
-                          &app.Camera.ViewMatrix._11,
+      cubeRenderer.Render(&app.Camera.ProjectionMatrix.m11,
+                          &app.Camera.ViewMatrix.m11,
                           instances.data(),
                           instances.size());
       lineRenderer.Render(
-        &app.Camera.ProjectionMatrix._11, &app.Camera.ViewMatrix._11, lines);
+        &app.Camera.ProjectionMatrix.m11, &app.Camera.ViewMatrix.m11, lines);
 
       auto data = app.RenderGui();
       platform.EndFrame(data);

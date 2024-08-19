@@ -20,7 +20,7 @@ main(int argc, char** argv)
 {
   // imgui
   GuiApp app;
-  app.Camera.Transform.Translation = {0, 1, 4};
+  app.Camera.Translation = {0, 1, 4};
 
   DxPlatform platform;
   if (!platform.Create()) {
@@ -58,7 +58,7 @@ main(int argc, char** argv)
   instances.push_back({});
   auto t = DirectX::XMMatrixTranslation(0, 1, -1);
   auto s = DirectX::XMMatrixScaling(1.6f, 0.9f, 0.1f);
-  DirectX::XMStoreFloat4x4(&instances.back().Matrix, s * t);
+  DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&instances.back().Matrix, s * t);
 
   static rgba pixels[4] = {
     { 255, 0, 0, 255 },
@@ -89,12 +89,12 @@ main(int argc, char** argv)
       texture->Bind(context, 1);
       texture->Bind(context, 2);
       texture->Bind(context, 3);
-      cubeRenderer.Render(&app.Camera.ProjectionMatrix._11,
-                          &app.Camera.ViewMatrix._11,
+      cubeRenderer.Render(&app.Camera.ProjectionMatrix.m11,
+                          &app.Camera.ViewMatrix.m11,
                           instances.data(),
                           instances.size());
       lineRenderer.Render(
-        &app.Camera.ProjectionMatrix._11, &app.Camera.ViewMatrix._11, lines);
+        &app.Camera.ProjectionMatrix.m11, &app.Camera.ViewMatrix.m11, lines);
       platform.EndFrame(data);
     }
   }
