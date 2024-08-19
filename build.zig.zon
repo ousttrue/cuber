@@ -1,0 +1,30 @@
+.{
+    .name = "cuber",
+    .version = "0.0.0",
+    .dependencies = .{
+        .directxmath = .{
+            .url = "https://github.com/microsoft/DirectXMath/archive/refs/tags/jan2022.tar.gz",
+            .hash = "1220b890b7c76159d4210527a5d8a8b4f19ef257baa956fd8845eb7b0bab37a6ca6d",
+        },
+        .glew = .{
+            .url = "https://github.com/edoren/glew/archive/refs/tags/v2.0.0.tar.gz",
+            .hash = "1220379fc1ecdd0bb15a0bbffc8b619fb071dae5a3de500ab5a4b1d73c7f4a627058",
+        },
+        .imgui = .{
+            .url = "git+https://github.com/ocornut/imgui.git?ref=docking#7b6314f47d2aaa3758cfeeca66af34f5c9309ca4",
+            .hash = "12204aabb4ee82210f81a57bb6b8163062b5cbc775c13e36744dcc42b1e7c36bcf86",
+        },
+        // .grapho = .{
+        //     .url = "git+https://github.com/ousttrue/grapho.git#88a9cc2d1cbf85e23dc21250edf9a4df966d5ddc",
+        //     .hash = "12200a858b6b460b6dc38a016df1986c50fb045f0f086bfce3c7834ca3584d619dfc",
+        // },
+        .grapho = .{
+            .path = "../grapho",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}

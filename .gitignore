@@ -7,3 +7,7 @@ compile_commands.json
 .cache
 *.bvh
 .meson-subproject-wrap-hash.txt
+
+.zig-cache/
+zig-cache/
+zig-out/
