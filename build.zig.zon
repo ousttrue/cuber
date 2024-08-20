@@ -2,17 +2,13 @@
     .name = "cuber",
     .version = "0.0.0",
     .dependencies = .{
-        .directxmath = .{
-            .url = "https://github.com/microsoft/DirectXMath/archive/refs/tags/jan2022.tar.gz",
-            .hash = "1220b890b7c76159d4210527a5d8a8b4f19ef257baa956fd8845eb7b0bab37a6ca6d",
+        .compile_commands = .{
+            .url = "git+https://github.com/xxxbrian/zig-compile-commands.git#dd40e0ca2b453684f2e34410ec4b69ef3c568bd7",
+            .hash = "12205f1bd27373077104440e39cbc388b2ebbc8938378cc261506588feed29fedf35",
         },
-        .glew = .{
-            .url = "https://github.com/edoren/glew/archive/refs/tags/v2.0.0.tar.gz",
-            .hash = "1220379fc1ecdd0bb15a0bbffc8b619fb071dae5a3de500ab5a4b1d73c7f4a627058",
-        },
-        .imgui = .{
-            .url = "git+https://github.com/ocornut/imgui.git?ref=docking#7b6314f47d2aaa3758cfeeca66af34f5c9309ca4",
-            .hash = "12204aabb4ee82210f81a57bb6b8163062b5cbc775c13e36744dcc42b1e7c36bcf86",
+        .sokol = .{
+            .url = "git+https://github.com/floooh/sokol-zig.git#9e4eabae83c74df29b24cdba7b31e985a2d8c33f",
+            .hash = "12209706d64fa2127cc2d48134c22790d70f561c40bdeb4589fa7f9c41c4f53fe9da",
         },
         .asio = .{
             .url = "git+https://github.com/chriskohlhoff/asio.git#efdc25ab99786101351a5afb39f01dfaf0781401",
@@ -28,14 +24,6 @@
         .grapho = .{
             .url = "git+https://github.com/ousttrue/grapho.git#ae196e34805442b694cc42ce91c7f24f52ddd9a9",
             .hash = "12206d00bd05b1b5907c9a659fefe878257bfc14ca6506f1ad91d448aceb29089fb1",
-        },
-        .sokol = .{
-            .url = "git+https://github.com/floooh/sokol-zig.git#9e4eabae83c74df29b24cdba7b31e985a2d8c33f",
-            .hash = "12209706d64fa2127cc2d48134c22790d70f561c40bdeb4589fa7f9c41c4f53fe9da",
-        },
-        .compile_commands = .{
-            .url = "git+https://github.com/xxxbrian/zig-compile-commands.git#dd40e0ca2b453684f2e34410ec4b69ef3c568bd7",
-            .hash = "12205f1bd27373077104440e39cbc388b2ebbc8938378cc261506588feed29fedf35",
         },
     },
     .paths = .{
