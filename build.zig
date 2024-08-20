@@ -3,6 +3,13 @@ const grapho = @import("grapho");
 
 const cflags = [_][]const u8{
     "-std=c++20",
+    "-DGLEW_STATIC",
+};
+
+const LIBS = [_][]const u8{
+    "gdi32",
+    "OpenGL32",
+    "Ws2_32",
 };
 
 const Example = struct {
@@ -39,33 +46,36 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const grapho_dep = b.dependency("grapho", .{});
-    const grapho_opts = grapho.MakeOptions{
-        .b = b,
-        .target = target,
-        .optimize = optimize,
-        .dep_builder = grapho_dep.builder,
-    };
-    // const glfw_dep = grapho_dep.builder.dependency("glfw", .{});
-    // const directxmath_dep = b.dependency("directxmath", .{});
-    // const glew_dep = b.dependency("glew", .{});
-    // const imgui_dep = b.dependency("imgui", .{});
     const asio_dep = b.dependency("asio", .{});
     const meshutils_dep = b.dependency("meshutils", .{});
+
+    // deps
+    const gb = grapho_dep.builder;
+    const directxmath = grapho.CLib.make_headeronly(
+        gb.dependency("directxmath", .{}),
+        &.{"Inc"},
+    );
+    const glew = grapho.make_glew(b, gb.dependency("glew", .{}), target, optimize);
+    const glfw = grapho.make_glfw(b, gb.dependency("glfw", .{}), target, optimize);
+    const imgui = grapho.make_imgui(b, gb.dependency("imgui", .{}), target, optimize);
+    const grapho_lib = grapho.make_grapho(b, gb.dependency("grapho", .{}), target, optimize);
+    if (grapho_lib.lib) |lib| {
+        directxmath.injectIncludes(lib);
+        glfw.injectIncludes(lib);
+        glew.injectIncludes(lib);
+    }
+    if (imgui.lib) |lib| {
+        glfw.injectIncludes(lib);
+    }
 
     for (examples) |example| {
         const exe = b.addExecutable(.{
             .name = example.name,
             .target = target,
             .optimize = optimize,
+            .link_libc = true,
         });
-
-        // deps
         exe.linkLibCpp();
-        grapho.make_grapho(grapho_opts, cflags).inject_to(exe);
-        grapho.make_directxmath(grapho_opts).inject_to(exe);
-        grapho.make_glew(grapho_opts, cflags).inject_to(exe);
-        grapho.make_glfw(grapho_opts, cflags).inject_to(exe);
-        grapho.make_imgui(grapho_opts, cflags).inject_to(exe);
 
         // srcs
         exe.addCSourceFiles(.{
@@ -78,8 +88,11 @@ pub fn build(b: *std.Build) void {
         exe.addIncludePath(b.path("cuber/include"));
         exe.addCSourceFiles(.{
             .files = &.{
+                "cuber/src/mesh.cpp",
                 "cuber/src/gl3/GlCubeRenderer.cpp",
+                "cuber/src/gl3/GlLineRenderer.cpp",
             },
+            .flags = &cflags,
         });
         exe.addIncludePath(b.path("example/bvhutil"));
         exe.addCSourceFiles(.{
@@ -88,12 +101,33 @@ pub fn build(b: *std.Build) void {
             .flags = &cflags,
         });
 
+        grapho_lib.injectIncludes(exe);
+        directxmath.injectIncludes(exe);
+        glew.injectIncludes(exe);
+        glfw.injectIncludes(exe);
+        imgui.injectIncludes(exe);
+        if (grapho_lib.lib) |lib| {
+            exe.linkLibrary(lib);
+        }
+        if (imgui.lib) |lib| {
+            exe.linkLibrary(lib);
+        }
+        if (glfw.lib) |lib| {
+            exe.linkLibrary(lib);
+        }
+        if (glew.lib) |lib| {
+            exe.linkLibrary(lib);
+        }
+        for (LIBS) |lib| {
+            exe.linkSystemLibrary(lib);
+        }
+
         // install
         const install = b.addInstallArtifact(exe, .{});
         b.getInstallStep().dependOn(&install.step);
         // run
         const run_cmd = b.addRunArtifact(exe);
-        run_cmd.step.dependOn(b.getInstallStep());
+        run_cmd.step.dependOn(&install.step);
         if (b.args) |args| {
             run_cmd.addArgs(args);
         }

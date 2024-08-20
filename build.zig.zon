@@ -14,13 +14,6 @@
             .url = "git+https://github.com/ocornut/imgui.git?ref=docking#7b6314f47d2aaa3758cfeeca66af34f5c9309ca4",
             .hash = "12204aabb4ee82210f81a57bb6b8163062b5cbc775c13e36744dcc42b1e7c36bcf86",
         },
-        // .grapho = .{
-        //     .url = "git+https://github.com/ousttrue/grapho.git#88a9cc2d1cbf85e23dc21250edf9a4df966d5ddc",
-        //     .hash = "12200a858b6b460b6dc38a016df1986c50fb045f0f086bfce3c7834ca3584d619dfc",
-        // },
-        .grapho = .{
-            .path = "../grapho",
-        },
         .asio = .{
             .url = "git+https://github.com/chriskohlhoff/asio.git#efdc25ab99786101351a5afb39f01dfaf0781401",
             .hash = "1220f0f235ad06ed8350f7a83984a41027c83e702f1ea13b99329aa4a591d9f0f3d1",
@@ -28,6 +21,13 @@
         .meshutils = .{
             .url = "git+https://github.com/i-saint/Glimmer.git#082f6ad4981e2c8ce73939efd03cdd400ce666cc",
             .hash = "12205df6e9769702e63c22876a103775e76a9981f697fc524d2a6046ea6cd11e758c",
+        },
+        // .grapho = .{
+        //     .path = "../grapho",
+        // },
+        .grapho = .{
+            .url = "git+https://github.com/ousttrue/grapho.git#ae196e34805442b694cc42ce91c7f24f52ddd9a9",
+            .hash = "12206d00bd05b1b5907c9a659fefe878257bfc14ca6506f1ad91d448aceb29089fb1",
         },
     },
     .paths = .{
