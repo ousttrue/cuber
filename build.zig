@@ -6,7 +6,7 @@ const cflags = [_][]const u8{
     "-DGLEW_STATIC",
 };
 
-const LIBS = [_][]const u8{
+const libs = [_][]const u8{
     "gdi32",
     "OpenGL32",
     "Ws2_32",
@@ -23,7 +23,7 @@ const examples = [_]Example{
         .name = "gl3",
         .root = "example/gl3",
         .files = &.{
-            "main.cpp",
+            "run.cpp",
             "GlfwPlatform.cpp",
         },
     },
@@ -68,15 +68,21 @@ pub fn build(b: *std.Build) void {
         glfw.injectIncludes(lib);
     }
 
+    const dep_sokol = b.dependency("sokol", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
     for (examples) |example| {
         const exe = b.addExecutable(.{
             .name = example.name,
             .target = target,
             .optimize = optimize,
             .link_libc = true,
+            .root_source_file = b.path("example/gl3/main.zig"),
         });
         exe.linkLibCpp();
-
+        exe.root_module.addImport("sokol", dep_sokol.module("sokol"));
         // srcs
         exe.addCSourceFiles(.{
             .root = b.path(example.root),
@@ -118,7 +124,7 @@ pub fn build(b: *std.Build) void {
         if (glew.lib) |lib| {
             exe.linkLibrary(lib);
         }
-        for (LIBS) |lib| {
+        for (libs) |lib| {
             exe.linkSystemLibrary(lib);
         }
 
