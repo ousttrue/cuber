@@ -98,172 +98,173 @@ struct State
 {
   GuiApp app;
 
+  BvhPanel bvhPanel;
+
+  // cuber
+  cuber::gl3::GlCubeRenderer cubeRenderer;
+  cuber::gl3::GlLineRenderer lineRenderer;
+
+  std::vector<cuber::LineVertex> lines;
+  std::vector<cuber::Instance> instances;
+
+  grapho::imgui::PrintfBuffer buf;
+
+  std::shared_ptr<grapho::gl3::Texture> texture;
+
   void init()
   {
-    // // imgui
-    // app.Camera.Translation = { 0, 1, 4 };
-    // // cuber
-    // cuber::gl3::GlCubeRenderer cubeRenderer;
-    // cuber::gl3::GlLineRenderer lineRenderer;
-    //
-    // std::vector<cuber::LineVertex> lines;
-    // cuber::PushGrid(lines);
-    //
-    // // texture
-    // static rgba pixels[4] = {
-    //   { 255, 0, 0, 255 },
-    //   { 0, 255, 0, 255 },
-    //   { 0, 0, 255, 255 },
-    //   { 255, 255, 255, 255 },
-    // };
-    // auto texture = grapho::gl3::Texture::Create({
-    //   .Width = 2,
-    //   .Height = 2,
-    //   .Format = grapho::PixelFormat::u8_RGBA,
-    //   .Pixels = &pixels[0].r,
-    // });
-    // texture->SamplingPoint();
-    //
-    // std::vector<cuber::Instance> instances;
-    // instances.push_back({});
-    // auto t = DirectX::XMMatrixTranslation(0, 1, -1);
-    // auto s = DirectX::XMMatrixScaling(1.6f, 0.9f, 0.1f);
-    // DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&instances.back().Matrix,
-    //                          s * t);
-    //
-    // // Pallete
-    // instances.back().PositiveFaceFlag = {
-    //   PalleteIndex, PalleteIndex, PalleteIndex, 0
-    // };
-    // instances.back().NegativeFaceFlag = {
-    //   PalleteIndex, PalleteIndex, PalleteIndex, 0
-    // };
-    // cubeRenderer.Pallete.Colors[PalleteIndex] = { 1, 1, 1, 1 };
-    // cubeRenderer.Pallete.Textures[PalleteIndex] = {
-    //   TextureBind, TextureBind, TextureBind, TextureBind
-    // };
-    // cubeRenderer.UploadPallete();
-    //
-    // grapho::imgui::PrintfBuffer buf;
+    app.Camera.Translation = { 0, 1, 4 };
+
+    cuber::PushGrid(lines);
+
+    // texture
+    static rgba pixels[4] = {
+      { 255, 0, 0, 255 },
+      { 0, 255, 0, 255 },
+      { 0, 0, 255, 255 },
+      { 255, 255, 255, 255 },
+    };
+    texture = grapho::gl3::Texture::Create({
+      .Width = 2,
+      .Height = 2,
+      .Format = grapho::PixelFormat::u8_RGBA,
+      .Pixels = &pixels[0].r,
+    });
+    texture->SamplingPoint();
+
+    instances.push_back({});
+    auto t = DirectX::XMMatrixTranslation(0, 1, -1);
+    auto s = DirectX::XMMatrixScaling(1.6f, 0.9f, 0.1f);
+    DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&instances.back().Matrix,
+                             s * t);
+
+    // Pallete
+    instances.back().PositiveFaceFlag = {
+      PalleteIndex, PalleteIndex, PalleteIndex, 0
+    };
+    instances.back().NegativeFaceFlag = {
+      PalleteIndex, PalleteIndex, PalleteIndex, 0
+    };
+    cubeRenderer.Pallete.Colors[PalleteIndex] = { 1, 1, 1, 1 };
+    cubeRenderer.Pallete.Textures[PalleteIndex] = {
+      TextureBind, TextureBind, TextureBind, TextureBind
+    };
+    cubeRenderer.UploadPallete();
   }
 
   void frame()
   {
-    // // main loop
-    // // while (auto time = platform.NewFrame(app.clear_color)) {
-    // // imgui
-    // {
-    //   app.UpdateGui();
-    //   bvhPanel.UpdateGui();
-    // }
-    //
-    // // scene
-    // {
-    //   auto cubes = bvhPanel.GetCubes();
-    //   instances.resize(1 + cubes.size());
-    //   std::copy(cubes.begin(), cubes.end(), instances.data() + 1);
-    //
-    //   auto& io = ImGui::GetIO();
-    //
-    //   if (auto ray = app.Camera.GetRay(io.MousePos.x, io.MousePos.y)) {
-    //
-    //     if (ImGui::Begin("ray")) {
-    //       ImGui::InputFloat2("mouse pos", &io.MousePos.x);
-    //       ImGui::InputFloat3("origin", &ray->Origin.x);
-    //       ImGui::InputFloat3("dir", &ray->Direction.x);
-    //     }
-    //     ImGui::End();
-    //
-    //     for (int i = 1; i < instances.size(); ++i) {
-    //       auto& cube = instances[i];
-    //       auto inv = DirectX::XMMatrixInverse(
-    //         nullptr,
-    //         DirectX::XMLoadFloat4x4((const
-    //         DirectX::XMFLOAT4X4*)&cube.Matrix));
-    //       auto local_ray = Transform(*ray, inv);
-    //
-    //       if (ImGui::Begin("ray")) {
-    //         ImGui::InputFloat3(buf.Printf("local.origin[%d]", i),
-    //                            &local_ray.Origin.x);
-    //         ImGui::InputFloat3(buf.Printf("local.dir[%d]", i),
-    //                            &local_ray.Direction.x);
-    //
-    //         auto origin =
-    //           DirectX::XMLoadFloat3((const DirectX::XMFLOAT3*)&ray->Origin);
-    //         auto dir =
-    //           DirectX::XMLoadFloat3((const
-    //           DirectX::XMFLOAT3*)&ray->Direction);
-    //
-    //         auto m =
-    //           DirectX::XMLoadFloat4x4((const
-    //           DirectX::XMFLOAT4X4*)&cube.Matrix);
-    //
-    //         {
-    //           float hit[3] = { 0, 0, 0 };
-    //
-    //           if (auto d = Intersect(origin, dir, m, 0)) {
-    //             cube.PositiveFaceFlag.x = 7;
-    //             hit[0] = *d;
-    //           } else {
-    //             cube.PositiveFaceFlag.x = 8;
-    //           }
-    //
-    //           if (auto d = Intersect(origin, dir, m, 1)) {
-    //             cube.PositiveFaceFlag.y = 7;
-    //             hit[1] = *d;
-    //           } else {
-    //             cube.PositiveFaceFlag.y = 8;
-    //           }
-    //
-    //           if (auto d = Intersect(origin, dir, m, 2)) {
-    //             cube.PositiveFaceFlag.z = 7;
-    //             hit[2] = *d;
-    //           } else {
-    //             cube.PositiveFaceFlag.z = 8;
-    //           }
-    //           ImGui::InputFloat3(buf.Printf("%d.hit.positive", i), hit);
-    //         }
-    //
-    //         {
-    //           float hit[3] = { 0, 0, 0 };
-    //           if (auto d = Intersect(origin, dir, m, 3)) {
-    //             cube.NegativeFaceFlag.x = 7;
-    //             hit[0] = *d;
-    //           } else {
-    //             cube.NegativeFaceFlag.x = 8;
-    //           }
-    //
-    //           if (auto d = Intersect(origin, dir, m, 4)) {
-    //             cube.NegativeFaceFlag.y = 7;
-    //             hit[1] = *d;
-    //           } else {
-    //             cube.NegativeFaceFlag.y = 8;
-    //           }
-    //
-    //           if (auto d = Intersect(origin, dir, m, 5)) {
-    //             cube.NegativeFaceFlag.z = 7;
-    //             hit[2] = *d;
-    //           } else {
-    //             cube.NegativeFaceFlag.z = 8;
-    //           }
-    //           ImGui::InputFloat3(buf.Printf("%d.hit.negative", i), hit);
-    //         }
-    //       }
-    //       ImGui::End();
-    //     }
-    //   }
-    //
-    //   texture->Activate(TextureBind);
-    //   cubeRenderer.Render(&app.Camera.ProjectionMatrix.m11,
-    //                       &app.Camera.ViewMatrix.m11,
-    //                       instances.data(),
-    //                       instances.size());
-    //   lineRenderer.Render(
-    //     &app.Camera.ProjectionMatrix.m11, &app.Camera.ViewMatrix.m11, lines);
-    //
-    //   auto data = app.RenderGui();
-    //   platform.EndFrame(data);
-    // }
+    // main loop
+    // auto time = platform.NewFrame(app.clear_color);
+
+    // imgui
+    {
+      app.UpdateGui();
+      bvhPanel.UpdateGui();
+    }
+
+    // scene
+    auto cubes = bvhPanel.GetCubes();
+    instances.resize(1 + cubes.size());
+    std::copy(cubes.begin(), cubes.end(), instances.data() + 1);
+
+    auto& io = ImGui::GetIO();
+
+    if (auto ray = app.Camera.GetRay(io.MousePos.x, io.MousePos.y)) {
+
+      if (ImGui::Begin("ray")) {
+        ImGui::InputFloat2("mouse pos", &io.MousePos.x);
+        ImGui::InputFloat3("origin", &ray->Origin.x);
+        ImGui::InputFloat3("dir", &ray->Direction.x);
+      }
+      ImGui::End();
+
+      for (int i = 1; i < instances.size(); ++i) {
+        auto& cube = instances[i];
+        auto inv = DirectX::XMMatrixInverse(
+          nullptr,
+          DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)&cube.Matrix));
+        auto local_ray = Transform(*ray, inv);
+
+        if (ImGui::Begin("ray")) {
+          ImGui::InputFloat3(buf.Printf("local.origin[%d]", i),
+                             &local_ray.Origin.x);
+          ImGui::InputFloat3(buf.Printf("local.dir[%d]", i),
+                             &local_ray.Direction.x);
+
+          auto origin =
+            DirectX::XMLoadFloat3((const DirectX::XMFLOAT3*)&ray->Origin);
+          auto dir =
+            DirectX::XMLoadFloat3((const DirectX::XMFLOAT3*)&ray->Direction);
+
+          auto m =
+            DirectX::XMLoadFloat4x4((const DirectX::XMFLOAT4X4*)&cube.Matrix);
+
+          {
+            float hit[3] = { 0, 0, 0 };
+
+            if (auto d = Intersect(origin, dir, m, 0)) {
+              cube.PositiveFaceFlag.x = 7;
+              hit[0] = *d;
+            } else {
+              cube.PositiveFaceFlag.x = 8;
+            }
+
+            if (auto d = Intersect(origin, dir, m, 1)) {
+              cube.PositiveFaceFlag.y = 7;
+              hit[1] = *d;
+            } else {
+              cube.PositiveFaceFlag.y = 8;
+            }
+
+            if (auto d = Intersect(origin, dir, m, 2)) {
+              cube.PositiveFaceFlag.z = 7;
+              hit[2] = *d;
+            } else {
+              cube.PositiveFaceFlag.z = 8;
+            }
+            ImGui::InputFloat3(buf.Printf("%d.hit.positive", i), hit);
+          }
+
+          {
+            float hit[3] = { 0, 0, 0 };
+            if (auto d = Intersect(origin, dir, m, 3)) {
+              cube.NegativeFaceFlag.x = 7;
+              hit[0] = *d;
+            } else {
+              cube.NegativeFaceFlag.x = 8;
+            }
+
+            if (auto d = Intersect(origin, dir, m, 4)) {
+              cube.NegativeFaceFlag.y = 7;
+              hit[1] = *d;
+            } else {
+              cube.NegativeFaceFlag.y = 8;
+            }
+
+            if (auto d = Intersect(origin, dir, m, 5)) {
+              cube.NegativeFaceFlag.z = 7;
+              hit[2] = *d;
+            } else {
+              cube.NegativeFaceFlag.z = 8;
+            }
+            ImGui::InputFloat3(buf.Printf("%d.hit.negative", i), hit);
+          }
+        }
+        ImGui::End();
+      }
+    }
+
+    texture->Activate(TextureBind);
+    cubeRenderer.Render(&app.Camera.ProjectionMatrix.m11,
+                        &app.Camera.ViewMatrix.m11,
+                        instances.data(),
+                        instances.size());
+    lineRenderer.Render(
+      &app.Camera.ProjectionMatrix.m11, &app.Camera.ViewMatrix.m11, lines);
+
+    auto data = app.RenderGui();
+    // platform.EndFrame(data);
   }
 };
 
