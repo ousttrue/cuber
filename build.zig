@@ -1,5 +1,6 @@
 const std = @import("std");
 const grapho = @import("grapho");
+const zcc = @import("compile_commands");
 
 const cflags = [_][]const u8{
     "-std=c++20",
@@ -42,6 +43,8 @@ const bvhutil = [_][]const u8{
 };
 
 pub fn build(b: *std.Build) void {
+    var targets = std.ArrayList(*std.Build.Step.Compile).init(b.allocator);
+
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
@@ -142,5 +145,13 @@ pub fn build(b: *std.Build) void {
             b.fmt("Run the {s}", .{example.name}),
         );
         run_step.dependOn(&run_cmd.step);
+
+        targets.append(exe) catch @panic("OOM");
     }
+
+    zcc.createStep(
+        b,
+        "zcc",
+        .{ .targets = targets.toOwnedSlice() catch @panic("OOM") },
+    );
 }

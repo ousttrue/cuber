@@ -33,6 +33,10 @@
             .url = "git+https://github.com/floooh/sokol-zig.git#9e4eabae83c74df29b24cdba7b31e985a2d8c33f",
             .hash = "12209706d64fa2127cc2d48134c22790d70f561c40bdeb4589fa7f9c41c4f53fe9da",
         },
+        .compile_commands = .{
+            .url = "git+https://github.com/xxxbrian/zig-compile-commands.git#dd40e0ca2b453684f2e34410ec4b69ef3c568bd7",
+            .hash = "12205f1bd27373077104440e39cbc388b2ebbc8938378cc261506588feed29fedf35",
+        },
     },
     .paths = .{
         "build.zig",
